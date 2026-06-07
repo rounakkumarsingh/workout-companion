@@ -1,50 +1,84 @@
-# Welcome to your Expo app 👋
+# Workout Companion
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A structured bodybuilding tracker app for executing a 12-week hypertrophy transformation program. Offline-first, dark-themed, built with Expo and React Native.
 
-## Get started
+## Prerequisites
 
-1. Install dependencies
+- [Node.js (LTS)](https://nodejs.org/)
+- [Expo Go](https://expo.dev/go) installed on your phone (iOS or Android)
+- Your computer and phone on the same Wi-Fi network
 
-   ```bash
-   npm install
-   ```
+## Setup
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```sh
+git clone <repo-url>
+cd workout-companion
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Run on your phone
+
+### 1. Start the dev server
+
+```sh
+npx expo start
+```
+
+### 2. Open in Expo Go
+
+- **Android**: Scan the QR code in the terminal with the Expo Go app.
+- **iOS**: Scan the QR code with the Camera app, then tap the notification to open in Expo Go.
+
+### If QR code doesn't connect (network issues)
+
+Use tunnel mode (slower but works on restricted networks):
+
+```sh
+npx expo start --tunnel
+```
+
+Then scan the QR code again.
+
+### Platform shortcuts
+
+| Key | Action          |
+| --- | --------------- |
+| `a`  | Open on Android |
+| `i`  | Open on iOS     |
+| `w`  | Open in web     |
+
+## Development builds (optional)
+
+If you need native modules not available in Expo Go:
+
+```sh
+npx eas build --profile development --platform all
+```
+
+## Tech stack
+
+- Expo SDK 54
+- React Native 0.81
+- Expo Router (file-based routing)
+- SQLite via `expo-sqlite`
+- Drizzle ORM
+- `react-native-reanimated` + `react-native-gesture-handler`
+- TypeScript
+
+## Project structure
+
+```
+app/            # File-based routing (expo-router)
+components/     # Reusable UI components
+features/       # Domain-specific feature modules
+hooks/          # Custom React hooks
+src/            # Core logic (DB, schemas, types)
+constants/      # Design tokens, UI constants
+docs/           # Project documentation
+```
 
 ## Learn more
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [Expo docs](https://docs.expo.dev/)
+- [Expo Router](https://docs.expo.dev/router/introduction/)
+- [Project context](./docs/PROJECT_CONTEXT.md)

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -17,7 +17,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams, Stack, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, typography, radii, spacing } from '@/src/theme';
+import { useColors, typography, radii, spacing } from '@/src/theme';
+import type { ColorSet } from '@/src/theme';
 import { ProgressRing } from '@/components/ui/ProgressRing';
 import { StatRow } from '@/components/ui/StatRow';
 import { SectionLabel } from '@/components/ui/SectionLabel';
@@ -147,6 +148,8 @@ export default function ActiveWorkoutScreen() {
   const activeRef = useRef<ActiveState | null>(null);
   const flatListRef = useRef<FlatList>(null);
   const reducedMotion = useReducedMotion();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [elapsed, setElapsed] = useState('0m');
   const [progressionSuggestions, setProgressionSuggestions] = useState<Map<string, ProgressionSuggestion>>(new Map());
   const [weekDays, setWeekDays] = useState<DayStatus[]>([]);
@@ -424,13 +427,6 @@ export default function ActiveWorkoutScreen() {
     <View style={styles.screen}>
       <Stack.Screen options={{ title: 'Workout', headerShown: false }} />
 
-      <TouchableOpacity
-        style={{ backgroundColor: 'red', padding: 20, margin: 10 }}
-        onPress={() => console.log('[test-btn] TEST BUTTON PRESSED')}
-      >
-        <Text style={{ color: 'white' }}>TEST BUTTON</Text>
-      </TouchableOpacity>
-
       <FlatList
         ref={flatListRef}
         data={session.exercises}
@@ -535,39 +531,39 @@ export default function ActiveWorkoutScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: ColorSet) => StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
   },
   centered: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.xxxl,
   },
   errorText: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
     textAlign: 'center',
     marginBottom: spacing.xs,
   },
   errorSub: {
     ...typography.monoSmall,
-    color: colors.textTertiary,
+    color: c.textTertiary,
     textAlign: 'center',
     marginBottom: spacing.xl,
   },
   dismissBtn: {
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: c.surfaceElevated,
     borderRadius: radii.row,
     paddingHorizontal: spacing.xxxl,
     paddingVertical: 14,
   },
   dismissBtnText: {
     ...typography.body,
-    color: colors.gold,
+    color: c.gold,
   },
   listHeader: {
     paddingBottom: spacing.sm,
@@ -581,14 +577,14 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     ...typography.monoLabel,
-    color: colors.textTertiary,
+    color: c.textTertiary,
     letterSpacing: 0.12,
     textTransform: 'uppercase',
     marginBottom: spacing.xs,
   },
   headerTitle: {
     ...typography.heading,
-    color: colors.textPrimary,
+    color: c.textPrimary,
     letterSpacing: -0.02,
   },
   ringSection: {
@@ -597,7 +593,7 @@ const styles = StyleSheet.create({
   },
   logHint: {
     ...typography.monoSmall,
-    color: colors.textMuted,
+    color: c.textMuted,
     paddingHorizontal: spacing.xxl,
     marginBottom: spacing.md,
     lineHeight: 16,
@@ -619,11 +615,11 @@ const styles = StyleSheet.create({
   },
   completeIcon: {
     fontSize: 24,
-    color: colors.success,
+    color: c.success,
   },
   allDoneText: {
     ...typography.subheading,
-    color: colors.successText,
+    color: c.successText,
   },
   finishRow: {
     flexDirection: 'row',
@@ -633,14 +629,14 @@ const styles = StyleSheet.create({
   },
   completeBtn: {
     flex: 1,
-    backgroundColor: colors.gold,
+    backgroundColor: c.gold,
     borderRadius: radii.row,
     paddingVertical: 15,
     alignItems: 'center',
   },
   completeBtnText: {
     ...typography.cta,
-    color: '#0f0f0f',
+    color: c.blackText,
     textTransform: 'uppercase',
     fontSize: 14,
   },
@@ -650,11 +646,11 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     alignItems: 'center',
     borderWidth: 0.5,
-    borderColor: colors.danger,
+    borderColor: c.danger,
   },
   abandonBtnText: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
     textTransform: 'uppercase',
     letterSpacing: 0.05,
     fontSize: 14,

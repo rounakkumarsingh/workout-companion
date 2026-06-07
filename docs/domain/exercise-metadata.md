@@ -1,0 +1,944 @@
+# Exercise Metadata — BTS Beginner Program
+
+Extracted from `docs/program.pdf`. Lists every unique exercise in the program with its metadata, block presence, and video demo link.
+
+---
+
+## Conventions
+
+| Field | Description |
+|-------|-------------|
+| **Day** | The training day the exercise belongs to (Upper / Lower / Pull / Push / Legs) |
+| **Block** | `Foundation` (weeks 1–5), `Ramping` (weeks 6–12), or `Both` |
+| **Technique** | `N/A` (standard set) or `Failure` (taken to failure) |
+| **Warm-Up Sets** | Range of warm-up sets prescribed before working sets |
+| **Working Sets** | Range of working sets across weeks the exercise appears |
+| **Rep Range** | Target rep range per set |
+| **Rest** | Rest period between working sets |
+| **Sub Option 1** | First alternative exercise |
+| **Sub Option 2** | Second alternative exercise |
+| **Notes** | Execution cues and instructions from the program |
+| **Demo** | YouTube URL extracted from the PDF (clickable link on exercise name) |
+
+**Video URL mapping**: The PDF attaches clickable YouTube demo links to each exercise name. The URLs below are extracted from the PDF's `/URI` annotations and mapped in document order. URLs are deduplicated — when the same video appears for the same exercise across multiple weeks, it is listed once.
+
+---
+
+## Upper Day — Foundation Block (Weeks 1–5)
+
+### 45° Incline Barbell Press
+
+| Field | Value |
+|-------|-------|
+| Day | Upper |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 2–3 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 6–8 |
+| Rest | 3–5 min |
+| Sub Option 1 | 45° Incline DB Press |
+| Sub Option 2 | 45° Incline Machine Press |
+| Notes | 1 second pause at the bottom of each rep while maintaining tension on the pecs. |
+| Demo | `https://youtu.be/o4eazahiXQw` |
+
+### Cable Crossover Ladder
+
+| Field | Value |
+|-------|-------|
+| Day | Upper |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 8–10 |
+| Rest | 1–2 min |
+| Sub Option 1 | Pec Deck |
+| Sub Option 2 | Bottom-Half DB Flye |
+| Notes | Do one set with low cable position, one set with medium-height cable position, and one set with a high cable position. If you only have one or two sets, choose the one or two cable positions you prefer. |
+| Demo | `https://youtu.be/gGTgyCU9gcg` |
+
+### Wide-Grip Pull-Up
+
+| Field | Value |
+|-------|-------|
+| Day | Upper |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 8–10 |
+| Rest | 2–3 min |
+| Sub Option 1 | Wide-Grip Lat Pulldown |
+| Sub Option 2 | Dual-Handle Lat Pulldown |
+| Notes | 1.5x shoulder width overhand grip. Slow 2–3 second negative. Feel your lats pulling apart on the way down. |
+| Demo | `https://youtu.be/BC_eDtrB-M4` |
+
+### High-Cable Lateral Raise
+
+| Field | Value |
+|-------|-------|
+| Day | Upper |
+| Block | Both (also appears in Push day) |
+| Technique | N/A (Foundation), Failure (Ramping) |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W1–2), 2 (W3–12) |
+| Rep Range | 8–10 (Foundation), 10–12 (Ramping) |
+| Rest | 1–2 min |
+| Sub Option 1 | High-Cable Cuffed Lateral Raise |
+| Sub Option 2 | Lean-In DB Lateral Raise |
+| Notes | Focus on squeezing your lateral delt to move the weight. |
+| Demo | `https://youtu.be/fzpYiRtzmFA` |
+
+### Pendlay Deficit Row
+
+| Field | Value |
+|-------|-------|
+| Day | Upper |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 6–8 |
+| Rest | 2–3 min |
+| Sub Option 1 | Smith Machine Row |
+| Sub Option 2 | Single-Arm DB Row |
+| Notes | Stand on a bumper plate. Focus on getting a big stretch and touch your stomach/chest on each rep! |
+| Demo | `https://youtu.be/hci6iKFtTkg` |
+
+### Overhead Cable Triceps Extension (Bar)
+
+| Field | Value |
+|-------|-------|
+| Day | Upper / Push |
+| Block | Both |
+| Technique | N/A (Foundation), Failure (Ramping) |
+| Warm-Up Sets | 1 |
+| Working Sets | 1 (W1–2), 2 (W3–12) |
+| Rep Range | 8–10 (Foundation), 10–12 (Ramping) |
+| Rest | 1–2 min |
+| Sub Option 1 | Overhead Cable Triceps Extension (Rope) |
+| Sub Option 2 | DB Skull Crusher |
+| Notes | Optionally pause for 0.5–1 second in the stretched aspect of each rep. |
+| Demo | `https://youtu.be/sOYvvFPYdsU` |
+
+### Bayesian Cable Curl
+
+| Field | Value |
+|-------|-------|
+| Day | Upper |
+| Block | Both |
+| Technique | N/A (Foundation), Failure (Ramping) |
+| Warm-Up Sets | 1 |
+| Working Sets | 1 (W1–2), 2 (W3–12) |
+| Rep Range | 8–10 (Foundation), 10–12 (Ramping) |
+| Rest | 1–2 min |
+| Sub Option 1 | Seated Super-Bayesian High Cable Curl |
+| Sub Option 2 | Incline DB Stretch Curl |
+| Notes | If you have a left-right bicep size imbalance, do these 1 arm at a time, starting with the weaker arm. Take the weaker arm to the listed RPE. Then match the reps with the other arm (stop once you've matched the reps, even if the RPE is lower). If you don't have a size imbalance, do these both arms at the same time. |
+| Demo | `https://youtu.be/S6DTPNZ_-F4` |
+
+---
+
+## Lower Day — Foundation Block (Weeks 1–5)
+
+### Lying Leg Curl
+
+| Field | Value |
+|-------|-------|
+| Day | Lower |
+| Block | Both |
+| Technique | N/A |
+| Warm-Up Sets | 2 |
+| Working Sets | 1 (W1–2), 2 (W3–12) |
+| Rep Range | 8–10 (Foundation), 10–12 (Ramping) |
+| Rest | 1–2 min |
+| Sub Option 1 | Seated Leg Curl |
+| Sub Option 2 | Nordic Ham Curl |
+| Notes | Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl. |
+| Demo | `https://youtu.be/1yKAQLVV_XI` |
+
+### Smith Machine Squat
+
+| Field | Value |
+|-------|-------|
+| Day | Lower |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 2–4 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 6–8 |
+| Rest | 3–5 min |
+| Sub Option 1 | DB Bulgarian Split Squat |
+| Sub Option 2 | High-Bar Back Squat |
+| Notes | Once you are under the bar, set up your feet as you would a normal squat and then bring them forward ~3–6 inches. This will cause you to lean back into the bar slightly, allowing for a more upright squat, while also placing more tension on the quads. If your heels are raising at the bottom, you may need to bring your feet more forward. If your feet feel like they are slipping or your lower back is rounding at the bottom, try bringing your feet back a bit. |
+| Demo | `https://youtu.be/sX4tGtcc62k` |
+
+### Barbell RDL
+
+| Field | Value |
+|-------|-------|
+| Day | Lower |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 2–4 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 6–8 |
+| Rest | 2–3 min |
+| Sub Option 1 | DB RDL |
+| Sub Option 2 | Snatch-Grip RDL |
+| Notes | To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion). |
+| Demo | `https://youtu.be/SEjKxJGg_C8` |
+
+### Leg Extension
+
+| Field | Value |
+|-------|-------|
+| Day | Lower |
+| Block | Both |
+| Technique | N/A (Foundation), Failure (Ramping) |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W1–2), 2 (W3–12) |
+| Rep Range | 8–10 (Foundation), 10–12 (Ramping) |
+| Rest | 1–2 min |
+| Sub Option 1 | Reverse Nordic |
+| Sub Option 2 | Sissy Squat |
+| Notes | Set the seat back as far as it will go while still feeling comfortable. Grab the handles as hard as you can to pull your butt down into the seat. Use a 2–3 second negative. Feel your quads pulling apart on the negative. |
+| Demo | `https://youtu.be/552L1K3Rb_Q` |
+
+### Standing Calf Raise
+
+| Field | Value |
+|-------|-------|
+| Day | Lower (Foundation), Legs (Ramping) |
+| Block | Both |
+| Technique | N/A (Foundation), Failure (Ramping) |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W1–2), 2 (W3–5 Foundation / W6–12 Ramping), 3 (W10–12 Legs) |
+| Rep Range | 6–8 (Foundation), 10–12 (Ramping), 12–15 (Ramping Legs) |
+| Rest | 1–2 min |
+| Sub Option 1 | Seated Calf Raise |
+| Sub Option 2 | Leg Press Calf Press |
+| Notes | 1–2 second pause at the bottom of each rep. Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet. |
+| Demo | `https://youtu.be/6pfj0G7VKdM` |
+
+### Cable Crunch
+
+| Field | Value |
+|-------|-------|
+| Day | Lower |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 1 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 8–10 |
+| Rest | 1–2 min |
+| Sub Option 1 | Decline Weighted Crunch |
+| Sub Option 2 | Machine Crunch |
+| Notes | Round your lower back as you crunch. Maintain a mind-muscle connection with your 6-pack. |
+| Demo | `https://youtu.be/TWUnnDK8rck` |
+
+---
+
+## Pull Day — Foundation Block (Weeks 1–5)
+
+### Neutral-Grip Lat Pulldown
+
+| Field | Value |
+|-------|-------|
+| Day | Pull |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 2–3 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 8–10 |
+| Rest | 2–3 min |
+| Sub Option 1 | Neutral-Grip Pull-Up |
+| Sub Option 2 | Dual-Handle Lat Pulldown |
+| Notes | Do these pulldowns with the handle more out in front of you, more like a cross between a pullover and a pulldown. Focus on feeling your lats working more than the weight you're using. |
+| Demo | `https://youtu.be/yv0aAY7M1mk` |
+
+### Chest-Supported Machine Row
+
+| Field | Value |
+|-------|-------|
+| Day | Pull |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 2–3 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 8–10 |
+| Rest | 2–3 min |
+| Sub Option 1 | Chest-Supported T-Bar Row |
+| Sub Option 2 | Incline Chest-Supported DB Row |
+| Notes | Flare elbows out at roughly 45° and squeeze your shoulder blades together hard at the top of each rep. |
+| Demo | `https://youtu.be/pozooPg6PBE` |
+
+### 1-Arm 45° Cable Rear Delt Flye
+
+| Field | Value |
+|-------|-------|
+| Day | Pull |
+| Block | Both |
+| Technique | N/A (Foundation), Failure (Ramping) |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W1–2), 2 (W3–12) |
+| Rep Range | 10–12 (Foundation), 12–15 (Ramping) |
+| Rest | 1–2 min |
+| Sub Option 1 | Rope Face Pull |
+| Sub Option 2 | Reverse Pec Deck |
+| Notes | Pause for 1–2 seconds in the squeeze of each rep. Contract the rear delts hard! |
+| Demo | `https://youtu.be/6lR2JdxUh7w` |
+
+### Machine Shrug
+
+| Field | Value |
+|-------|-------|
+| Day | Pull |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 2–3 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 10–12 |
+| Rest | 1–2 min |
+| Sub Option 1 | Cable Paused Shrug-In |
+| Sub Option 2 | DB Shrug |
+| Notes | Brief pause at the top of the bottom of ROM. Think about pulling your shoulders up to your ears! |
+| Demo | `https://youtu.be/b8fYnZ-usP0` |
+
+### EZ-Bar Cable Curl
+
+| Field | Value |
+|-------|-------|
+| Day | Pull |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 1 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 10–12 |
+| Rest | 1–2 min |
+| Sub Option 1 | EZ-Bar Curl |
+| Sub Option 2 | DB Curl |
+| Notes | Set up the cable at the lowest position. Maintain constant tension on the biceps. Slow, controlled reps! |
+| Demo | `https://youtu.be/qJzc-iHKGdg` |
+
+### Machine Preacher Curl
+
+| Field | Value |
+|-------|-------|
+| Day | Pull |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 1 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 12–15 |
+| Rest | 1–2 min |
+| Sub Option 1 | EZ-Bar Preacher Curl |
+| Sub Option 2 | DB Preacher Curl |
+| Notes | Smooth, controlled reps. Mind-muscle connection with the biceps. |
+| Demo | `https://youtu.be/yGnp0HU8BnA` |
+
+---
+
+## Push Day — Foundation Block (Weeks 1–5)
+
+### Barbell Bench Press
+
+| Field | Value |
+|-------|-------|
+| Day | Push |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 2–4 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 8–10 (W1–2), 8–10 (W3–5) |
+| Rest | 3–5 min |
+| Sub Option 1 | Machine Chest Press |
+| Sub Option 2 | DB Bench Press |
+| Notes | Set up a comfortable arch, quick pause on the chest and explode up on each rep. |
+| Demo | `https://youtu.be/roKtfQZbxzg` |
+
+### Machine Shoulder Press
+
+| Field | Value |
+|-------|-------|
+| Day | Push |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 2–3 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 8–10 |
+| Rest | 2–3 min |
+| Sub Option 1 | Cable Shoulder Press |
+| Sub Option 2 | Seated DB Shoulder Press |
+| Notes | Ensure that your elbows break at least 90°. Mind-muscle connection with your delts. Smooth, controlled reps. |
+| Demo | `https://youtu.be/fbLTzgTKOR8` |
+
+### Bottom-Half DB Flye
+
+| Field | Value |
+|-------|-------|
+| Day | Push |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 10–12 |
+| Rest | 1–2 min |
+| Sub Option 1 | Bottom-Half Seated Cable Flye |
+| Sub Option 2 | Low-to-High Cable Crossover |
+| Notes | All reps and sets are to be performed in the bottom half of the ROM. Focus on feeling a deep stretch in your pecs at the bottom of each rep. |
+| Demo | `https://youtu.be/Z0NIYS9nyoQ` |
+
+### Cable Triceps Kickback
+
+| Field | Value |
+|-------|-------|
+| Day | Push |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 1 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 12–15 |
+| Rest | 1–2 min |
+| Sub Option 1 | DB Triceps Kickback |
+| Sub Option 2 | Bench Dip |
+| Notes | There are two ways you can do this: upright or bent over. Choose the one that feels more comfortable for you. The main thing is that when you're in the full squeeze, your shoulder should be positioned back behind your torso. |
+| Demo | `https://youtu.be/vqQ9ok0dEgk` |
+
+### Lying Leg Raise
+
+| Field | Value |
+|-------|-------|
+| Day | Push |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 10–20 |
+| Rest | 1–2 min |
+| Sub Option 1 | Hanging Leg Raise |
+| Sub Option 2 | Modified Candlestick |
+| Notes | Perform these slowly, focus on keeping your lower back against the ground throughout the set. |
+| Demo | `https://youtu.be/0TP9kVcWGic` |
+
+---
+
+## Legs Day — Foundation Block (Weeks 1–5)
+
+### Leg Press
+
+| Field | Value |
+|-------|-------|
+| Day | Legs |
+| Block | Foundation only |
+| Technique | N/A |
+| Warm-Up Sets | 2–4 |
+| Working Sets | 1 (W1–2), 2 (W3–5) |
+| Rep Range | 8–10 |
+| Rest | 2–3 min |
+| Sub Option 1 | Smith Machine Static Lunge |
+| Sub Option 2 | DB Walking Lunge |
+| Notes | Feet lower on the platform for more quad focus. Get as deep as you can without excessive back rounding. Control the negative and do a slight pause at the bottom of each rep. |
+| Demo | `https://youtu.be/IYXRrYXfVLc` |
+
+### Seated Leg Curl
+
+| Field | Value |
+|-------|-------|
+| Day | Legs |
+| Block | Both |
+| Technique | N/A (Foundation), Failure (Ramping) |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W1–2), 2 (W3–12) |
+| Rep Range | 10–12 (Foundation), 12–15 (Ramping) |
+| Rest | 1–2 min |
+| Sub Option 1 | Lying Leg Curl |
+| Sub Option 2 | Nordic Ham Curl |
+| Notes | Lean forward over the machine to get a maximum stretch in your hamstrings. |
+| Demo | `https://youtu.be/8m2jNHBP580` |
+
+### Walking Lunge
+
+| Field | Value |
+|-------|-------|
+| Day | Legs |
+| Block | Both |
+| Technique | N/A |
+| Warm-Up Sets | 2–3 |
+| Working Sets | 1 (W1–2), 2 (W3–12) |
+| Rep Range | 8–10 (Foundation), 10–12 (Ramping) |
+| Rest | 2–3 min |
+| Sub Option 1 | DB Step-Up (Foundation) / Smith Machine Static Lunge (Ramping) |
+| Sub Option 2 | Goblet Squat (Foundation) / DB Static Lunge (Ramping) |
+| Notes | Take medium strides. Minimize contribution from the back leg. |
+| Demo | `https://youtu.be/MmuyHKYCLps` |
+
+### Machine Hip Abduction
+
+| Field | Value |
+|-------|-------|
+| Day | Legs |
+| Block | Both |
+| Technique | N/A (Foundation), Failure (Ramping) |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W1–2), 2 (W3–12) |
+| Rep Range | 10–12 (Foundation), 12–15 (Ramping) |
+| Rest | 1–2 min |
+| Sub Option 1 | Cable Hip Abduction |
+| Sub Option 2 | Lateral Band Walk |
+| Notes | If possible, use pads to increase the range of motion on the machine. Lean forward and grab onto the machine rails to stretch the glutes further. |
+| Demo | `https://youtu.be/GYoUoVNlbGc` |
+
+---
+
+## Upper Day — Ramping Block (Weeks 6–12)
+
+### 45° Incline DB Press
+
+| Field | Value |
+|-------|-------|
+| Day | Upper |
+| Block | Ramping only |
+| Technique | N/A |
+| Warm-Up Sets | 2–3 |
+| Working Sets | 1 (W6), 2 (W7–9), 3 (W10–12) |
+| Rep Range | 8–10 (W6–9), 8–10 (W10–12) |
+| Rest | 3–5 min |
+| Sub Option 1 | 45° Incline Barbell Press |
+| Sub Option 2 | 45° Incline Machine Press |
+| Notes | 1 second pause at the bottom of each rep while maintaining tension on the pecs. |
+| Demo | `https://youtu.be/o4eazahiXQw` |
+
+### Pec Deck
+
+| Field | Value |
+|-------|-------|
+| Day | Upper |
+| Block | Ramping only |
+| Technique | N/A |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W6), 2 (W7–12) |
+| Rep Range | 10–12 (W6–9), 10–12 (W10–12) |
+| Rest | 1–2 min |
+| Sub Option 1 | Cable Crossover Ladder |
+| Sub Option 2 | Bottom-Half DB Flye |
+| Notes | Focus on bringing your elbows together — not your hands. |
+| Demo | `https://youtu.be/jQ9rkfvAbIc` |
+
+### Dual-Handle Lat Pulldown
+
+| Field | Value |
+|-------|-------|
+| Day | Upper |
+| Block | Ramping only |
+| Technique | N/A |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W6), 2 (W7–9), 3 (W10–12) |
+| Rep Range | 10–12 |
+| Rest | 2–3 min |
+| Sub Option 1 | Wide-Grip Lat Pulldown |
+| Sub Option 2 | Wide-Grip Pull-Up |
+| Notes | Lean back by ~15° and drive your elbows down as you squeeze your shoulder blades together. This should feel like a mix of lats and mid-traps. |
+| Demo | `https://youtu.be/CI88L1VNvEs` |
+
+### Smith Machine Row
+
+| Field | Value |
+|-------|-------|
+| Day | Upper |
+| Block | Ramping only |
+| Technique | N/A |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W6), 2 (W7–9), 2 (W10–12) |
+| Rep Range | 8–10 |
+| Rest | 2–3 min |
+| Sub Option 1 | Pendlay Deficit Row |
+| Sub Option 2 | Single-Arm DB Row |
+| Notes | Focus on squeezing your shoulder blades together, keeping your elbows at a ~45° angle. |
+| Demo | `https://youtu.be/NwQ5Ch5t5Vk` |
+
+---
+
+## Lower Day — Ramping Block (Weeks 6–12)
+
+### Smith Machine Static Lunge w/ Elevated Front Foot
+
+| Field | Value |
+|-------|-------|
+| Day | Lower |
+| Block | Ramping only |
+| Technique | N/A |
+| Warm-Up Sets | 2–4 |
+| Working Sets | 1 (W6), 2 (W7–9), 3 (W10–12) |
+| Rep Range | 8–10 |
+| Rest | 3–5 min |
+| Sub Option 1 | DB Bulgarian Split Squat |
+| Sub Option 2 | High-Bar Back Squat |
+| Notes | Elevate your front foot on a small box. Minimize contribution from your back leg. |
+| Demo | `https://youtu.be/Wmivm40AV3Q` |
+
+### 45° Hyperextension
+
+| Field | Value |
+|-------|-------|
+| Day | Lower |
+| Block | Ramping only |
+| Technique | N/A |
+| Warm-Up Sets | 2–4 |
+| Working Sets | 1 (W6), 2 (W7–9), 3 (W10–12) |
+| Rep Range | 8–10 |
+| Rest | 2–3 min |
+| Sub Option 1 | Glute-Ham Raise |
+| Sub Option 2 | Cable Pull-Through |
+| Notes | Squeeze your glutes hard at the top of each rep. Slow controlled reps on the way down, followed by an explosive positive. |
+| Demo | `https://youtu.be/9_I1PqZAjdA` |
+
+### Leg Press Calf Press
+
+| Field | Value |
+|-------|-------|
+| Day | Lower |
+| Block | Ramping only |
+| Technique | Failure |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W6), 2 (W7–12) |
+| Rep Range | 8–10 |
+| Rest | 1–2 min |
+| Sub Option 1 | Seated Calf Raise |
+| Sub Option 2 | Standing Calf Raise |
+| Notes | 1–2 second pause at the bottom of each rep. Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet. |
+| Demo | `https://youtu.be/CWH5J_7kzjM` |
+
+### Machine Crunch
+
+| Field | Value |
+|-------|-------|
+| Day | Lower |
+| Block | Ramping only |
+| Technique | Failure |
+| Warm-Up Sets | 1 |
+| Working Sets | 1 (W6), 2 (W7–12) |
+| Rep Range | 10–12 |
+| Rest | 1–2 min |
+| Sub Option 1 | Decline Weighted Crunch |
+| Sub Option 2 | Cable Crunch |
+| Notes | Round your lower back as you crunch. Maintain a mind-muscle connection with your 6-pack. |
+| Demo | `https://youtu.be/9ksG-O0ZUto` |
+
+---
+
+## Pull Day — Ramping Block (Weeks 6–12)
+
+### Lean-Back Lat Pulldown
+
+| Field | Value |
+|-------|-------|
+| Day | Pull |
+| Block | Ramping only |
+| Technique | N/A |
+| Warm-Up Sets | 2–3 |
+| Working Sets | 1 (W6), 2 (W7–9), 2 (W10–12) |
+| Rep Range | 10–12 |
+| Rest | 2–3 min |
+| Sub Option 1 | Lean-Back Machine Pulldown |
+| Sub Option 2 | Pull-Up |
+| Notes | Initiate the pulldown with a straight up posture. As you pull the bar down, lean back by about 15–30° to get the mid-back more involved. Softly touch the bar to your chest on every rep and, even though you're leaning back, still control the weight! |
+| Demo | `https://youtu.be/D-kqUKEQZZ0` |
+
+### Chest-Supported T-Bar Row
+
+| Field | Value |
+|-------|-------|
+| Day | Pull |
+| Block | Ramping only |
+| Technique | Failure |
+| Warm-Up Sets | 2–3 |
+| Working Sets | 1 (W6), 3 (W7–12) |
+| Rep Range | 10–12 |
+| Rest | 2–3 min |
+| Sub Option 1 | Chest-Supported Machine Row |
+| Sub Option 2 | Incline Chest-Supported DB Row |
+| Notes | Flare elbows out at roughly 45° and squeeze your shoulder blades together hard at the top of each rep. |
+| Demo | `https://youtu.be/ZheUsKqU81M` |
+
+### Cable Paused Shrug-In
+
+| Field | Value |
+|-------|-------|
+| Day | Pull |
+| Block | Ramping only |
+| Technique | N/A |
+| Warm-Up Sets | 2–3 |
+| Working Sets | 1 (W6), 2 (W7–12) |
+| Rep Range | 12–15 |
+| Rest | 1–2 min |
+| Sub Option 1 | Machine Shrug |
+| Sub Option 2 | DB Shrug |
+| Notes | Shrug up and in. Think about shrugging "up to your ears." 1–2 second pause in the squeeze (at the top) of each rep, then another 1–2 second pause in the stretch (at the bottom) of each rep. |
+| Demo | `https://youtu.be/GOqHdmshRKY` |
+
+### Cable Rope Hammer Curl
+
+| Field | Value |
+|-------|-------|
+| Day | Pull |
+| Block | Ramping only |
+| Technique | N/A |
+| Warm-Up Sets | 1 |
+| Working Sets | 1 (W6), 2 (W7–9), 3 (W10–12) |
+| Rep Range | 12–15 |
+| Rest | 1–2 min |
+| Sub Option 1 | DB Hammer Curl |
+| Sub Option 2 | Hammer Preacher Curl |
+| Notes | Squeeze the rope hard as you curl the weight up. Smooth, controlled reps. |
+| Demo | `https://youtu.be/lEeCPhlFZig` |
+
+### DB Concentration Curl
+
+| Field | Value |
+|-------|-------|
+| Day | Pull |
+| Block | Ramping only |
+| Technique | Failure |
+| Warm-Up Sets | 1 |
+| Working Sets | 1 (W6), 2 (W7–12) |
+| Rep Range | 15–20 |
+| Rest | 1–2 min |
+| Sub Option 1 | Concentration Cable Curl |
+| Sub Option 2 | DB Preacher Curl |
+| Notes | Smooth, controlled reps. Mind-muscle connection with the biceps. |
+| Demo | `https://youtu.be/uFbNtqP966A` |
+
+---
+
+## Push Day — Ramping Block (Weeks 6–12)
+
+### Machine Chest Press
+
+| Field | Value |
+|-------|-------|
+| Day | Push |
+| Block | Ramping only |
+| Technique | N/A |
+| Warm-Up Sets | 2–4 |
+| Working Sets | 1 (W6), 2 (W7–9), 3 (W10–12) |
+| Rep Range | 10–12 |
+| Rest | 3–5 min |
+| Sub Option 1 | Barbell Bench Press |
+| Sub Option 2 | DB Bench Press |
+| Notes | 1 second pause at the bottom of each rep while maintaining tension on the pecs. |
+| Demo | `https://youtu.be/roKtfQZbxzg` |
+
+### Seated DB Shoulder Press
+
+| Field | Value |
+|-------|-------|
+| Day | Push |
+| Block | Ramping only |
+| Technique | N/A |
+| Warm-Up Sets | 2–3 |
+| Working Sets | 1 (W6), 2 (W7–9), 2 (W10–12) |
+| Rep Range | 10–12 |
+| Rest | 2–3 min |
+| Sub Option 1 | Cable Shoulder Press |
+| Sub Option 2 | Machine Shoulder Press |
+| Notes | Ensure that your elbows break at least 90°. Mind-muscle connection with your delts. Smooth, controlled reps. |
+| Demo | `https://youtu.be/fbLTzgTKOR8` |
+
+### Bottom-Half Seated Cable Flye
+
+| Field | Value |
+|-------|-------|
+| Day | Push |
+| Block | Ramping only |
+| Technique | Failure |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W6), 2 (W7–12) |
+| Rep Range | 12–15 |
+| Rest | 1–2 min |
+| Sub Option 1 | Bottom-Half DB Flye |
+| Sub Option 2 | Low-to-High Cable Crossover |
+| Notes | All reps and sets are to be performed in the bottom half of the ROM. Focus on feeling a deep stretch in your pecs at the bottom of each rep. |
+| Demo | `https://youtu.be/eFsNZc69m10` |
+
+### EZ-Bar Skull Crusher
+
+| Field | Value |
+|-------|-------|
+| Day | Push |
+| Block | Ramping only |
+| Technique | N/A |
+| Warm-Up Sets | 1 |
+| Working Sets | 1 (W6), 2 (W7–9), 3 (W10–12) |
+| Rep Range | 12–15 |
+| Rest | 1–2 min |
+| Sub Option 1 | DB Skull Crusher |
+| Sub Option 2 | Katana Triceps Extension |
+| Notes | Optionally pause for 0.5–1 second in the stretched aspect of each rep. |
+| Demo | `https://youtu.be/eWAjlO4FWPQ` |
+
+### Triceps Pressdown (Bar)
+
+| Field | Value |
+|-------|-------|
+| Day | Push |
+| Block | Ramping only |
+| Technique | Failure |
+| Warm-Up Sets | 1 |
+| Working Sets | 1 (W6), 2 (W7–12) |
+| Rep Range | 15–20 |
+| Rest | 1–2 min |
+| Sub Option 1 | Triceps Pressdown (Rope) |
+| Sub Option 2 | DB Triceps Kickback |
+| Notes | Focus on squeezing your triceps to move the weight. |
+| Demo | `https://youtu.be/epBrpaGHMcg` |
+
+### Ab Wheel Rollout
+
+| Field | Value |
+|-------|-------|
+| Day | Push |
+| Block | Ramping only |
+| Technique | Failure |
+| Warm-Up Sets | 1–2 |
+| Working Sets | 1 (W6), 2 (W7–12) |
+| Rep Range | 12–15 |
+| Rest | 1–2 min |
+| Sub Option 1 | Swiss Ball Rollout |
+| Sub Option 2 | Long-Lever Plank |
+| Notes | Don't just bend at your hips, use your abs to lower yourself down under control and pull yourself back up. If you don't have the core strength to get all the way extended at the bottom, try to progressively increase the ROM week to week. |
+| Demo | `https://youtu.be/htDXu61MPio` |
+
+---
+
+## Legs Day — Ramping Block (Weeks 6–12)
+
+### Hack Squat
+
+| Field | Value |
+|-------|-------|
+| Day | Legs |
+| Block | Ramping only |
+| Technique | N/A |
+| Warm-Up Sets | 2–4 |
+| Working Sets | 1 (W6), 2 (W7–9), 3 (W10–12) |
+| Rep Range | 10–12 |
+| Rest | 2–3 min |
+| Sub Option 1 | Leg Press |
+| Sub Option 2 | DB Walking Lunge |
+| Notes | Use a controlled negative (don't free fall) and then explode on the positive. |
+| Demo | `https://youtu.be/V-B_Y-OvOTQ` |
+
+---
+
+## Exercise Presence Summary
+
+| Exercise | Foundation (W1–5) | Ramping (W6–12) | Day |
+|----------|-------------------|-----------------|-----|
+| 45° Incline Barbell Press | ✓ | — | Upper |
+| 45° Incline DB Press | — | ✓ | Upper |
+| Cable Crossover Ladder | ✓ | — | Upper |
+| Pec Deck | — | ✓ | Upper |
+| Wide-Grip Pull-Up | ✓ | — | Upper |
+| Dual-Handle Lat Pulldown | — | ✓ | Upper |
+| High-Cable Lateral Raise | ✓ | ✓ | Upper / Push |
+| Pendlay Deficit Row | ✓ | — | Upper |
+| Smith Machine Row | — | ✓ | Upper |
+| Overhead Cable Triceps Extension (Bar) | ✓ | ✓ | Upper / Push |
+| Bayesian Cable Curl | ✓ | ✓ | Upper |
+| Lying Leg Curl | ✓ | ✓ | Lower |
+| Smith Machine Squat | ✓ | — | Lower |
+| Smith Machine Static Lunge w/ Elevated Front Foot | — | ✓ | Lower |
+| Barbell RDL | ✓ | — | Lower |
+| 45° Hyperextension | — | ✓ | Lower |
+| Leg Extension | ✓ | ✓ | Lower |
+| Standing Calf Raise | ✓ | ✓ | Lower / Legs |
+| Cable Crunch | ✓ | — | Lower |
+| Leg Press Calf Press | — | ✓ | Lower |
+| Machine Crunch | — | ✓ | Lower |
+| Neutral-Grip Lat Pulldown | ✓ | — | Pull |
+| Lean-Back Lat Pulldown | — | ✓ | Pull |
+| Chest-Supported Machine Row | ✓ | — | Pull |
+| Chest-Supported T-Bar Row | — | ✓ | Pull |
+| 1-Arm 45° Cable Rear Delt Flye | ✓ | ✓ | Pull |
+| Machine Shrug | ✓ | — | Pull |
+| Cable Paused Shrug-In | — | ✓ | Pull |
+| EZ-Bar Cable Curl | ✓ | — | Pull |
+| Cable Rope Hammer Curl | — | ✓ | Pull |
+| Machine Preacher Curl | ✓ | — | Pull |
+| DB Concentration Curl | — | ✓ | Pull |
+| Barbell Bench Press | ✓ | — | Push |
+| Machine Chest Press | — | ✓ | Push |
+| Machine Shoulder Press | ✓ | — | Push |
+| Seated DB Shoulder Press | — | ✓ | Push |
+| Bottom-Half DB Flye | ✓ | — | Push |
+| Bottom-Half Seated Cable Flye | — | ✓ | Push |
+| Cable Triceps Kickback | ✓ | — | Push |
+| EZ-Bar Skull Crusher | — | ✓ | Push |
+| Triceps Pressdown (Bar) | — | ✓ | Push |
+| Lying Leg Raise | ✓ | — | Push |
+| Ab Wheel Rollout | — | ✓ | Push |
+| Leg Press | ✓ | — | Legs |
+| Hack Squat | — | ✓ | Legs |
+| Seated Leg Curl | ✓ | ✓ | Legs |
+| Walking Lunge | ✓ | ✓ | Legs |
+| Machine Hip Abduction | ✓ | ✓ | Legs |
+
+---
+
+## Video Demo URL Index
+
+All demo URLs extracted from the PDF `/URI` annotations. URLs are listed as canonical `youtu.be` shortlinks (some also appear as `www.youtube.com/watch?v=` in the PDF — deduplicated here).
+
+| Video ID | Exercise(s) |
+|----------|-------------|
+| `o4eazahiXQw` | 45° Incline Barbell Press, 45° Incline DB Press |
+| `gGTgyCU9gcg` | Cable Crossover Ladder |
+| `BC_eDtrB-M4` | Wide-Grip Pull-Up |
+| `fzpYiRtzmFA` | High-Cable Lateral Raise |
+| `hci6iKFtTkg` | Pendlay Deficit Row |
+| `sOYvvFPYdsU` | Overhead Cable Triceps Extension (Bar) |
+| `S6DTPNZ_-F4` | Bayesian Cable Curl |
+| `1yKAQLVV_XI` | Lying Leg Curl |
+| `sX4tGtcc62k` | Smith Machine Squat, Smith Machine Static Lunge w/ Elevated Front Foot |
+| `SEjKxJGg_C8` | Barbell RDL |
+| `552L1K3Rb_Q` | Leg Extension |
+| `6pfj0G7VKdM` | Standing Calf Raise |
+| `TWUnnDK8rck` | Cable Crunch, Machine Crunch |
+| `yv0aAY7M1mk` | Neutral-Grip Lat Pulldown, Lean-Back Lat Pulldown |
+| `pozooPg6PBE` | Chest-Supported Machine Row, Chest-Supported T-Bar Row |
+| `6lR2JdxUh7w` | 1-Arm 45° Cable Rear Delt Flye |
+| `b8fYnZ-usP0` | Machine Shrug, Cable Paused Shrug-In |
+| `qJzc-iHKGdg` | EZ-Bar Cable Curl |
+| `yGnp0HU8BnA` | Machine Preacher Curl, DB Concentration Curl |
+| `roKtfQZbxzg` | Barbell Bench Press, Machine Chest Press |
+| `fbLTzgTKOR8` | Machine Shoulder Press, Seated DB Shoulder Press |
+| `Z0NIYS9nyoQ` | Bottom-Half DB Flye, Bottom-Half Seated Cable Flye |
+| `vqQ9ok0dEgk` | Cable Triceps Kickback |
+| `0TP9kVcWGic` | Lying Leg Raise, Ab Wheel Rollout |
+| `IYXRrYXfVLc` | Leg Press |
+| `8m2jNHBP580` | Seated Leg Curl |
+| `MmuyHKYCLps` | Walking Lunge |
+| `GYoUoVNlbGc` | Machine Hip Abduction |
+| `jQ9rkfvAbIc` | Pec Deck |
+| `CI88L1VNvEs` | Dual-Handle Lat Pulldown |
+| `NwQ5Ch5t5Vk` | Smith Machine Row |
+| `Wmivm40AV3Q` | Smith Machine Static Lunge w/ Elevated Front Foot |
+| `9_I1PqZAjdA` | 45° Hyperextension |
+| `CWH5J_7kzjM` | Leg Press Calf Press |
+| `9ksG-O0ZUto` | Machine Crunch |
+| `D-kqUKEQZZ0` | Lean-Back Lat Pulldown |
+| `ZheUsKqU81M` | Chest-Supported T-Bar Row |
+| `GOqHdmshRKY` | Cable Paused Shrug-In |
+| `lEeCPhlFZig` | Cable Rope Hammer Curl |
+| `uFbNtqP966A` | DB Concentration Curl |
+| `eFsNZc69m10` | Bottom-Half Seated Cable Flye |
+| `eWAjlO4FWPQ` | EZ-Bar Skull Crusher |
+| `epBrpaGHMcg` | Triceps Pressdown (Bar) |
+| `htDXu61MPio` | Ab Wheel Rollout |
+| `V-B_Y-OvOTQ` | Hack Squat |
+| `BmYuAG2j2co` | (warm-up related / general content) |
+| `p2t9daxLpB8` | (warm-up related / general content) |
+
+Note: Some URLs may correspond to warm-up demonstrations or general program content not tied to a specific exercise row. The mapping above reflects the most likely association based on document order and context.

@@ -1,35 +1,113 @@
+import { useEffect, useRef, useMemo } from 'react';
 import { Tabs } from 'expo-router';
-import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { typography } from '@/src/theme';
+import { useColors } from '@/src/theme';
+import type { ColorSet } from '@/src/theme';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeTabStyles(colors), [colors]);
+  const scale = useSharedValue(1);
+  const reducedMotion = useReducedMotion();
+  const prevRef = useRef(false);
+
+  useEffect(() => {
+    if (focused && !prevRef.current && !reducedMotion) {
+      scale.value = withSpring(1.05, { damping: 12, stiffness: 150 });
+      const timer = setTimeout(() => {
+        scale.value = withSpring(1, { damping: 12, stiffness: 150 });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+    prevRef.current = focused;
+  }, [focused, reducedMotion]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <View style={[styles.iconWrap, focused && styles.activeWrap]}>
+        <Text style={[styles.icon, focused && styles.activeIcon]}>{icon}</Text>
+      </View>
+    </Animated.View>
+  );
+}
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const colors = useColors();
+  const tabStyles = useMemo(() => makeTabStyles(colors), [colors]);
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarStyle: tabStyles.tabBar,
+        tabBarShowLabel: true,
+        tabBarLabelStyle: tabStyles.tabLabel,
+        tabBarActiveTintColor: colors.gold,
+        tabBarInactiveTintColor: colors.textMuted,
+      }}
+    >
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Today',
+          tabBarIcon: ({ focused }) => <TabIcon icon="⚡" focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="week"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'This Week',
+          tabBarIcon: ({ focused }) => <TabIcon icon="📅" focused={focused} />,
+          lazy: false,
+        }}
+      />
+      <Tabs.Screen
+        name="progress"
+        options={{
+          title: 'History',
+          tabBarIcon: ({ focused }) => <TabIcon icon="📊" focused={focused} />,
+          lazy: false,
         }}
       />
     </Tabs>
   );
 }
+
+const makeTabStyles = (c: ColorSet) => StyleSheet.create({
+  tabBar: {
+    backgroundColor: c.surface,
+    borderTopWidth: 0.5,
+    borderTopColor: c.border,
+    paddingTop: 12,
+    paddingBottom: 8,
+    height: 70,
+  },
+  tabLabel: {
+    ...typography.monoTiny,
+    letterSpacing: 0.08,
+    textTransform: 'uppercase',
+    marginTop: 3,
+  },
+  iconWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 4,
+    borderRadius: 8,
+  },
+  activeWrap: {},
+  icon: {
+    fontSize: 16,
+    color: c.textMuted,
+  },
+  activeIcon: {
+    color: c.gold,
+  },
+});

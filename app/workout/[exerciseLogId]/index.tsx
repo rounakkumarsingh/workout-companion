@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, BackHandler, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSequence, withRepeat, Easing } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
-import { colors, typography, radii, spacing } from '@/src/theme';
+import { useColors, typography, radii, spacing } from '@/src/theme';
+import type { ColorSet } from '@/src/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { SetLogList } from '@/components/workout/SetLogList';
@@ -29,8 +30,9 @@ import {
   logWarmupSet,
   getNextExercise,
   setExerciseStatus,
+  invalidateCachedSession,
 } from '@/src/features/workout-session';
-import { getSubstitutionOptions } from '@/src/features/workout-session/substitution';
+import { getSubstitutionOptions, getSubstitutionTarget } from '@/src/features/workout-session/substitution';
 import { getActiveSession } from '@/src/db/repositories/sessions';
 
 function parseRestSeconds(rest: string): number {
@@ -223,6 +225,8 @@ export default function ExerciseDetailScreen() {
     return () => sub.remove();
   }, [hasLoggedSetsRef.current]);
 
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const pulseScale = useSharedValue(1);
   const reducedMotion = useReducedMotion();
   const prevRestRemainingRef = useRef<number>(0);
@@ -364,12 +368,32 @@ export default function ExerciseDetailScreen() {
   const handleSubstitution = useCallback(async (slot: 1 | 2) => {
     if (state.phase !== 'active') return;
     try {
-      const updated = await substituteExercise(state.session, exerciseLogId, slot);
-      const updatedExercise = updated.exercises.find((e) => e.exerciseLogId === exerciseLogId)!;
-      setState((prev) => {
-        if (prev.phase !== 'active') return prev;
-        return { ...prev, session: updated, exercise: updatedExercise };
-      });
+      const current = state.session.exercises.find((e) => e.exerciseLogId === exerciseLogId);
+      if (!current) return;
+
+      if (slot === 1 && current.exerciseName !== current.prescribedExerciseName) {
+        const { updateExerciseLog } = await import('@/src/db/repositories/exercises');
+        await updateExerciseLog(exerciseLogId, {
+          exerciseName: current.prescribedExerciseName,
+          substitutionNote: null,
+        });
+        invalidateCachedSession(state.session.id);
+        const updated = (await hydrateActiveSession(state.session.id))!;
+        const updatedExercise = updated.exercises.find((e) => e.exerciseLogId === exerciseLogId)!;
+        setState((prev) => {
+          if (prev.phase !== 'active') return prev;
+          return { ...prev, session: updated, exercise: updatedExercise };
+        });
+      } else {
+        const target = getSubstitutionTarget(current.prescribedExerciseName, slot);
+        if (!target) return;
+        const updated = await substituteExercise(state.session, exerciseLogId, slot);
+        const updatedExercise = updated.exercises.find((e) => e.exerciseLogId === exerciseLogId)!;
+        setState((prev) => {
+          if (prev.phase !== 'active') return prev;
+          return { ...prev, session: updated, exercise: updatedExercise };
+        });
+      }
     } catch (e) {
       console.error('[exercise] Failed to substitute exercise:', e);
     }
@@ -434,11 +458,17 @@ export default function ExerciseDetailScreen() {
 
   const { session, exercise, loggingPhase } = state;
   const pres = exercise.prescription;
-  const exerciseMeta = PROGRAM.exercises[exercise.prescribedExerciseName];
-  const substitutionOptions = getSubstitutionOptions(exercise.prescribedExerciseName).map((o) => ({
-    slot: o.slot,
-    name: o.substituteName,
-  }));
+  const exerciseMeta = PROGRAM.exercises[exercise.exerciseName];
+  const isSubstituted = exercise.exerciseName !== exercise.prescribedExerciseName;
+  const rawOptions = getSubstitutionOptions(exercise.prescribedExerciseName);
+  const substitutionOptions = isSubstituted
+    ? [
+        { slot: 1 as const, name: exercise.prescribedExerciseName },
+        ...rawOptions
+          .filter((o) => o.substituteName !== exercise.exerciseName)
+          .map((o) => ({ slot: 2 as const, name: o.substituteName })),
+      ]
+    : rawOptions.map((o) => ({ slot: o.slot, name: o.substituteName }));
   const substitutionDisabled = exercise.sets.some((s) => s.weight > 0 || s.reps > 0);
   const nextExercise = getNextExercise(session, exerciseLogId);
 
@@ -847,10 +877,10 @@ export default function ExerciseDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: ColorSet) => StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
   },
   scroll: {
     flex: 1,
@@ -860,26 +890,26 @@ const styles = StyleSheet.create({
   },
   centered: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: c.background,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.xxxl,
   },
   error: {
     ...typography.body,
-    color: colors.danger,
+    color: c.danger,
     textAlign: 'center',
     marginBottom: spacing.xl,
   },
   dismissBtn: {
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: c.surfaceElevated,
     borderRadius: radii.row,
     paddingHorizontal: spacing.xxxl,
     paddingVertical: 14,
   },
   dismissBtnText: {
     ...typography.body,
-    color: colors.gold,
+    color: c.gold,
   },
   backBtn: {
     paddingHorizontal: spacing.xxl,
@@ -892,7 +922,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 0.1,
     textTransform: 'uppercase',
-    color: colors.textTertiary,
+    color: c.textTertiary,
   },
   hero: {
     paddingHorizontal: spacing.xxl,
@@ -903,26 +933,26 @@ const styles = StyleSheet.create({
     fontSize: 36,
     lineHeight: 36,
     letterSpacing: -0.02,
-    color: colors.textPrimary,
+    color: c.textPrimary,
   },
   exType: {
     ...typography.monoBody,
-    color: colors.textTertiary,
+    color: c.textTertiary,
     marginTop: spacing.xs,
     letterSpacing: 0.06,
   },
   logCard: {
     marginHorizontal: spacing.xxl,
     marginBottom: 14,
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: c.surfaceElevated,
     borderWidth: 0.5,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: radii.card,
     padding: spacing.xl,
   },
   setLabel: {
     ...typography.monoLabel,
-    color: colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 0.1,
     textTransform: 'uppercase',
     marginBottom: spacing.lg,
@@ -938,7 +968,7 @@ const styles = StyleSheet.create({
   },
   stepperLabel: {
     ...typography.monoSmall,
-    color: colors.textMuted,
+    color: c.textMuted,
   },
   stepperControls: {
     flexDirection: 'row',
@@ -949,19 +979,19 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: radii.dot,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
     borderWidth: 0.5,
-    borderColor: colors.borderActive,
+    borderColor: c.borderActive,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepBtnText: {
     ...typography.monoBody,
-    color: colors.textSecondary,
+    color: c.textSecondary,
   },
   stepVal: {
     ...typography.monoBody,
-    color: colors.textPrimary,
+    color: c.textPrimary,
     minWidth: 70,
     textAlign: 'center',
   },
@@ -973,32 +1003,32 @@ const styles = StyleSheet.create({
   },
   stepValInput: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.gold,
+    borderBottomColor: c.gold,
     paddingVertical: 0,
     paddingHorizontal: 4,
   },
   stepUnit: {
     ...typography.monoSmall,
-    color: colors.textTertiary,
+    color: c.textTertiary,
   },
   prevBest: {
     ...typography.monoSmall,
-    color: colors.textMuted,
+    color: c.textMuted,
     paddingTop: spacing.sm,
   },
   validationError: {
     marginHorizontal: spacing.xxl,
     marginBottom: spacing.md,
-    backgroundColor: '#1a0808',
+    backgroundColor: c.dangerSurface,
     borderWidth: 0.5,
-    borderColor: '#5a1a1a',
+    borderColor: c.dangerBorder,
     borderRadius: radii.icon,
     padding: spacing.md,
     alignItems: 'center',
   },
   validationErrorText: {
     ...typography.monoSmall,
-    color: colors.danger,
+    color: c.danger,
   },
   spacerLg: {
     height: spacing.lg,
@@ -1013,11 +1043,11 @@ const styles = StyleSheet.create({
   },
   completeIcon: {
     fontSize: 40,
-    color: colors.success,
+    color: c.success,
   },
   completeText: {
     ...typography.monoBody,
-    color: colors.success,
+    color: c.success,
     textAlign: 'center',
   },
   // Rest timer styles
@@ -1029,14 +1059,14 @@ const styles = StyleSheet.create({
   },
   restLabel: {
     ...typography.monoLabel,
-    color: colors.textTertiary,
+    color: c.textTertiary,
     letterSpacing: 0.15,
     textTransform: 'uppercase',
     marginBottom: spacing.sm,
   },
   restContext: {
     ...typography.subheading,
-    color: colors.textSecondary,
+    color: c.textSecondary,
     marginBottom: spacing.xxxl,
     textAlign: 'center',
   },
@@ -1055,14 +1085,14 @@ const styles = StyleSheet.create({
     fontSize: 42,
     lineHeight: 42,
     letterSpacing: -0.04,
-    color: colors.textPrimary,
+    color: c.textPrimary,
   },
   restTimeExpired: {
-    color: colors.success,
+    color: c.success,
   },
   restTimeLabel: {
     ...typography.monoSmall,
-    color: colors.textTertiary,
+    color: c.textTertiary,
     letterSpacing: 0.12,
     textTransform: 'uppercase',
     marginTop: spacing.sm,
@@ -1075,28 +1105,28 @@ const styles = StyleSheet.create({
   },
   restAdjBtn: {
     flex: 1,
-    backgroundColor: colors.surfaceInteractive,
+    backgroundColor: c.surfaceInteractive,
     borderWidth: 0.5,
-    borderColor: colors.borderActive,
+    borderColor: c.borderActive,
     borderRadius: radii.dot,
     paddingVertical: spacing.lg,
     alignItems: 'center',
   },
   restAdjBtnText: {
     ...typography.body,
-    color: colors.textSecondary,
+    color: c.textSecondary,
     letterSpacing: 0.04,
   },
   restSkipBtn: {
     width: '100%',
-    backgroundColor: colors.gold,
+    backgroundColor: c.gold,
     borderRadius: radii.row,
     paddingVertical: 15,
     alignItems: 'center',
   },
   restSkipBtnText: {
     ...typography.cta,
-    color: '#0f0f0f',
+    color: c.blackText,
     textTransform: 'uppercase',
   },
   // Finished styles
@@ -1107,19 +1137,19 @@ const styles = StyleSheet.create({
   },
   finishedIcon: {
     fontSize: 48,
-    color: colors.success,
+    color: c.success,
   },
   finishedTitle: {
     fontFamily: 'BarlowCondensed_800ExtraBold',
     fontSize: 32,
     lineHeight: 32,
     letterSpacing: -0.02,
-    color: colors.textPrimary,
+    color: c.textPrimary,
     textAlign: 'center',
   },
   finishedSub: {
     ...typography.monoBody,
-    color: colors.textTertiary,
+    color: c.textTertiary,
   },
   finishedActions: {
     width: '100%',

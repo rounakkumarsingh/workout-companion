@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -9,7 +9,9 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
-import { colors, typography, radii, spacing } from '@/src/theme';
+import { typography, radii, spacing } from '@/src/theme';
+import { useColors } from '@/src/theme';
+import type { ColorSet } from '@/src/theme';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { ActiveExercise } from '@/src/features/workout-session/types';
 
@@ -30,6 +32,8 @@ const CHECK_LENGTH = 28;
 const SHIMMER_WIDTH = 4;
 
 export function ExerciseRow({ exercise, status, progressionStatus, icon, spec, onPress, onLongPress }: ExerciseRowProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   console.log('[ExerciseRow] rendered:', exercise.exerciseName, 'status:', status);
   const reducedMotion = useReducedMotion();
   const prevStatus = useRef(status);
@@ -164,11 +168,11 @@ export function ExerciseRow({ exercise, status, progressionStatus, icon, spec, o
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: ColorSet) => StyleSheet.create({
   row: {
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: c.surfaceElevated,
     borderWidth: 0.5,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: radii.row,
     paddingVertical: spacing.lg,
     paddingHorizontal: 14,
@@ -179,12 +183,12 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   rowDone: {
-    borderColor: colors.successBorder,
-    backgroundColor: colors.successSurface,
+    borderColor: c.successBorder,
+    backgroundColor: c.successSurface,
   },
   rowActive: {
-    borderColor: colors.gold,
-    backgroundColor: colors.goldSurface,
+    borderColor: c.gold,
+    backgroundColor: c.goldSurface,
   },
   shimmer: {
     position: 'absolute',
@@ -192,29 +196,29 @@ const styles = StyleSheet.create({
     left: 0,
     width: SHIMMER_WIDTH,
     height: '100%',
-    backgroundColor: colors.gold,
+    backgroundColor: c.gold,
     opacity: 0.12,
   },
   flashOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.success,
+    backgroundColor: c.success,
     borderRadius: radii.row,
   },
   iconWrap: {
     width: 34,
     height: 34,
     borderRadius: radii.icon,
-    backgroundColor: colors.border,
+    backgroundColor: c.border,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
     position: 'relative',
   },
   iconDone: {
-    backgroundColor: colors.successDim,
+    backgroundColor: c.successDim,
   },
   iconActive: {
-    backgroundColor: colors.goldDim,
+    backgroundColor: c.goldDim,
   },
   icon: {
     fontSize: 13,
@@ -226,13 +230,13 @@ const styles = StyleSheet.create({
   },
   name: {
     ...typography.exerciseName,
-    color: colors.textPrimary,
+    color: c.textPrimary,
   },
   nameDone: {
-    color: colors.successText,
+    color: c.successText,
   },
   nameActive: {
-    color: colors.gold,
+    color: c.gold,
   },
   specRow: {
     flexDirection: 'row',
@@ -241,60 +245,60 @@ const styles = StyleSheet.create({
   },
   spec: {
     ...typography.monoBody,
-    color: colors.textTertiary,
+    color: c.textTertiary,
   },
   specDone: {
-    color: colors.successDim,
+    color: c.successDim,
   },
   specActive: {
-    color: colors.goldDim,
+    color: c.goldDim,
   },
   check: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 1.5,
-    borderColor: colors.textMuted,
+    borderColor: c.textMuted,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
     position: 'relative',
   },
   checkDone: {
-    backgroundColor: colors.success,
-    borderColor: colors.success,
+    backgroundColor: c.success,
+    borderColor: c.success,
   },
   checkActive: {
-    borderColor: colors.gold,
+    borderColor: c.gold,
   },
   chevron: {
     fontSize: 16,
-    color: colors.textMuted,
+    color: c.textMuted,
     fontWeight: '700',
     lineHeight: 18,
   },
   chevronActive: {
-    color: colors.gold,
+    color: c.gold,
   },
   progressionBadge: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: colors.successDim,
+    backgroundColor: c.successDim,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: spacing.sm,
     flexShrink: 0,
   },
   progressionAlmost: {
-    backgroundColor: colors.goldDim,
+    backgroundColor: c.goldDim,
   },
   progressionIcon: {
     fontSize: 12,
-    color: colors.successText,
+    color: c.successText,
     fontWeight: '700',
   },
   progressionAlmostIcon: {
-    color: colors.gold,
+    color: c.gold,
   },
 });

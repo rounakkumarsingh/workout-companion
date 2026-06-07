@@ -1,0 +1,583 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@400;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+.app{font-family:'Barlow Condensed',sans-serif;background:#0d0d0d;color:#f0ede8;width:100%;max-width:390px;margin:0 auto;border-radius:20px;overflow:hidden;position:relative}
+.screen{display:none;flex-direction:column;min-height:700px}
+.screen.active{display:flex}
+.nav{display:flex;justify-content:space-around;background:#111;border-top:0.5px solid #1e1e1e;padding:10px 0 6px;margin-top:auto}
+.ni{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 12px;border-radius:8px}
+.ni i{font-size:20px;color:#3a3a3a}
+.ni span{font-size:9px;color:#3a3a3a;letter-spacing:.1em;text-transform:uppercase;font-family:'Space Mono',monospace}
+.ni.on i,.ni.on span{color:#e8c547}
+.hdr{padding:20px 20px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.hdr-left{}
+.eyebrow{font-size:10px;color:#555;letter-spacing:.12em;text-transform:uppercase;font-family:'Space Mono',monospace}
+.h1{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1;margin-top:2px}
+.streak-box{background:#1a1a1a;border:0.5px solid #2a2a2a;border-radius:10px;padding:7px 12px;text-align:center}
+.streak-num{font-size:26px;font-weight:800;font-family:'Space Mono',monospace;line-height:1;color:#e8c547}
+.streak-lbl{font-size:9px;color:#666;letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
+.divider{height:.5px;background:#1e1e1e;margin:14px 20px}
+.sec{font-size:10px;color:#555;letter-spacing:.12em;text-transform:uppercase;font-family:'Space Mono',monospace;padding:0 20px;margin-bottom:8px}
+.cta{display:block;margin:0 20px 8px;background:#e8c547;color:#0d0d0d;border:none;border-radius:12px;width:calc(100% - 40px);padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.ghost{display:block;margin:0 20px 8px;background:transparent;color:#555;border:.5px solid #2a2a2a;border-radius:12px;width:calc(100% - 40px);padding:11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.danger{display:block;margin:0 20px 8px;background:#1a0808;color:#e06060;border:.5px solid #5a1a1a;border-radius:12px;width:calc(100% - 40px);padding:11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.back-btn{background:none;border:none;color:#555;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding:14px 20px 4px;display:flex;align-items:center;gap:5px}
+.back-btn i{font-size:14px}
+.spacer{flex:1}
+.week-strip{display:flex;gap:5px;padding:0 20px 14px}
+.wd{flex:1;height:42px;border-radius:9px;background:#141414;border:.5px solid #1e1e1e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+.wd.done{background:#111812;border-color:#1e3a1e}
+.wd.today{background:#191700;border-color:#e8c547}
+.wd.rest{background:#111}
+.wd-l{font-size:9px;color:#333;letter-spacing:.06em;text-transform:uppercase}
+.wd.done .wd-l{color:#2e5a2e}.wd.today .wd-l{color:#8a7520}
+.wd-p{width:5px;height:5px;border-radius:50%;background:#1e1e1e}
+.wd.done .wd-p{background:#3a7a3a}.wd.today .wd-p{background:#e8c547}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:0 20px 14px}
+.stat{background:#1a1a1a;border:.5px solid #222;border-radius:10px;padding:11px;text-align:center}
+.stat-v{font-size:20px;font-weight:700;font-family:'Space Mono',monospace;line-height:1}
+.stat-l{font-size:9px;color:#555;letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.ex-list{padding:0 20px;display:flex;flex-direction:column;gap:7px}
+.ex{background:#161616;border:.5px solid #222;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.ex.done{border-color:#2a4a2a;background:#111812}
+.ex.active{border-color:#e8c547;background:#191700}
+.ex-ico{width:34px;height:34px;border-radius:8px;background:#1e1e1e;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ex.done .ex-ico{background:#192a19}.ex.active .ex-ico{background:#252100}
+.ex-info{flex:1}
+.ex-name{font-size:16px;font-weight:700;line-height:1}
+.ex.done .ex-name{color:#4d7a4d}.ex.active .ex-name{color:#e8c547}
+.ex-spec{font-size:11px;color:#555;margin-top:2px;font-family:'Space Mono',monospace}
+.ex.done .ex-spec{color:#2e5a2e}.ex.active .ex-spec{color:#8a7520}
+.ex-chk{width:22px;height:22px;border-radius:50%;border:1.5px solid #2a2a2a;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.ex.done .ex-chk{background:#3a7a3a;border-color:#3a7a3a;color:#fff;font-size:11px}
+.ex.active .ex-chk{border-color:#e8c547}
+.pills{display:flex;gap:6px;padding:0 20px 14px;flex-wrap:wrap}
+.pill{background:#1a1a1a;border:.5px solid #2a2a2a;border-radius:20px;padding:5px 12px;font-size:12px;font-family:'Space Mono',monospace;color:#888;cursor:pointer}
+.pill.done{background:#192a19;border-color:#2a5a2a;color:#4d9a4d}
+.pill.cur{background:#252100;border-color:#e8c547;color:#e8c547}
+.ring-wrap{display:flex;justify-content:center;padding:18px 20px 10px;position:relative}
+.ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.ring-pct{font-size:38px;font-weight:800;font-family:'Space Mono',monospace;line-height:1}
+.ring-sub{font-size:10px;color:#666;letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
+</style>
+
+<h2 class="sr-only">Complete workout tracker prototype — all 9 screens navigable including onboarding, today, rest timer, exercise detail, PR celebration, session complete, missed session, mid-workout resume, history, and plan</h2>
+
+<div style="background:var(--color-background-secondary);border-radius:16px;padding:12px">
+
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+<button class="sw on" data-s="s-ob" onclick="sw(this)">Onboarding</button>
+<button class="sw" data-s="s-zero" onclick="sw(this)">Day 1</button>
+<button class="sw" data-s="s-today" onclick="sw(this)">Today</button>
+<button class="sw" data-s="s-detail" onclick="sw(this)">Exercise</button>
+<button class="sw" data-s="s-rest" onclick="sw(this)">Rest Timer</button>
+<button class="sw" data-s="s-pr" onclick="sw(this)">PR!</button>
+<button class="sw" data-s="s-done" onclick="sw(this)">Complete</button>
+<button class="sw" data-s="s-missed" onclick="sw(this)">Missed</button>
+<button class="sw" data-s="s-resume" onclick="sw(this)">Resume</button>
+<button class="sw" data-s="s-history" onclick="sw(this)">History</button>
+<button class="sw" data-s="s-plan" onclick="sw(this)">Plan</button>
+<button class="sw" data-s="s-restday" onclick="sw(this)">Rest Day</button>
+</div>
+
+<style>
+.sw{background:#1a1a1a;border:.5px solid #2a2a2a;border-radius:8px;padding:5px 11px;font-size:11px;font-family:'Space Mono',monospace;color:#666;cursor:pointer;white-space:nowrap}
+.sw.on{background:#252100;border-color:#e8c547;color:#e8c547}
+</style>
+
+<div class="app">
+
+<!-- ONBOARDING -->
+<div class="screen active" id="s-ob">
+  <div style="padding:44px 24px 24px;text-align:center">
+    <div style="font-size:54px;margin-bottom:14px">💪</div>
+    <div style="font-size:42px;font-weight:800;letter-spacing:-.02em;line-height:1">Let's get<br>to work.</div>
+    <div style="font-size:14px;color:#666;margin-top:10px;line-height:1.5">Your programme is loaded.<br>Here's how this works.</div>
+  </div>
+  <div style="padding:0 20px;display:flex;flex-direction:column;gap:9px">
+    <div style="background:#161616;border:.5px solid #222;border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:13px">
+      <div style="width:32px;height:32px;border-radius:50%;border:1.5px solid #e8c547;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#e8c547;font-family:'Space Mono',monospace;flex-shrink:0">1</div>
+      <div><div style="font-size:16px;font-weight:700">Open on workout days</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;margin-top:2px">Your plan tells you what to do, when</div></div>
+    </div>
+    <div style="background:#161616;border:.5px solid #222;border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:13px">
+      <div style="width:32px;height:32px;border-radius:50%;border:1.5px solid #e8c547;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#e8c547;font-family:'Space Mono',monospace;flex-shrink:0">2</div>
+      <div><div style="font-size:16px;font-weight:700">Log each set as you go</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;margin-top:2px">Tap "Log Set" after every set</div></div>
+    </div>
+    <div style="background:#161616;border:.5px solid #222;border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:13px">
+      <div style="width:32px;height:32px;border-radius:50%;border:1.5px solid #e8c547;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#e8c547;font-family:'Space Mono',monospace;flex-shrink:0">3</div>
+      <div><div style="font-size:16px;font-weight:700">Rest timer auto-starts</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;margin-top:2px">Default 90s — adjust anytime</div></div>
+    </div>
+    <div style="background:#161616;border:.5px solid #222;border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:13px">
+      <div style="width:32px;height:32px;border-radius:50%;border:1.5px solid #e8c547;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#e8c547;font-family:'Space Mono',monospace;flex-shrink:0">4</div>
+      <div><div style="font-size:16px;font-weight:700">Build your streak</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;margin-top:2px">Don't break the chain</div></div>
+    </div>
+  </div>
+  <div style="margin:14px 20px;background:#191700;border:.5px solid #3a3000;border-radius:12px;padding:13px 15px">
+    <div style="font-size:10px;color:#666;font-family:'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Your programme — PPL 5-day</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">
+      <span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Mon — Push A</span>
+      <span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Tue — Legs</span>
+      <span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Wed — Pull</span>
+      <span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Thu — Rest</span>
+      <span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Fri — Push B</span>
+    </div>
+  </div>
+  <button class="cta" onclick="go('s-zero')">Start Day 1 →</button>
+  <div style="height:16px"></div>
+</div>
+
+<!-- DAY 1 ZERO STATE -->
+<div class="screen" id="s-zero">
+  <div class="hdr">
+    <div><div class="eyebrow">Monday · Week 1</div><div class="h1">Push Day A</div></div>
+    <div class="streak-box"><div class="streak-num" style="color:#333">0</div><div class="streak-lbl">Streak</div></div>
+  </div>
+  <div style="padding:16px 20px 0">
+    <div class="week-strip" style="padding:0 0 0">
+      <div class="wd today"><div class="wd-l">M</div><div class="wd-p"></div></div>
+      <div class="wd"><div class="wd-l">T</div><div class="wd-p"></div></div>
+      <div class="wd"><div class="wd-l">W</div><div class="wd-p"></div></div>
+      <div class="wd"><div class="wd-l">T</div><div class="wd-p"></div></div>
+      <div class="wd"><div class="wd-l">F</div><div class="wd-p"></div></div>
+      <div class="wd"><div class="wd-l">S</div><div class="wd-p"></div></div>
+      <div class="wd"><div class="wd-l">S</div><div class="wd-p"></div></div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px">
+    <svg width="110" height="110" viewBox="0 0 110 110" style="margin-bottom:18px">
+      <circle cx="55" cy="55" r="46" fill="none" stroke="#1e1e1e" stroke-width="7" stroke-dasharray="6 5"/>
+      <text x="55" y="50" text-anchor="middle" font-family="'Space Mono',monospace" font-size="20" font-weight="700" fill="#2a2a2a">0%</text>
+      <text x="55" y="66" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-size="11" fill="#2a2a2a" letter-spacing="2">READY</text>
+    </svg>
+    <div style="font-size:26px;font-weight:800">Ready when you are</div>
+    <div style="font-size:13px;color:#555;margin-top:8px;line-height:1.5;max-width:240px">Your first session is loaded. Start your first set to begin the clock.</div>
+  </div>
+  <div style="margin:0 20px 12px;background:#191700;border:.5px solid #3a3000;border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
+    <div style="font-size:16px;flex-shrink:0">💡</div>
+    <div style="font-size:12px;color:#8a7520;line-height:1.4;font-family:'Space Mono',monospace">First time? Start lighter than you think. Increase weight next session.</div>
+  </div>
+  <button class="cta" onclick="go('s-today')">Begin Session →</button>
+  <div style="height:16px"></div>
+</div>
+
+<!-- TODAY (ACTIVE SESSION) -->
+<div class="screen" id="s-today">
+  <div class="hdr">
+    <div><div class="eyebrow">Friday · Week 4</div><div class="h1">Push Day A</div></div>
+    <div class="streak-box"><div class="streak-num">12</div><div class="streak-lbl">Streak</div></div>
+  </div>
+  <div class="ring-wrap">
+    <svg width="150" height="150" viewBox="0 0 150 150">
+      <circle cx="75" cy="75" r="63" fill="none" stroke="#1e1e1e" stroke-width="8"/>
+      <circle cx="75" cy="75" r="63" fill="none" stroke="#2d4a2d" stroke-width="8" stroke-dasharray="395.84" stroke-dashoffset="138.54" stroke-linecap="round" transform="rotate(-90 75 75)"/>
+      <circle cx="75" cy="75" r="49" fill="none" stroke="#1e1e1e" stroke-width="6"/>
+      <circle cx="75" cy="75" r="49" fill="none" stroke="#e8c547" stroke-width="6" stroke-dasharray="307.88" stroke-dashoffset="76.97" stroke-linecap="round" transform="rotate(-90 75 75)"/>
+    </svg>
+    <div class="ring-center"><div class="ring-pct">65%</div><div class="ring-sub">Complete</div></div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-v">4<span style="font-size:11px;color:#555">/6</span></div><div class="stat-l">Sets</div></div>
+    <div class="stat"><div class="stat-v">42<span style="font-size:10px;color:#555">m</span></div><div class="stat-l">Elapsed</div></div>
+    <div class="stat"><div class="stat-v" style="color:#e8c547">4.2k</div><div class="stat-l">KCal</div></div>
+  </div>
+  <div class="divider"></div>
+  <div class="sec">This week</div>
+  <div class="week-strip">
+    <div class="wd done"><div class="wd-l">M</div><div class="wd-p"></div></div>
+    <div class="wd done"><div class="wd-l">T</div><div class="wd-p"></div></div>
+    <div class="wd done"><div class="wd-l">W</div><div class="wd-p"></div></div>
+    <div class="wd rest"><div class="wd-l">T</div><div class="wd-p"></div></div>
+    <div class="wd today"><div class="wd-l">F</div><div class="wd-p"></div></div>
+    <div class="wd"><div class="wd-l">S</div><div class="wd-p"></div></div>
+    <div class="wd"><div class="wd-l">S</div><div class="wd-p"></div></div>
+  </div>
+  <div class="divider"></div>
+  <div class="sec">Exercises</div>
+  <div class="ex-list">
+    <div class="ex done" onclick="go('s-detail')"><div class="ex-ico">🏋️</div><div class="ex-info"><div class="ex-name">Bench Press</div><div class="ex-spec">4×8 · 80kg</div></div><div class="ex-chk">✓</div></div>
+    <div class="ex done" onclick="go('s-detail')"><div class="ex-ico">💪</div><div class="ex-info"><div class="ex-name">Overhead Press</div><div class="ex-spec">3×10 · 50kg</div></div><div class="ex-chk">✓</div></div>
+    <div class="ex active" onclick="go('s-detail')"><div class="ex-ico">🔁</div><div class="ex-info"><div class="ex-name">Incline Dumbbell</div><div class="ex-spec">3×12 · 24kg</div></div><div class="ex-chk"></div></div>
+    <div class="ex" onclick="go('s-detail')"><div class="ex-ico">📐</div><div class="ex-info"><div class="ex-name">Tricep Pushdown</div><div class="ex-spec">3×15 · Cable</div></div><div class="ex-chk"></div></div>
+  </div>
+  <div style="height:10px"></div>
+  <div class="sec">Current set — Incline Dumbbell</div>
+  <div class="pills"><span class="pill done">Set 1 ✓</span><span class="pill done">Set 2 ✓</span><span class="pill cur">Set 3 →</span></div>
+  <button class="cta" onclick="go('s-rest')">Log Set → Rest Timer</button>
+  <button class="ghost" onclick="go('s-detail')">View Exercise Detail</button>
+  <div class="nav">
+    <div class="ni on" onclick="go('s-today')"><i class="ti ti-bolt" aria-hidden="true"></i><span>Today</span></div>
+    <div class="ni" onclick="go('s-plan')"><i class="ti ti-layout-list" aria-hidden="true"></i><span>Plan</span></div>
+    <div class="ni" onclick="go('s-history')"><i class="ti ti-calendar" aria-hidden="true"></i><span>History</span></div>
+  </div>
+</div>
+
+<!-- EXERCISE DETAIL -->
+<div class="screen" id="s-detail">
+  <button class="back-btn" onclick="go('s-today')"><i class="ti ti-arrow-left"></i>Today</button>
+  <div style="padding:8px 20px 16px">
+    <div style="font-size:36px;font-weight:800;letter-spacing:-.02em;line-height:1">Incline Dumbbell</div>
+    <div style="font-size:12px;color:#555;font-family:'Space Mono',monospace;margin-top:4px;letter-spacing:.06em">CHEST · COMPOUND · 3 SETS</div>
+  </div>
+  <div style="margin:0 20px 14px;background:#161616;border:.5px solid #222;border-radius:13px;padding:16px">
+    <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:11px">Working weight</div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <button style="width:42px;height:42px;border-radius:9px;background:#1e1e1e;border:.5px solid #2a2a2a;font-size:22px;color:#888;cursor:pointer;font-family:'Space Mono',monospace;display:flex;align-items:center;justify-content:center" onclick="adjW(-2.5)">−</button>
+      <div style="flex:1;text-align:center;font-size:46px;font-weight:700;font-family:'Space Mono',monospace;line-height:1" id="wdisp">24<span style="font-size:16px;color:#555">kg</span></div>
+      <button style="width:42px;height:42px;border-radius:9px;background:#1e1e1e;border:.5px solid #2a2a2a;font-size:22px;color:#888;cursor:pointer;font-family:'Space Mono',monospace;display:flex;align-items:center;justify-content:center" onclick="adjW(2.5)">+</button>
+    </div>
+  </div>
+  <div class="sec">Set log</div>
+  <div style="padding:0 20px;display:flex;flex-direction:column;gap:6px">
+    <div style="background:#111812;border:.5px solid #2a4a2a;border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px">
+      <div style="font-size:11px;color:#2e5a2e;font-family:'Space Mono',monospace;width:38px">Set 1</div>
+      <div style="flex:1;font-size:17px;font-weight:700;color:#4d7a4d">12 reps</div>
+      <div style="font-size:12px;color:#2e5a2e;font-family:'Space Mono',monospace">24kg</div>
+      <div style="color:#3a7a3a;font-size:13px">✓</div>
+    </div>
+    <div style="background:#111812;border:.5px solid #2a4a2a;border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px">
+      <div style="font-size:11px;color:#2e5a2e;font-family:'Space Mono',monospace;width:38px">Set 2</div>
+      <div style="flex:1;font-size:17px;font-weight:700;color:#4d7a4d">12 reps</div>
+      <div style="font-size:12px;color:#2e5a2e;font-family:'Space Mono',monospace">24kg</div>
+      <div style="color:#3a7a3a;font-size:13px">✓</div>
+    </div>
+    <div style="background:#191700;border:.5px solid #e8c547;border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px">
+      <div style="font-size:11px;color:#8a7520;font-family:'Space Mono',monospace;width:38px">Set 3</div>
+      <div style="flex:1;font-size:17px;font-weight:700;color:#e8c547">12 reps</div>
+      <div style="font-size:12px;color:#8a7520;font-family:'Space Mono',monospace">24kg</div>
+      <div style="color:#e8c547;font-size:13px">→</div>
+    </div>
+  </div>
+  <div style="padding:12px 20px 6px;font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Rate of effort (RPE)</div>
+  <div style="display:flex;gap:6px;padding:0 20px 12px" id="rpe-row">
+    <button class="rpe-b" onclick="selRpe(this)">6</button>
+    <button class="rpe-b" onclick="selRpe(this)">7</button>
+    <button class="rpe-b on" onclick="selRpe(this)">8</button>
+    <button class="rpe-b" onclick="selRpe(this)">9</button>
+    <button class="rpe-b" onclick="selRpe(this)">10</button>
+  </div>
+  <div style="padding:0 20px 12px;font-size:11px;color:#3a3a3a;font-family:'Space Mono',monospace">Previous best: 3×12 @ 24kg · RPE 8</div>
+  <button class="cta" onclick="go('s-rest')">Complete Set → Rest</button>
+  <button class="ghost" onclick="go('s-pr')">Finish Workout</button>
+  <div style="height:16px"></div>
+</div>
+
+<style>
+.rpe-b{flex:1;background:#1a1a1a;border:.5px solid #2a2a2a;border-radius:9px;padding:10px 4px;font-family:'Space Mono',monospace;font-size:13px;color:#666;cursor:pointer}
+.rpe-b.on{background:#252100;border-color:#e8c547;color:#e8c547}
+</style>
+
+<!-- REST TIMER -->
+<div class="screen" id="s-rest">
+  <div style="padding:22px 20px 0;text-align:center">
+    <div style="font-size:10px;color:#555;letter-spacing:.15em;text-transform:uppercase;font-family:'Space Mono',monospace">Rest Timer</div>
+    <div style="font-size:20px;font-weight:700;color:#888;margin-top:5px">After <span style="color:#f0ede8">Set 2 · Incline Dumbbell</span></div>
+  </div>
+  <div style="display:flex;justify-content:center;align-items:center;padding:28px 20px 18px;position:relative">
+    <svg width="220" height="220" viewBox="0 0 220 220">
+      <circle cx="110" cy="110" r="96" fill="none" stroke="#1e1e1e" stroke-width="7"/>
+      <circle cx="110" cy="110" r="96" fill="none" stroke="#e8c547" stroke-width="7" stroke-dasharray="603.19" stroke-dashoffset="251.33" id="rarc" stroke-linecap="round" transform="rotate(-90 110 110)"/>
+    </svg>
+    <div style="position:absolute;text-align:center">
+      <div style="font-size:60px;font-weight:700;font-family:'Space Mono',monospace;line-height:1;letter-spacing:-.04em" id="rdisplay">1:24</div>
+      <div style="font-size:11px;color:#555;letter-spacing:.12em;text-transform:uppercase;margin-top:5px">Remaining</div>
+    </div>
+  </div>
+  <div style="margin:0 20px 12px;background:#161616;border:.5px solid #222;border-radius:13px;padding:15px">
+    <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:9px">Up next</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:26px">🔁</div>
+      <div>
+        <div style="font-size:18px;font-weight:700">Incline Dumbbell</div>
+        <div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;margin-top:2px">Set 3 of 3 · 12 reps · 24kg</div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:7px;padding:0 20px 12px">
+    <button style="flex:1;background:#1a1a1a;border:.5px solid #2a2a2a;border-radius:9px;padding:11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:#888;cursor:pointer;letter-spacing:.04em" onclick="adjR(-15)">−15s</button>
+    <button style="flex:1;background:#1a1a1a;border:.5px solid #2a2a2a;border-radius:9px;padding:11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:#888;cursor:pointer;letter-spacing:.04em" onclick="adjR(15)">+15s</button>
+    <button style="flex:1;background:#1a1a1a;border:.5px solid #2a2a2a;border-radius:9px;padding:11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;color:#888;cursor:pointer;letter-spacing:.04em" onclick="adjR(30)">+30s</button>
+  </div>
+  <button class="cta" onclick="go('s-detail')">Skip Rest → Start Set</button>
+  <button class="ghost" onclick="go('s-today')">← Back to Workout</button>
+  <div style="height:16px"></div>
+</div>
+
+<!-- PR CELEBRATION -->
+<div class="screen" id="s-pr">
+  <div style="height:7px;background:linear-gradient(90deg,#e8c547,#e87a47,#47e8a8,#47a8e8,#e847e8,#e8c547)"></div>
+  <div style="padding:28px 20px 16px;text-align:center">
+    <div style="font-size:56px;margin-bottom:10px">🏆</div>
+    <div style="display:inline-block;background:#e8c547;color:#0d0d0d;font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:10px;font-family:'Space Mono',monospace">New Personal Record</div>
+    <div style="font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.1">You just lifted<br>more than ever.</div>
+    <div style="font-size:14px;color:#666;margin-top:7px">Bench Press · Week 6</div>
+  </div>
+  <div style="margin:0 20px 12px;background:#161616;border:.5px solid #2a2a2a;border-radius:13px;padding:15px">
+    <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:11px">Bench Press — Working Weight</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="flex:1;background:#111;border:.5px solid #1e1e1e;border-radius:9px;padding:11px;text-align:center">
+        <div style="font-size:26px;font-weight:700;font-family:'Space Mono',monospace;color:#444">80<span style="font-size:13px;color:#333">kg</span></div>
+        <div style="font-size:9px;color:#444;letter-spacing:.08em;text-transform:uppercase;margin-top:3px">Previous PR</div>
+      </div>
+      <div style="font-size:20px;color:#e8c547">→</div>
+      <div style="flex:1;background:#191700;border:.5px solid #e8c547;border-radius:9px;padding:11px;text-align:center">
+        <div style="font-size:30px;font-weight:800;font-family:'Space Mono',monospace;color:#e8c547">85<span style="font-size:15px;color:#8a7520">kg</span></div>
+        <div style="font-size:9px;color:#8a7520;letter-spacing:.08em;text-transform:uppercase;margin-top:3px">New PR</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:8px;font-size:14px;color:#4d9a4d;font-family:'Space Mono',monospace">+5 kg · +6.25% improvement</div>
+  </div>
+  <div class="sec" style="margin-top:4px">Progress over 6 weeks</div>
+  <div style="display:flex;gap:4px;padding:0 20px 16px;align-items:flex-end;height:70px">
+    <div style="flex:1;height:32%;border-radius:4px 4px 0 0;background:#1e1e1e;position:relative"><span style="position:absolute;bottom:-17px;left:0;right:0;text-align:center;font-size:9px;color:#444;font-family:'Space Mono',monospace">W1</span></div>
+    <div style="flex:1;height:46%;border-radius:4px 4px 0 0;background:#1e1e1e;position:relative"><span style="position:absolute;bottom:-17px;left:0;right:0;text-align:center;font-size:9px;color:#444;font-family:'Space Mono',monospace">W2</span></div>
+    <div style="flex:1;height:56%;border-radius:4px 4px 0 0;background:#1e1e1e;position:relative"><span style="position:absolute;bottom:-17px;left:0;right:0;text-align:center;font-size:9px;color:#444;font-family:'Space Mono',monospace">W3</span></div>
+    <div style="flex:1;height:68%;border-radius:4px 4px 0 0;background:#1e1e1e;position:relative"><span style="position:absolute;bottom:-17px;left:0;right:0;text-align:center;font-size:9px;color:#444;font-family:'Space Mono',monospace">W4</span></div>
+    <div style="flex:1;height:82%;border-radius:4px 4px 0 0;background:#1e1e1e;position:relative"><span style="position:absolute;bottom:-17px;left:0;right:0;text-align:center;font-size:9px;color:#444;font-family:'Space Mono',monospace">W5</span></div>
+    <div style="flex:1;height:100%;border-radius:4px 4px 0 0;background:#e8c547;position:relative"><span style="position:absolute;bottom:-17px;left:0;right:0;text-align:center;font-size:9px;color:#8a7520;font-family:'Space Mono',monospace">W6</span></div>
+  </div>
+  <div style="height:8px"></div>
+  <button class="cta" onclick="go('s-done')">Continue → Finish Session</button>
+  <button class="ghost">Share PR</button>
+  <div style="height:16px"></div>
+</div>
+
+<!-- SESSION COMPLETE -->
+<div class="screen" id="s-done">
+  <div style="padding:36px 20px 20px;text-align:center">
+    <div style="font-size:54px;margin-bottom:10px">🎯</div>
+    <div style="font-size:40px;font-weight:800;letter-spacing:-.02em;color:#e8c547">Session Done</div>
+    <div style="font-size:14px;color:#555;margin-top:6px">Push Day A · Friday 30 May</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 20px 14px">
+    <div class="stat"><div class="stat-v">58<span style="font-size:11px;color:#555">m</span></div><div class="stat-l">Duration</div></div>
+    <div class="stat"><div class="stat-v" style="color:#e8c547">13</div><div class="stat-l">Day Streak</div></div>
+    <div class="stat"><div class="stat-v">18</div><div class="stat-l">Sets Logged</div></div>
+    <div class="stat"><div class="stat-v">5.8k</div><div class="stat-l">Est. KCal</div></div>
+  </div>
+  <div style="margin:0 20px 12px;background:#191700;border:.5px solid #e8c547;border-radius:13px;padding:15px;display:flex;align-items:center;gap:14px">
+    <div style="font-size:38px;font-weight:800;font-family:'Space Mono',monospace;color:#e8c547;line-height:1">13</div>
+    <div>
+      <div style="font-size:16px;font-weight:700;color:#e8c547">Day Streak 🔥</div>
+      <div style="font-size:12px;color:#8a7520;margin-top:2px">Next session Saturday</div>
+    </div>
+  </div>
+  <div class="sec">Exercises completed</div>
+  <div style="padding:0 20px;display:flex;flex-direction:column;gap:6px">
+    <div style="background:#111812;border:.5px solid #1e3a1e;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px"><div style="font-size:18px">🏋️</div><div style="flex:1;font-size:15px;font-weight:600;color:#4d7a4d">Bench Press</div><div style="font-size:11px;color:#2e5a2e;font-family:'Space Mono',monospace">4×8 · 80kg</div></div>
+    <div style="background:#111812;border:.5px solid #1e3a1e;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px"><div style="font-size:18px">💪</div><div style="flex:1;font-size:15px;font-weight:600;color:#4d7a4d">Overhead Press</div><div style="font-size:11px;color:#2e5a2e;font-family:'Space Mono',monospace">3×10 · 50kg</div></div>
+    <div style="background:#111812;border:.5px solid #1e3a1e;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px"><div style="font-size:18px">🔁</div><div style="flex:1;font-size:15px;font-weight:600;color:#4d7a4d">Incline Dumbbell</div><div style="font-size:11px;color:#2e5a2e;font-family:'Space Mono',monospace">3×12 · 24kg</div></div>
+    <div style="background:#111812;border:.5px solid #1e3a1e;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px"><div style="font-size:18px">📐</div><div style="flex:1;font-size:15px;font-weight:600;color:#4d7a4d">Tricep Pushdown</div><div style="font-size:11px;color:#2e5a2e;font-family:'Space Mono',monospace">3×15 · Cable</div></div>
+  </div>
+  <div style="height:12px"></div>
+  <button class="cta" onclick="go('s-today')">Back to Home</button>
+  <div style="height:16px"></div>
+</div>
+
+<!-- MISSED SESSION -->
+<div class="screen" id="s-missed">
+  <div class="hdr" style="align-items:flex-start">
+    <div><div class="eyebrow">Wednesday · Week 4</div><div class="h1">Welcome back.</div></div>
+  </div>
+  <div style="margin:14px 20px 0;background:#150808;border:.5px solid #5a1a1a;border-radius:13px;padding:15px;display:flex;gap:12px;align-items:flex-start">
+    <div style="font-size:20px;flex-shrink:0">⚠️</div>
+    <div>
+      <div style="font-size:15px;font-weight:700;color:#e06060">You missed Pull Day</div>
+      <div style="font-size:11px;color:#804040;margin-top:3px;font-family:'Space Mono',monospace;line-height:1.4">Tuesday 27 May was skipped. Your streak has reset.</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:7px;margin:10px 20px 0">
+    <div style="flex:1;background:#161616;border:.5px solid #222;border-radius:11px;padding:11px;text-align:center">
+      <div style="font-size:26px;font-weight:800;font-family:'Space Mono',monospace;color:#444;text-decoration:line-through;line-height:1">11</div>
+      <div style="font-size:9px;color:#444;letter-spacing:.08em;text-transform:uppercase;margin-top:3px">Was</div>
+    </div>
+    <div style="flex:1;background:#150808;border:.5px solid #5a1a1a;border-radius:11px;padding:11px;text-align:center">
+      <div style="font-size:26px;font-weight:800;font-family:'Space Mono',monospace;color:#e06060;line-height:1">0</div>
+      <div style="font-size:9px;color:#804040;letter-spacing:.08em;text-transform:uppercase;margin-top:3px">Now</div>
+    </div>
+  </div>
+  <div style="padding:16px 20px 8px;font-size:10px;color:#555;letter-spacing:.12em;text-transform:uppercase;font-family:'Space Mono',monospace">What would you like to do?</div>
+  <div style="padding:0 20px;display:flex;flex-direction:column;gap:7px">
+    <div style="background:#191700;border:.5px solid #e8c547;border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:13px;cursor:pointer" onclick="go('s-today')">
+      <div style="font-size:22px">▶️</div>
+      <div style="flex:1"><div style="font-size:16px;font-weight:700;color:#e8c547">Do today's workout — Pull Day</div><div style="font-size:11px;color:#8a7520;font-family:'Space Mono',monospace;margin-top:2px">Stay on schedule, skip the missed session</div></div>
+      <div style="font-size:9px;background:#e8c547;color:#0d0d0d;padding:2px 8px;border-radius:5px;font-weight:700;font-family:'Space Mono',monospace;white-space:nowrap">Best</div>
+    </div>
+    <div style="background:#161616;border:.5px solid #222;border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:13px;cursor:pointer">
+      <div style="font-size:22px">🔁</div>
+      <div style="flex:1"><div style="font-size:16px;font-weight:700">Make up Pull Day now</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;margin-top:2px">Do yesterday's session today instead</div></div>
+    </div>
+    <div style="background:#161616;border:.5px solid #222;border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:13px;cursor:pointer">
+      <div style="font-size:22px">⏭️</div>
+      <div style="flex:1"><div style="font-size:16px;font-weight:700">Skip and continue</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;margin-top:2px">Resume the plan from tomorrow</div></div>
+    </div>
+  </div>
+  <div style="height:16px"></div>
+  <button class="cta" onclick="go('s-today')">Start Pull Day →</button>
+  <div style="height:16px"></div>
+</div>
+
+<!-- MID-WORKOUT RESUME -->
+<div class="screen" id="s-resume">
+  <div class="hdr">
+    <div><div class="eyebrow">Friday · Week 4</div><div class="h1">Welcome back.</div></div>
+  </div>
+  <div style="margin:14px 20px 0;background:#0d1a0d;border:.5px solid #1e4a1e;border-radius:13px;padding:14px 15px;display:flex;align-items:center;gap:12px">
+    <div style="width:8px;height:8px;border-radius:50%;background:#4d9a4d;flex-shrink:0;animation:pulse 1.5s infinite"></div>
+    <div><div style="font-size:14px;font-weight:700;color:#4d9a4d">Session in progress</div><div style="font-size:11px;color:#2e5a2e;font-family:'Space Mono',monospace;margin-top:2px">Left 42 min ago · Push Day A</div></div>
+  </div>
+  <div style="margin:10px 20px 0;background:#161616;border:.5px solid #222;border-radius:13px;padding:14px 15px">
+    <div style="font-size:20px;font-weight:800">Push Day A</div>
+    <div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;margin-top:3px">Started 10:24 AM · 42 min elapsed</div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:8px;height:8px;border-radius:50%;background:#3a7a3a;flex-shrink:0"></div><div style="flex:1;font-size:14px;color:#4d7a4d">Bench Press</div><div style="font-size:11px;color:#2e5a2e;font-family:'Space Mono',monospace">4/4</div></div>
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:8px;height:8px;border-radius:50%;background:#3a7a3a;flex-shrink:0"></div><div style="flex:1;font-size:14px;color:#4d7a4d">Overhead Press</div><div style="font-size:11px;color:#2e5a2e;font-family:'Space Mono',monospace">3/3</div></div>
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:8px;height:8px;border-radius:50%;background:#e8c547;flex-shrink:0"></div><div style="flex:1;font-size:14px;color:#e8c547">Incline Dumbbell</div><div style="font-size:11px;color:#8a7520;font-family:'Space Mono',monospace">2/3</div></div>
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:8px;height:8px;border-radius:50%;background:#2a2a2a;flex-shrink:0"></div><div style="flex:1;font-size:14px;color:#333">Tricep Pushdown</div><div style="font-size:11px;color:#2a2a2a;font-family:'Space Mono',monospace">0/3</div></div>
+    </div>
+    <div style="margin-top:10px"><div style="height:4px;background:#1e1e1e;border-radius:2px"><div style="height:4px;background:#e8c547;border-radius:2px;width:45%"></div></div><div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;margin-top:4px">9 of 13 sets · 45%</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 20px 0">
+    <div class="stat"><div class="stat-v">42<span style="font-size:10px;color:#555">m</span></div><div class="stat-l">Elapsed</div></div>
+    <div class="stat"><div class="stat-v">~25<span style="font-size:10px;color:#555">m</span></div><div class="stat-l">Left</div></div>
+    <div class="stat"><div class="stat-v" style="color:#e8c547">2</div><div class="stat-l">Ex. left</div></div>
+  </div>
+  <div style="height:16px"></div>
+  <button class="cta" onclick="go('s-detail')">Resume → Set 3 of Incline DB</button>
+  <button class="danger">Abandon Session</button>
+  <div style="height:16px"></div>
+</div>
+
+<!-- HISTORY -->
+<div class="screen" id="s-history">
+  <div class="hdr" style="padding-bottom:14px"><div><div class="eyebrow">Your log</div><div class="h1">History</div></div></div>
+  <div style="padding:0 20px;display:flex;flex-direction:column;gap:14px">
+    <div>
+      <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">May 2026</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="background:#161616;border:.5px solid #222;border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:12px;cursor:pointer">
+          <div style="text-align:center;width:38px;flex-shrink:0"><div style="font-size:22px;font-weight:800;font-family:'Space Mono',monospace;line-height:1">30</div><div style="font-size:9px;color:#555;letter-spacing:.06em;text-transform:uppercase">Fri</div></div>
+          <div style="flex:1"><div style="font-size:16px;font-weight:700">Push Day A</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;margin-top:2px">58min · 18 sets</div></div>
+          <div style="background:#192a19;border-radius:6px;padding:3px 9px;font-size:11px;color:#4d9a4d;font-family:'Space Mono',monospace">Done</div>
+        </div>
+        <div style="background:#161616;border:.5px solid #222;border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:12px;cursor:pointer">
+          <div style="text-align:center;width:38px;flex-shrink:0"><div style="font-size:22px;font-weight:800;font-family:'Space Mono',monospace;line-height:1">28</div><div style="font-size:9px;color:#555;letter-spacing:.06em;text-transform:uppercase">Wed</div></div>
+          <div style="flex:1"><div style="font-size:16px;font-weight:700">Pull Day</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;margin-top:2px">52min · 16 sets</div></div>
+          <div style="background:#192a19;border-radius:6px;padding:3px 9px;font-size:11px;color:#4d9a4d;font-family:'Space Mono',monospace">Done</div>
+        </div>
+        <div style="background:#161616;border:.5px solid #222;border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:12px;cursor:pointer">
+          <div style="text-align:center;width:38px;flex-shrink:0"><div style="font-size:22px;font-weight:800;font-family:'Space Mono',monospace;line-height:1">27</div><div style="font-size:9px;color:#555;letter-spacing:.06em;text-transform:uppercase">Tue</div></div>
+          <div style="flex:1"><div style="font-size:16px;font-weight:700">Legs Day</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;margin-top:2px">65min · 20 sets</div></div>
+          <div style="background:#192a19;border-radius:6px;padding:3px 9px;font-size:11px;color:#4d9a4d;font-family:'Space Mono',monospace">Done</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">April 2026</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="background:#161616;border:.5px solid #222;border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:12px;cursor:pointer">
+          <div style="text-align:center;width:38px;flex-shrink:0"><div style="font-size:22px;font-weight:800;font-family:'Space Mono',monospace;line-height:1">25</div><div style="font-size:9px;color:#555;letter-spacing:.06em;text-transform:uppercase">Fri</div></div>
+          <div style="flex:1"><div style="font-size:16px;font-weight:700">Pull Day</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;margin-top:2px">54min · 17 sets</div></div>
+          <div style="background:#192a19;border-radius:6px;padding:3px 9px;font-size:11px;color:#4d9a4d;font-family:'Space Mono',monospace">Done</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="nav">
+    <div class="ni" onclick="go('s-today')"><i class="ti ti-bolt" aria-hidden="true"></i><span>Today</span></div>
+    <div class="ni" onclick="go('s-plan')"><i class="ti ti-layout-list" aria-hidden="true"></i><span>Plan</span></div>
+    <div class="ni on" onclick="go('s-history')"><i class="ti ti-calendar" aria-hidden="true"></i><span>History</span></div>
+  </div>
+</div>
+
+<!-- PLAN -->
+<div class="screen" id="s-plan">
+  <div class="hdr" style="padding-bottom:14px"><div><div class="eyebrow">Your programme</div><div class="h1">Weekly Plan</div></div></div>
+  <div style="padding:0 20px;display:flex;flex-direction:column;gap:7px">
+    <div style="background:#161616;border:.5px solid #222;border-radius:13px;padding:13px 15px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px"><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;width:32px">MON</div><div style="font-size:20px;font-weight:800;flex:1">Push Day A</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace">4 ex.</div></div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px"><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Bench Press</span><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">OHP</span><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Incline DB</span><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Tricep Push</span></div>
+    </div>
+    <div style="background:#161616;border:.5px solid #222;border-radius:13px;padding:13px 15px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px"><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;width:32px">TUE</div><div style="font-size:20px;font-weight:800;flex:1">Legs Day</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace">5 ex.</div></div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px"><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Squat</span><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Leg Press</span><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">RDL</span><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Leg Curl</span><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Calf Raise</span></div>
+    </div>
+    <div style="background:#161616;border:.5px solid #222;border-radius:13px;padding:13px 15px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px"><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;width:32px">WED</div><div style="font-size:20px;font-weight:800;flex:1">Pull Day</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace">4 ex.</div></div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px"><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Deadlift</span><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Barbell Row</span><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Lat Pulldown</span><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Bicep Curl</span></div>
+    </div>
+    <div style="background:#111;border:.5px solid #1a1a1a;border-radius:13px;padding:13px 15px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="font-size:11px;color:#333;font-family:'Space Mono',monospace;width:32px">THU</div><div style="font-size:20px;font-weight:800;color:#333;flex:1">Rest Day</div></div>
+    </div>
+    <div style="background:#161616;border:.5px solid #222;border-radius:13px;padding:13px 15px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px"><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;width:32px">FRI</div><div style="font-size:20px;font-weight:800;flex:1">Push Day B</div><div style="font-size:11px;color:#555;font-family:'Space Mono',monospace">4 ex.</div></div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px"><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Incline Press</span><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">DB Shoulder</span><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Lateral Raise</span><span style="background:#1e1e1e;border:.5px solid #2a2a2a;border-radius:6px;padding:3px 9px;font-size:11px;color:#888">Skull Crusher</span></div>
+    </div>
+    <div style="background:#111;border:.5px solid #1a1a1a;border-radius:13px;padding:13px 15px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="font-size:11px;color:#333;font-family:'Space Mono',monospace;width:32px">SAT</div><div style="font-size:20px;font-weight:800;color:#333;flex:1">Rest Day</div></div>
+    </div>
+    <div style="background:#111;border:.5px solid #1a1a1a;border-radius:13px;padding:13px 15px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="font-size:11px;color:#333;font-family:'Space Mono',monospace;width:32px">SUN</div><div style="font-size:20px;font-weight:800;color:#333;flex:1">Rest Day</div></div>
+    </div>
+  </div>
+  <div class="spacer" style="min-height:16px"></div>
+  <div class="nav">
+    <div class="ni" onclick="go('s-today')"><i class="ti ti-bolt" aria-hidden="true"></i><span>Today</span></div>
+    <div class="ni on" onclick="go('s-plan')"><i class="ti ti-layout-list" aria-hidden="true"></i><span>Plan</span></div>
+    <div class="ni" onclick="go('s-history')"><i class="ti ti-calendar" aria-hidden="true"></i><span>History</span></div>
+  </div>
+</div>
+
+<!-- REST DAY -->
+<div class="screen" id="s-restday">
+  <div class="hdr"><div><div class="eyebrow">Thursday</div><div class="h1">Rest Day</div></div></div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px">
+    <div style="font-size:60px;margin-bottom:16px;opacity:.4">😴</div>
+    <div style="font-size:28px;font-weight:800">Recovery Day</div>
+    <div style="font-size:14px;color:#555;margin-top:8px;line-height:1.5;max-width:240px">No training today. Your muscles grow while you rest.</div>
+    <button class="ghost" style="margin-top:24px;width:200px" onclick="go('s-plan')">View Full Plan</button>
+  </div>
+  <div class="nav">
+    <div class="ni on" onclick="go('s-today')"><i class="ti ti-bolt" aria-hidden="true"></i><span>Today</span></div>
+    <div class="ni" onclick="go('s-plan')"><i class="ti ti-layout-list" aria-hidden="true"></i><span>Plan</span></div>
+    <div class="ni" onclick="go('s-history')"><i class="ti ti-calendar" aria-hidden="true"></i><span>History</span></div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+var rSec=84,rInt=null,wt=24;
+function go(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
+  document.getElementById(id).classList.add('active');
+  var map={'s-ob':0,'s-zero':1,'s-today':2,'s-detail':3,'s-rest':4,'s-pr':5,'s-done':6,'s-missed':7,'s-resume':8,'s-history':9,'s-plan':10,'s-restday':11};
+  document.querySelectorAll('.sw').forEach(function(b,i){b.classList.toggle('on',i===map[id])});
+  if(id==='s-rest') startRest();
+}
+function sw(btn){
+  document.querySelectorAll('.sw').forEach(function(b){b.classList.remove('on')});
+  btn.classList.add('on');
+  go(btn.dataset.s);
+}
+function startRest(){
+  if(rInt) clearInterval(rInt);
+  rSec=84;
+  rInt=setInterval(function(){
+    if(rSec>0){rSec--;updR();}else clearInterval(rInt);
+  },1000);
+  updR();
+}
+function updR(){
+  var m=Math.floor(rSec/60),s=rSec%60;
+  var el=document.getElementById('rdisplay');
+  if(el) el.textContent=m+':'+(s<10?'0':'')+s;
+  var arc=document.getElementById('rarc');
+  if(arc){var c=603.19;arc.setAttribute('stroke-dashoffset',(c*(1-rSec/120)).toFixed(2));}
+}
+function adjR(d){rSec=Math.max(0,rSec+d);updR();}
+function adjW(d){wt=Math.max(0,wt+d);var el=document.getElementById('wdisp');if(el)el.innerHTML=wt+'<span style="font-size:16px;color:#555">kg</span>';}
+function selRpe(btn){document.querySelectorAll('.rpe-b').forEach(function(b){b.classList.remove('on')});btn.classList.add('on');}
+</script>
