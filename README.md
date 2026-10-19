@@ -55,6 +55,17 @@ If you need native modules not available in Expo Go:
 npx eas build --profile development --platform all
 ```
 
+## Lint & format
+
+Linting uses [oxlint](https://oxc.rs/docs/guide/usage/linter) (`.oxlintrc.json`) and formatting uses [oxfmt](https://oxc.rs/docs/guide/usage/formatter) (`.oxfmtrc.json`).
+
+```sh
+npm run lint          # oxlint
+npm run lint:fix      # oxlint, applying safe fixes
+npm run format        # oxfmt, rewrite files
+npm run format:check  # oxfmt, fail if anything is unformatted
+```
+
 ## Tech stack
 
 - Expo SDK 54
