@@ -1,4 +1,4 @@
-import { eq, asc, and, or, desc, inArray, sql } from 'drizzle-orm';
+import { eq, asc, and, ne, desc, inArray, isNotNull, sql } from 'drizzle-orm';
 import { getDb } from '../client';
 import {
   exerciseLogs,
@@ -31,6 +31,7 @@ export interface ExerciseLogWithSets {
 }
 
 export interface ExerciseHistoryRow {
+  sessionId: string;
   sessionDate: string;
   weekNumber: number;
   setIndex: number;
@@ -151,13 +152,34 @@ export async function getSetLogsByExerciseLog(exerciseLogId: string) {
     .all();
 }
 
+/**
+ * History only includes working sets the user actually logged, from
+ * sessions that have ended (completed, or abandoned with logged sets).
+ * Suggested values pre-filled into unlogged sets are never history.
+ */
+function historyFilter(exerciseName: string, excludeSessionId?: string) {
+  return and(
+    eq(exerciseLogs.exerciseName, exerciseName),
+    isNotNull(workoutSetLogs.loggedAt),
+    eq(workoutSetLogs.isWarmup, 0),
+    inArray(workoutSessions.status, ['completed', 'abandoned']),
+    excludeSessionId ? ne(workoutSessions.id, excludeSessionId) : undefined,
+  );
+}
+
+/**
+ * Returns the most recent `limit` logged working sets for an exercise
+ * (matched on the exercise actually performed), in chronological order.
+ */
 export async function getExerciseHistory(
   exerciseName: string,
   limit = 50,
+  options: { excludeSessionId?: string } = {},
 ): Promise<ExerciseHistoryRow[]> {
   const db = await getDb();
-  return db
+  const rows = db
     .select({
+      sessionId: workoutSessions.id,
       sessionDate: workoutSessions.startedAt,
       weekNumber: workoutSessions.weekNumber,
       setIndex: workoutSetLogs.setIndex,
@@ -174,17 +196,65 @@ export async function getExerciseHistory(
       workoutSessions,
       eq(exerciseLogs.workoutSessionId, workoutSessions.id),
     )
+    .where(historyFilter(exerciseName, options.excludeSessionId))
+    .orderBy(desc(workoutSessions.startedAt), desc(workoutSetLogs.setIndex))
+    .limit(limit)
+    .all();
+
+  return rows.reverse();
+}
+
+/** Heaviest logged working-set weight for an exercise, excluding one session. */
+export async function getBestWorkingWeight(
+  exerciseName: string,
+  excludeSessionId: string,
+): Promise<number | null> {
+  const db = await getDb();
+  const rows = db
+    .select({
+      best: sql<number | null>`MAX(${workoutSetLogs.weight})`,
+    })
+    .from(workoutSetLogs)
+    .innerJoin(
+      exerciseLogs,
+      eq(workoutSetLogs.exerciseLogId, exerciseLogs.id),
+    )
+    .innerJoin(
+      workoutSessions,
+      eq(exerciseLogs.workoutSessionId, workoutSessions.id),
+    )
+    .where(historyFilter(exerciseName, excludeSessionId))
+    .all();
+
+  return rows[0]?.best ?? null;
+}
+
+/** Total logged working volume per performed exercise, highest first. */
+export async function getVolumeByExercise(): Promise<{ exerciseName: string; volume: number }[]> {
+  const db = await getDb();
+  return db
+    .select({
+      exerciseName: exerciseLogs.exerciseName,
+      volume: sql`SUM(${workoutSetLogs.weight} * ${workoutSetLogs.reps})`.mapWith(Number),
+    })
+    .from(workoutSetLogs)
+    .innerJoin(
+      exerciseLogs,
+      eq(workoutSetLogs.exerciseLogId, exerciseLogs.id),
+    )
+    .innerJoin(
+      workoutSessions,
+      eq(exerciseLogs.workoutSessionId, workoutSessions.id),
+    )
     .where(
       and(
-        or(
-          eq(exerciseLogs.exerciseName, exerciseName),
-          eq(exerciseLogs.prescribedExerciseName, exerciseName),
-        ),
-        eq(workoutSessions.status, 'completed'),
+        isNotNull(workoutSetLogs.loggedAt),
+        eq(workoutSetLogs.isWarmup, 0),
+        inArray(workoutSessions.status, ['completed', 'abandoned']),
       ),
     )
-    .orderBy(asc(workoutSessions.startedAt), asc(workoutSetLogs.setIndex))
-    .limit(limit)
+    .groupBy(exerciseLogs.exerciseName)
+    .orderBy(desc(sql`SUM(${workoutSetLogs.weight} * ${workoutSetLogs.reps})`))
     .all();
 }
 
@@ -203,7 +273,13 @@ export async function getTotalVolume(
       exerciseLogs,
       eq(workoutSetLogs.exerciseLogId, exerciseLogs.id),
     )
-    .where(eq(exerciseLogs.workoutSessionId, sessionId))
+    .where(
+      and(
+        eq(exerciseLogs.workoutSessionId, sessionId),
+        isNotNull(workoutSetLogs.loggedAt),
+        eq(workoutSetLogs.isWarmup, 0),
+      ),
+    )
     .all();
 
   return rows[0]?.total ?? 0;
