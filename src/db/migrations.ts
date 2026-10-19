@@ -113,6 +113,33 @@ const MIGRATIONS: { version: number; description: string; statements: string[] }
       `ALTER TABLE workout_set_logs ADD COLUMN is_warmup INTEGER NOT NULL DEFAULT 0`,
     ],
   },
+  {
+    version: 4,
+    description: 'Allow more than 3 warmup sets: relax workout_set_logs set_index CHECK for warmups',
+    statements: [
+      `CREATE TABLE workout_set_logs_new (
+        id TEXT PRIMARY KEY,
+        exercise_log_id TEXT NOT NULL,
+        set_index INTEGER NOT NULL,
+        weight REAL NOT NULL,
+        reps INTEGER NOT NULL,
+        logged_rpe REAL,
+        logged_at TEXT,
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+        is_warmup INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY (exercise_log_id) REFERENCES exercise_logs(id) ON DELETE CASCADE,
+        CHECK (set_index >= 1 AND (is_warmup = 1 OR set_index <= 3)),
+        CHECK (logged_rpe IS NULL OR (logged_rpe >= 1 AND logged_rpe <= 10))
+      )`,
+      `INSERT INTO workout_set_logs_new
+        (id, exercise_log_id, set_index, weight, reps, logged_rpe, logged_at, created_at, is_warmup)
+        SELECT id, exercise_log_id, set_index, weight, reps, logged_rpe, logged_at, created_at, is_warmup
+        FROM workout_set_logs`,
+      `DROP TABLE workout_set_logs`,
+      `ALTER TABLE workout_set_logs_new RENAME TO workout_set_logs`,
+      `CREATE INDEX IF NOT EXISTS idx_workout_set_logs_exercise ON workout_set_logs(exercise_log_id)`,
+    ],
+  },
 ];
 
 /**
@@ -122,6 +149,11 @@ const MIGRATIONS: { version: number; description: string; statements: string[] }
  * 1. The `schema_version` table may not exist yet on first run
  * 2. DDL operations (CREATE TABLE, etc.) are simpler as raw SQL
  * 3. Avoids any ORM/type issues during the startup path
+ *
+ * SQLite DDL is transactional, so each migration's statements and its
+ * schema_version row are applied in a single transaction: a migration is
+ * either fully applied and recorded, or rolled back and retried on the
+ * next launch. Errors are rethrown so the boot screen surfaces them.
  */
 export async function runMigrations(): Promise<void> {
   const rawDb = await getRawDb();
@@ -157,20 +189,20 @@ export async function runMigrations(): Promise<void> {
     /ALTER\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\S+)\s+ADD\s+(?:COLUMN\s+)?(\S+)/i;
 
   for (const migration of pending) {
-    // --- Step 1: Record the version atomically before any DDL ---
-    // SQLite DDL (CREATE TABLE, ALTER TABLE) auto-commits — it cannot
-    // be rolled back. If we wrapped everything in one transaction and
-    // a later statement failed, the DDL would persist but the version
-    // would not be recorded. On next boot the migration would be
-    // retried and fail because the table/column already exists.
-    //
-    // By recording schema_version FIRST in its own transaction, we
-    // ensure the migration is never retried — even if subsequent DDL
-    // auto-commits and a later statement fails. Idempotency guards
-    // (CREATE TABLE IF NOT EXISTS, ALTER column-exists check) prevent
-    // errors on any hypothetical re-run.
     rawDb.execSync('BEGIN IMMEDIATE');
     try {
+      for (const stmt of migration.statements) {
+        // Idempotency guard for ALTER TABLE ADD COLUMN — skip if the
+        // column already exists (databases upgraded by the previous
+        // runner may have the column without the version row).
+        const alterMatch = stmt.match(ALTER_ADD_COLUMN_RE);
+        if (alterMatch) {
+          const tableName = alterMatch[1].replace(/[`"[\]]/g, '');
+          const columnName = alterMatch[2].replace(/[`"[\]]/g, '');
+          if (columnExists(tableName, columnName)) continue;
+        }
+        rawDb.execSync(stmt);
+      }
       rawDb.runSync(
         `INSERT OR REPLACE INTO schema_version (version, description, applied_at) VALUES (?, ?, ?)`,
         migration.version,
@@ -180,41 +212,9 @@ export async function runMigrations(): Promise<void> {
       rawDb.execSync('COMMIT');
     } catch (e) {
       rawDb.execSync('ROLLBACK');
-      throw e;
-    }
-
-    // --- Step 2: Execute each DDL statement with idempotency guards ---
-    // DDL auto-commits so each statement is individually persistent.
-    // That's safe now because the version is already recorded — the
-    // migration won't be retried. Guards handle re-runs if a prior
-    // partial-apply already exists.
-    for (const stmt of migration.statements) {
-      // Idempotency guard for ALTER TABLE ADD COLUMN — skip if the
-      // column already exists (handles partial-apply from a prior
-      // failed run where DDL auto-committed before schema_version
-      // was recorded).
-      const alterMatch = stmt.match(ALTER_ADD_COLUMN_RE);
-      if (alterMatch) {
-        const tableName = alterMatch[1].replace(/[`"[\]]/g, '');
-        const columnName = alterMatch[2].replace(/[`"[\]]/g, '');
-        if (columnExists(tableName, columnName)) continue;
-      }
-
-      // Use execSync for DDL — it does not go through the
-      // prepare/execute/finalize cycle (fewer native round-trips
-      // and avoids any edge-case issues with runSync + DDL).
-      try {
-        rawDb.execSync(stmt);
-      } catch (stmtErr) {
-        // The migration version is already recorded, so this migration
-        // won't be retried. Log a warning so the developer can
-        // investigate, but don't crash the app — idempotency guards
-        // ensure safe re-runs if a prior partial-apply exists.
-        console.warn(
-          `[migrations] Statement skipped (may already be applied): ${stmt}`,
-          stmtErr,
-        );
-      }
+      throw new Error(
+        `Migration ${migration.version} failed: ${e instanceof Error ? e.message : String(e)}`,
+      );
     }
   }
 }

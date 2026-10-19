@@ -75,7 +75,6 @@ const ALL_TABLES = [
   'cardio_sessions',
   'progress_photos',
   'app_settings',
-  'schema_version',
 ] as const;
 
 export async function clearAllTables(): Promise<void> {
