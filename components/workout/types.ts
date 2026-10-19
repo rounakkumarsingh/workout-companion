@@ -17,5 +17,5 @@ export function setToInputValues(set: ActiveSet): SetInputValues {
 }
 
 export function hasSetBeenLogged(set: ActiveSet): boolean {
-  return set.weight > 0 || set.reps > 0;
+  return set.isComplete;
 }

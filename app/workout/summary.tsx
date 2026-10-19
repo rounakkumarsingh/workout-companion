@@ -15,9 +15,8 @@ import { CtaButton } from '@/components/ui/CtaButton';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { StreakBanner } from '@/components/ui/StreakBanner';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { hydrateActiveSession } from '@/src/features/workout-session';
+import { hydrateActiveSession, getCurrentStreak } from '@/src/features/workout-session';
 import { computeAllStatistics } from '@/src/features/workout-session/statistics';
-import { getActiveSession } from '@/src/db/repositories/sessions';
 import type { ActiveSession, SessionStatistics } from '@/src/features/workout-session/types';
 
 const dayNames: Record<string, string> = {
@@ -93,15 +92,7 @@ export default function WorkoutSummaryScreen() {
       setStatistics(computeAllStatistics(hydrated));
       setLoading(false);
 
-      const { getSessionCountByWeek } = await import('@/src/db/repositories/sessions');
-      const weeks = await getSessionCountByWeek();
-      const sortedWeeks = weeks.sort((a, b) => b.weekNumber - a.weekNumber);
-      let streak = 0;
-      for (const w of sortedWeeks) {
-        if (w.count >= 1) streak += w.count;
-        else break;
-      }
-      setStreakCount(streak);
+      setStreakCount(await getCurrentStreak());
     })();
   }, [sessionId]);
 
@@ -127,7 +118,7 @@ export default function WorkoutSummaryScreen() {
     : 0;
   const completedSets = session
     ? session.exercises.reduce(
-        (sum, ex) => sum + ex.sets.filter((s) => s.weight > 0 || s.reps > 0).length,
+        (sum, ex) => sum + ex.sets.filter((s) => s.isComplete).length,
         0,
       )
     : 0;
@@ -215,7 +206,7 @@ export default function WorkoutSummaryScreen() {
               <Text style={styles.exIcon}>✓</Text>
               <Text style={styles.exName}>{ex.exerciseName}</Text>
               <Text style={styles.exDetail}>
-                {ex.sets.filter((s) => s.weight > 0 || s.reps > 0).length}/{ex.sets.length} sets
+                {ex.sets.filter((s) => s.isComplete).length}/{ex.sets.length} sets
               </Text>
             </View>
           </FadeInView>
