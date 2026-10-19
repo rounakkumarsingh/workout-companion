@@ -1,4 +1,4 @@
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, gte } from 'drizzle-orm';
 import { getDb } from '../client';
 import { cardioSessions } from '../drizzle-schema';
 
@@ -49,6 +49,16 @@ export async function getCardioSessionsByWeek(weekNumber: number) {
 export async function getCardioSessions(limit = 50) {
   const db = await getDb();
   return db.select().from(cardioSessions).orderBy(desc(cardioSessions.loggedAt)).limit(limit).all();
+}
+
+export async function getCardioSessionsSince(sinceIso: string) {
+  const db = await getDb();
+  return db
+    .select()
+    .from(cardioSessions)
+    .where(gte(cardioSessions.loggedAt, sinceIso))
+    .orderBy(desc(cardioSessions.loggedAt))
+    .all();
 }
 
 export async function getCardioMinutesByWeek(weekNumber: number): Promise<number> {

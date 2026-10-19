@@ -1,4 +1,5 @@
-import type { DayType, ActivityType, DayPrescription } from '@/src/data/program';
+import type { DayPrescription } from '@/src/data/program';
+import type { TodayPlan } from '@/src/features/workout-session';
 
 export type HomeScreenState =
   | { status: 'loading' }
@@ -6,17 +7,9 @@ export type HomeScreenState =
   | { status: 'onboarding' }
   | { status: 'programCompleted' }
   | {
-      status: 'restDay';
-      weekNumber: number;
-      dayType: DayType;
-      activityType: ActivityType;
+      status: 'choose';
       blockName: string;
-    }
-  | {
-      status: 'ready';
-      weekNumber: number;
-      dayPrescription: DayPrescription;
-      blockName: string;
+      plan: TodayPlan;
     }
   | {
       status: 'inProgress';
@@ -30,15 +23,4 @@ export type HomeScreenState =
       weekNumber: number;
       dayPrescription: DayPrescription;
       blockName: string;
-    }
-  | {
-      status: 'missed';
-      weekNumber: number;
-      dayPrescription: DayPrescription;
-      blockName: string;
-      missedDate: string;
-      missedDayType: string;
-      daysAgo: number;
-      missedWeekNumber: number;
-      missedDayPrescription: DayPrescription;
     };

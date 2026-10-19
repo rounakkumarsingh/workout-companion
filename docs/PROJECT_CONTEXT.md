@@ -8,17 +8,24 @@ The app is not a generic workout generator or social fitness platform.
 
 The primary goal is to help users complete workouts quickly and consistently during gym sessions with minimal logging friction.
 
-The app is built around a repeating 7-day cycle:
+The program is 12 weeks. Each program week holds five workouts:
 
 * Upper
 * Lower
-* Rest + Cardio/HIIT(not always, only when user chooses)
 * Pull
 * Push
 * Legs
-* Rest
 
-This cycle repeats for 12 weeks.
+Optional Cardio/HIIT (shown as "Cardio / Mobility") can be logged on rest days.
+
+The order isn't fixed. Each time the user opens the app, they choose today's workout and see what they did in the last 7 days. The app enforces these rules:
+
+* A workout already completed in the current program week can't be chosen again.
+* A workout completed in the last 7 days stays locked until 7 days have passed, so no more than five lifting sessions fit in any 7 days.
+* Cardio / Mobility can be logged at most once in any 7 days.
+* The next program week starts once all five workouts of the current week are completed. This follows the guidebook's advice to carry remaining workouts over into the following week, so nothing is ever "missed".
+
+Rest days are never chosen. The user simply doesn't train that day.
 
 The experience should feel fast, focused, dark-themed, and optimized for phone use during workouts.
 
@@ -44,7 +51,7 @@ The MVP should support:
 * Home screen showing:
 
   * current week (1–12)
-  * current training day type
+  * a choice of today's workout, with the last 7 days of history
   * Start Workout button
 * Workout screen with:
 

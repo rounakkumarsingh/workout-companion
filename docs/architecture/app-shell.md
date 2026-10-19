@@ -59,9 +59,11 @@ The resolution happens via `resolveCurrentSchedule()` (from `src/features/workou
 resolveCurrentSchedule()
 ├── null start date   → ScheduleResolution.status === 'onboarding'
 │                        → render (onboarding) group, tabs are inaccessible
-├── start date set    → ScheduleResolution.status === 'active'
+├── start date set    → ScheduleResolution.status === 'active' { weekNumber }
+│                        weekNumber = the program week in progress; it advances
+│                        once all five of its workouts are completed
 │                        → render (tabs) group, onboarding is inaccessible
-├── week > 12         → ScheduleResolution.status === 'programCompleted'
+├── week 12 completed → ScheduleResolution.status === 'programCompleted'
 │                        → render program completed screen or restart prompt
 ```
 

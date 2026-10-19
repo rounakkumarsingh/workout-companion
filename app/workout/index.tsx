@@ -24,7 +24,7 @@ import { StatRow } from '@/components/ui/StatRow';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { Divider } from '@/components/ui/Divider';
 import { StreakBadge } from '@/components/ui/StreakBadge';
-import { WeekStrip } from '@/components/ui/WeekStrip';
+import { WeekStrip, recentDayStatuses } from '@/components/ui/WeekStrip';
 import { ExerciseRow } from '@/components/workout/ExerciseRow';
 import { QuickLogOverlay } from '@/components/workout/QuickLogOverlay';
 import type {
@@ -43,7 +43,7 @@ import {
   getElapsedMinutes,
   computeTotalVolume,
   getProgressionSuggestions,
-  getWeekDayStatuses,
+  getRecentDays,
   getCurrentStreak,
 } from '@/src/features/workout-session';
 import { getActiveSession } from '@/src/db/repositories/sessions';
@@ -91,8 +91,6 @@ const DAY_NAMES: Record<string, string> = {
   Push: 'Push',
   Legs: 'Legs',
 };
-
-const WEEKDAY_INITIALS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 function getExerciseIcon(name: string, index: number): string {
   return EXERCISE_ICONS[name] || EXERCISE_EMOJIS[index % EXERCISE_EMOJIS.length];
@@ -226,15 +224,8 @@ export default function ActiveWorkoutScreen() {
         setProgressionSuggestions(map);
       });
 
-      getWeekDayStatuses(state.session.weekNumber)
-        .then((days) => {
-          setWeekDays(
-            days.map((d) => ({
-              label: WEEKDAY_INITIALS[d.date.getDay()],
-              status: d.status,
-            })),
-          );
-        })
+      getRecentDays()
+        .then((days) => setWeekDays(recentDayStatuses(days)))
         .catch((e) => console.warn('[workout] Failed to load week strip:', e));
 
       getCurrentStreak()
@@ -483,7 +474,7 @@ export default function ActiveWorkoutScreen() {
 
             <Divider style={{ marginHorizontal: spacing.xxl, marginBottom: spacing.xl }} />
 
-            <SectionLabel label="This week" />
+            <SectionLabel label="Last 7 days" />
             <WeekStrip days={weekDays} />
 
             <Divider style={{ marginHorizontal: spacing.xxl, marginBottom: spacing.xl }} />

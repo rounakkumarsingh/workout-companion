@@ -5,6 +5,12 @@ export type {
   ExerciseStatus,
   LoggingPhase,
   ScheduleResolution,
+  TrainingDayType,
+  RecentDay,
+  WorkoutChoice,
+  WorkoutChoiceStatus,
+  MobilityChoice,
+  TodayPlan,
   SessionProgress,
   ProgressionSuggestion,
   ExerciseHistoryComparison,
@@ -17,15 +23,14 @@ export {
   setProgramStartDate,
   clearProgramStartDate,
   getProgramStart,
-  getProgramDay,
-  getProgramWeekDays,
+  TRAINING_DAY_TYPES,
+  isTrainingDayType,
+  getDayPrescription,
   resolveCurrentSchedule,
-  wasTrainingDayMissed,
-  getWeekDayStatuses,
+  getRecentDays,
+  getTodayPlan,
   getCurrentStreak,
 } from './schedule';
-
-export type { ProgramDay, ProgramDayStatus } from './schedule';
 
 export { initializeSession } from './session-initializer';
 

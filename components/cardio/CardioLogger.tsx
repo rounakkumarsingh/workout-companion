@@ -38,7 +38,7 @@ export function CardioLogger({ onLog }: CardioLoggerProps) {
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>Log Cardio / HIIT</Text>
+      <Text style={styles.title}>Log Cardio / Mobility</Text>
 
       <View style={styles.row}>
         <TouchableOpacity
@@ -65,7 +65,7 @@ export function CardioLogger({ onLog }: CardioLoggerProps) {
 
       <TextInput
         style={styles.input}
-        placeholder="Activity (e.g. treadmill, cycling)"
+        placeholder="Activity (e.g. stretching, cycling)"
         placeholderTextColor={colors.textMuted}
         value={activity}
         onChangeText={setActivity}

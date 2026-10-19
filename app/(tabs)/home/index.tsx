@@ -20,34 +20,38 @@ import { useColors, typography, radii, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { CtaButton } from '@/components/ui/CtaButton';
-import { GhostButton } from '@/components/ui/GhostButton';
 import { ProgramProgressBar } from '@/components/ui/ProgramProgressBar';
+import { WeekStrip, recentDayStatuses } from '@/components/ui/WeekStrip';
 import {
   resolveCurrentSchedule,
-  wasTrainingDayMissed,
+  getTodayPlan,
+  getDayPrescription,
+  isTrainingDayType,
   hydrateActiveSession,
   abandonSession,
   getSessionProgress,
   getElapsedMinutes,
   getLastActivityAt,
   finalizeStaleSessions,
-  getCurrentStreak,
 } from '@/src/features/workout-session';
 import { getActiveSession, getSessionsStartedBetween } from '@/src/db/repositories/sessions';
-import { addLocalDays, localDayBoundsIso, parseLocalDateKey } from '@/src/lib/dates';
+import { localDayBoundsIso, localDaysBetween, parseLocalDateKey } from '@/src/lib/dates';
 import { initializeSession } from '@/src/features/workout-session/session-initializer';
 import { createCardioSession } from '@/src/db/repositories/cardio';
 import { PROGRAM, TOTAL_WEEKS } from '@/src/data/program';
 import type { DayPrescription } from '@/src/data/program';
 import type { HomeScreenState } from '@/components/home/types';
-import type { ActiveSession } from '@/src/features/workout-session';
+import type {
+  ActiveSession,
+  TodayPlan,
+  TrainingDayType,
+  WorkoutChoice,
+} from '@/src/features/workout-session';
 import { CardioLogger } from '@/components/cardio/CardioLogger';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { DevClearDbButton } from '@/components/ui/DevClearDbButton';
 
-type WorkoutDayType = 'Upper' | 'Lower' | 'Pull' | 'Push' | 'Legs';
-
-const TRAINING_DAY_TYPES: WorkoutDayType[] = ['Upper', 'Lower', 'Pull', 'Push', 'Legs'];
+type Selection = TrainingDayType | 'Mobility';
 
 function getBlockName(weekNumber: number): string {
   const block = PROGRAM.blocks.find(
@@ -57,8 +61,41 @@ function getBlockName(weekNumber: number): string {
   return block?.name ?? '';
 }
 
-function isTrainingDayType(dayType: string): dayType is WorkoutDayType {
-  return (TRAINING_DAY_TYPES as readonly string[]).includes(dayType);
+/** The suggestion: the first open training day in program order. */
+function defaultSelection(plan: TodayPlan): Selection | null {
+  const next = plan.choices.find((c) => c.status === 'available');
+  if (next) return next.dayType;
+  return plan.mobility.available ? 'Mobility' : null;
+}
+
+function isSelectable(plan: TodayPlan, selection: Selection): boolean {
+  if (selection === 'Mobility') return plan.mobility.available;
+  return plan.choices.some((c) => c.dayType === selection && c.status === 'available');
+}
+
+/** "today", "yesterday", or a short weekday for a recent date key. */
+function formatRecentDay(dateKey: string): string {
+  const daysAgo = localDaysBetween(parseLocalDateKey(dateKey), new Date());
+  if (daysAgo === 0) return 'today';
+  if (daysAgo === 1) return 'yesterday';
+  return parseLocalDateKey(dateKey).toLocaleDateString('en-US', { weekday: 'short' });
+}
+
+/** "tomorrow" or a weekday for an upcoming date key. */
+function formatUnlockDay(dateKey: string): string {
+  if (localDaysBetween(new Date(), parseLocalDateKey(dateKey)) <= 1) return 'tomorrow';
+  return parseLocalDateKey(dateKey).toLocaleDateString('en-US', { weekday: 'long' });
+}
+
+function choiceSubtitle(choice: WorkoutChoice): string {
+  const exercises = `${choice.dayPrescription.exercises.length} exercises`;
+  if (choice.status === 'doneThisWeek') return `${exercises} · ✓ Done this week`;
+  if (choice.status === 'recent' && choice.lastDoneOn && choice.availableOn) {
+    return `Done ${formatRecentDay(choice.lastDoneOn)} · unlocks ${formatUnlockDay(choice.availableOn)}`;
+  }
+  if (!choice.lastDoneOn) return `${exercises} · Not done yet`;
+  const daysAgo = localDaysBetween(parseLocalDateKey(choice.lastDoneOn), new Date());
+  return `${exercises} · Last done ${daysAgo} days ago`;
 }
 
 const WEEKDAY_NAMES = [
@@ -90,80 +127,37 @@ async function computeScreenState(): Promise<HomeScreenState> {
   // else, so they never block today's workout.
   await finalizeStaleSessions();
 
-  const { weekNumber, dayPrescription } = schedule;
-
-  // An open session always wins — even on a rest day, and even when it is
-  // a make-up for another day. Describe it with its own week/day.
+  // An open session always wins. Describe it with its own week/day.
   const activeSession = await getActiveSession();
-  if (activeSession) {
-    const sessionDay: DayPrescription =
-      PROGRAM.weeks[activeSession.weekNumber - 1]?.days.find(
-        (d) => d.dayType === activeSession.dayType,
-      ) ?? dayPrescription;
+  if (activeSession && isTrainingDayType(activeSession.dayType)) {
     return {
       status: 'inProgress',
       weekNumber: activeSession.weekNumber,
-      dayPrescription: sessionDay,
+      dayPrescription: getDayPrescription(activeSession.weekNumber, activeSession.dayType),
       sessionId: activeSession.id,
       blockName: getBlockName(activeSession.weekNumber),
     };
   }
 
-  const blockName = getBlockName(weekNumber);
-
-  if (
-    dayPrescription.activityType === 'OptionalCardioHIIT' ||
-    dayPrescription.activityType === 'FullRest'
-  ) {
-    return {
-      status: 'restDay',
-      weekNumber,
-      dayType: dayPrescription.dayType,
-      activityType: dayPrescription.activityType,
-      blockName,
-    };
-  }
-
   const { startIso, endIso } = localDayBoundsIso(new Date());
-  const todaySessions = await getSessionsStartedBetween(startIso, endIso);
-  const completedToday = todaySessions.some(
-    (s) =>
-      s.weekNumber === weekNumber &&
-      s.dayType === dayPrescription.dayType &&
-      s.status === 'completed',
+  const completedToday = (await getSessionsStartedBetween(startIso, endIso)).find(
+    (s) => s.status === 'completed',
   );
-  if (completedToday) {
+  if (completedToday && isTrainingDayType(completedToday.dayType)) {
     return {
       status: 'completed',
-      weekNumber,
-      dayPrescription,
-      blockName,
+      weekNumber: completedToday.weekNumber,
+      dayPrescription: getDayPrescription(completedToday.weekNumber, completedToday.dayType),
+      blockName: getBlockName(completedToday.weekNumber),
     };
   }
-  // An abandoned session for today falls through to 'ready': Begin reopens
-  // it with its logged sets.
-
-  // Check if a training day was recently missed
-  const missed = await wasTrainingDayMissed();
-  if (missed) {
-    return {
-      status: 'missed',
-      weekNumber,
-      dayPrescription,
-      blockName,
-      missedDate: missed.missedDate,
-      missedDayType: missed.missedDayType,
-      daysAgo: missed.daysAgo,
-      missedWeekNumber: missed.weekNumber,
-      missedDayPrescription: missed.dayPrescription,
-    };
-  }
+  // An abandoned session for today stays selectable: Begin reopens it with
+  // its logged sets.
 
   return {
-    status: 'ready',
-    weekNumber,
-    dayPrescription,
-    blockName,
+    status: 'choose',
+    blockName: getBlockName(schedule.weekNumber),
+    plan: await getTodayPlan(schedule.weekNumber),
   };
 }
 
@@ -174,7 +168,7 @@ export default function TodayScheduleScreen() {
   const reducedMotion = useReducedMotion();
   const [hydratedSession, setHydratedSession] = useState<ActiveSession | null>(null);
   const [hydrating, setHydrating] = useState(false);
-  const [missedStreakWas, setMissedStreakWas] = useState(0);
+  const [picked, setPicked] = useState<Selection | null>(null);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -222,21 +216,6 @@ export default function TodayScheduleScreen() {
     }
   }, [screenState.status === 'inProgress' ? screenState.sessionId : null]);
 
-  // Compute streak when entering missed state
-  useEffect(() => {
-    if (screenState.status === 'missed') {
-      (async () => {
-        try {
-          // The streak as it stood on the day before the missed session.
-          const dayBefore = addLocalDays(parseLocalDateKey(screenState.missedDate), -1);
-          setMissedStreakWas(await getCurrentStreak(dayBefore, false));
-        } catch {
-          setMissedStreakWas(0);
-        }
-      })();
-    }
-  }, [screenState.status === 'missed' ? screenState.missedDate : null]);
-
   useEffect(() => {
     if (screenState.status === 'programCompleted' && !didAutoRedirect) {
       setDidAutoRedirect(true);
@@ -269,18 +248,20 @@ export default function TodayScheduleScreen() {
       durationMinutes: number;
       note: string | null;
     }) => {
-      if (screenState.status !== 'restDay') return;
+      if (screenState.status !== 'choose') return;
       try {
         await createCardioSession({
           id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-          weekNumber: screenState.weekNumber,
+          weekNumber: screenState.plan.weekNumber,
           intensityType: data.intensityType,
           activity: data.activity,
           durationMinutes: data.durationMinutes,
           note: data.note,
           loggedAt: new Date().toISOString(),
         });
-        Alert.alert('Cardio logged', `${data.durationMinutes} min of ${data.activity} saved.`);
+        Alert.alert('Logged', `${data.durationMinutes} min of ${data.activity} saved.`);
+        // Refresh so the history and the mobility lock show the new log.
+        setScreenState(await computeScreenState());
       } catch (e) {
         console.error('[home] Failed to log cardio:', e);
         Alert.alert('Error', 'Failed to log cardio. Please try again.');
@@ -309,27 +290,26 @@ export default function TodayScheduleScreen() {
     [router],
   );
 
-  const handleStartOrResume = useCallback(async () => {
-    if (screenState.status === 'ready' || screenState.status === 'missed') {
-      // 'missed': do today's scheduled workout and skip the missed one.
-      await startSession(screenState.weekNumber, screenState.dayPrescription);
-    } else if (screenState.status === 'inProgress') {
-      const activeSesh = hydratedSession ?? (await hydrateActiveSession(screenState.sessionId));
-      if (activeSesh) {
-        const activeEx = activeSesh.exercises.find((e) => e.status === 'active');
-        if (activeEx) {
-          router.push(`/workout/${activeEx.exerciseLogId}` as Href);
-          return;
-        }
-      }
-      router.push(`/workout?sessionId=${screenState.sessionId}` as Href);
-    }
-  }, [screenState, router, hydratedSession, startSession]);
+  const handleBegin = useCallback(
+    async (choice: WorkoutChoice) => {
+      if (screenState.status !== 'choose' || choice.status !== 'available') return;
+      await startSession(screenState.plan.weekNumber, choice.dayPrescription);
+    },
+    [screenState, startSession],
+  );
 
-  const handleMakeUp = useCallback(async () => {
-    if (screenState.status !== 'missed') return;
-    await startSession(screenState.missedWeekNumber, screenState.missedDayPrescription);
-  }, [screenState, startSession]);
+  const handleResume = useCallback(async () => {
+    if (screenState.status !== 'inProgress') return;
+    const activeSesh = hydratedSession ?? (await hydrateActiveSession(screenState.sessionId));
+    if (activeSesh) {
+      const activeEx = activeSesh.exercises.find((e) => e.status === 'active');
+      if (activeEx) {
+        router.push(`/workout/${activeEx.exerciseLogId}` as Href);
+        return;
+      }
+    }
+    router.push(`/workout?sessionId=${screenState.sessionId}` as Href);
+  }, [screenState, router, hydratedSession]);
 
   const handleAbandon = useCallback(() => {
     if (screenState.status !== 'inProgress' || !hydratedSession) return;
@@ -399,152 +379,138 @@ export default function TodayScheduleScreen() {
     );
   }
 
-  // --- MISSED SESSION (mockup s-missed) ---
-  if (screenState.status === 'missed') {
-    const { dayPrescription, weekNumber, blockName, missedDate, missedDayType, daysAgo } =
-      screenState;
-    const missedDay = new Date(missedDate + 'T00:00:00');
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const displayDayName = dayNames[missedDay.getDay()];
-    const displayDate = missedDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const todayDayName = weekdayName();
+  // --- CHOOSE TODAY'S WORKOUT ---
+  if (screenState.status === 'choose') {
+    const { plan, blockName } = screenState;
+    const selection = picked && isSelectable(plan, picked) ? picked : defaultSelection(plan);
+    const upNext = plan.choices.find((c) => c.status === 'available');
+    const selectedChoice = plan.choices.find((c) => c.dayType === selection);
+    const nextUnlock = upNext
+      ? null
+      : plan.choices
+          .map((c) => c.availableOn)
+          .filter((d): d is string => d !== null)
+          .sort()[0];
+    const firstWorkout =
+      plan.weekNumber === 1 && plan.choices.every((c) => c.status !== 'doneThisWeek');
+
     return (
       <View style={styles.screen}>
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.header}>
             <View>
               <Text style={styles.eyebrow}>
-                {todayDayName} · Week {weekNumber}
+                {weekdayName()} · Week {plan.weekNumber} · {blockName}
               </Text>
-              <Text style={styles.headerTitle}>Welcome back.</Text>
+              <Text style={styles.headerTitle}>Pick today&apos;s workout</Text>
             </View>
           </View>
 
-          <View style={styles.missedWarning}>
-            <Text style={styles.missedIcon}>⚠️</Text>
-            <View>
-              <Text style={styles.missedTitle}>You missed {missedDayType} Day</Text>
-              <Text style={styles.missedSub}>
-                {displayDayName} {displayDate} was skipped. Your streak has reset.
-              </Text>
-            </View>
-          </View>
+          <Text style={styles.sectionTitle}>Last 7 days</Text>
+          <WeekStrip days={recentDayStatuses(plan.recentDays)} />
 
-          <View style={styles.streakResetRow}>
-            <View style={styles.streakWas}>
-              <Text style={styles.streakWasNum}>{missedStreakWas}</Text>
-              <Text style={styles.streakWasLbl}>Was</Text>
-            </View>
-            <View style={styles.streakNow}>
-              <Text style={styles.streakNowNum}>0</Text>
-              <Text style={styles.streakNowLbl}>Now</Text>
-            </View>
-          </View>
+          {plan.choices.map((choice) => {
+            const locked = choice.status !== 'available';
+            const isSelected = choice.dayType === selection;
+            return (
+              <TouchableOpacity
+                key={choice.dayType}
+                style={[
+                  isSelected ? styles.optionBest : styles.optionRegular,
+                  locked && styles.optionLocked,
+                ]}
+                onPress={() => setPicked(choice.dayType)}
+                disabled={locked}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSelected, disabled: locked }}
+              >
+                <Text style={styles.optionIcon}>
+                  {choice.status === 'doneThisWeek' ? '✅' : locked ? '🔒' : '🏋️'}
+                </Text>
+                <View style={styles.optionInfo}>
+                  <Text style={styles.optionTitle}>{choice.dayType} Day</Text>
+                  <Text style={styles.optionSub}>{choiceSubtitle(choice)}</Text>
+                </View>
+                {choice === upNext && (
+                  <View style={styles.bestBadge}>
+                    <Text style={styles.bestBadgeText}>Up next</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
 
-          <Text style={styles.sectionTitle}>What would you like to do?</Text>
-
-          <TouchableOpacity style={styles.optionBest} onPress={handleStartOrResume}>
-            <Text style={styles.optionIcon}>▶️</Text>
+          <TouchableOpacity
+            style={[
+              selection === 'Mobility' ? styles.optionBest : styles.optionRegular,
+              !plan.mobility.available && styles.optionLocked,
+            ]}
+            onPress={() => setPicked('Mobility')}
+            disabled={!plan.mobility.available}
+            accessibilityRole="radio"
+            accessibilityState={{
+              selected: selection === 'Mobility',
+              disabled: !plan.mobility.available,
+            }}
+          >
+            <Text style={styles.optionIcon}>{plan.mobility.available ? '🧘' : '🔒'}</Text>
             <View style={styles.optionInfo}>
-              <Text style={styles.optionTitle}>
-                Do today&apos;s workout — {dayPrescription.dayType} Day
-              </Text>
-              <Text style={styles.optionSub}>Stay on schedule, skip the missed session</Text>
-            </View>
-            <View style={styles.bestBadge}>
-              <Text style={styles.bestBadgeText}>Best</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.optionRegular} onPress={handleMakeUp}>
-            <Text style={styles.optionIcon}>🔁</Text>
-            <View style={styles.optionInfo}>
-              <Text style={styles.optionTitle}>Make up {missedDayType} Day now</Text>
+              <Text style={styles.optionTitle}>Cardio / Mobility</Text>
               <Text style={styles.optionSub}>
-                Do {daysAgo === 1 ? "yesterday's" : `${daysAgo} days ago`} session today instead
+                {plan.mobility.availableOn
+                  ? `Logged in the last 7 days · unlocks ${formatUnlockDay(plan.mobility.availableOn)}`
+                  : 'Optional · once every 7 days'}
               </Text>
             </View>
           </TouchableOpacity>
 
-          <CtaButton
-            label={`Start ${dayPrescription.dayType} Day →`}
-            onPress={handleStartOrResume}
-          />
-        </ScrollView>
-        <DevClearDbButton onCleared={() => setScreenState({ status: 'onboarding' })} />
-      </View>
-    );
-  }
-
-  // --- REST DAY (mockup s-restday) ---
-  if (screenState.status === 'restDay') {
-    const { activityType, weekNumber } = screenState;
-    return (
-      <View style={styles.screen}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.eyebrow}>Rest Day · Week {weekNumber}</Text>
-              <Text style={styles.headerTitle}>Recovery Day</Text>
+          {nextUnlock && (
+            <View style={styles.tipBox}>
+              <Text style={styles.tipIcon}>⏳</Text>
+              <Text style={styles.tipText}>
+                All five workouts were done in the last 7 days. The next one unlocks{' '}
+                {formatUnlockDay(nextUnlock)}.
+              </Text>
             </View>
-          </View>
-
-          <View style={styles.restCenter}>
-            <Text style={styles.restEmoji}>😴</Text>
-            <Text style={styles.restDesc}>
-              No training today. Your muscles grow while you rest.
-            </Text>
-          </View>
-
-          {activityType === 'OptionalCardioHIIT' && (
-            <CardioLogger weekNumber={weekNumber} onLog={handleCardioLog} />
           )}
 
-          <GhostButton label="View Full Plan" onPress={() => router.push('/(tabs)/week' as Href)} />
-        </ScrollView>
-        <DevClearDbButton onCleared={() => setScreenState({ status: 'onboarding' })} />
-      </View>
-    );
-  }
+          {selectedChoice && (
+            <View style={styles.exPreview}>
+              <Text style={styles.sectionLabel}>{selectedChoice.dayType} Day exercises</Text>
+              {selectedChoice.dayPrescription.exercises.map((ex) => (
+                <View key={`${ex.exerciseName}-${ex.sortOrder}`} style={styles.exRow}>
+                  <Text style={styles.exName} numberOfLines={1}>
+                    {ex.exerciseName}
+                  </Text>
+                  <Text style={styles.exSpec}>
+                    {ex.workingSets}×{ex.repRange}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
 
-  // --- READY / DAY 1 ZERO STATE (mockup s-zero + s-ready) ---
-  if (screenState.status === 'ready') {
-    const { dayPrescription, weekNumber, blockName } = screenState;
-    const dayName = dayPrescription.dayType;
+          {selection === 'Mobility' && (
+            <CardioLogger weekNumber={plan.weekNumber} onLog={handleCardioLog} />
+          )}
 
-    return (
-      <View style={styles.screen}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.eyebrow}>
-                {weekdayName()} · Week {weekNumber}
+          {firstWorkout && selectedChoice && (
+            <View style={styles.tipBox}>
+              <Text style={styles.tipIcon}>💡</Text>
+              <Text style={styles.tipText}>
+                First time? Start lighter than you think. Increase weight next session.
               </Text>
-              <Text style={styles.headerTitle}>{dayName} Day</Text>
             </View>
-          </View>
+          )}
 
-          <View style={styles.zeroRing}>
-            <View style={styles.zeroRingSvg}>
-              <Text style={styles.zeroPct}>0%</Text>
-              <Text style={styles.zeroLbl}>READY</Text>
-            </View>
-            <Text style={styles.zeroTitle}>Ready when you are</Text>
-            <Text style={styles.zeroSub}>
-              Your first session is loaded. Start your first set to begin the clock.
-            </Text>
-          </View>
+          <ProgramProgressBar currentWeek={plan.weekNumber} totalWeeks={TOTAL_WEEKS} />
 
-          <View style={styles.tipBox}>
-            <Text style={styles.tipIcon}>💡</Text>
-            <Text style={styles.tipText}>
-              First time? Start lighter than you think. Increase weight next session.
-            </Text>
-          </View>
-
-          <ProgramProgressBar currentWeek={weekNumber} totalWeeks={TOTAL_WEEKS} />
-
-          <CtaButton label="Begin Session →" onPress={handleStartOrResume} />
+          {selectedChoice && (
+            <CtaButton
+              label={`Begin ${selectedChoice.dayType} Day →`}
+              onPress={() => handleBegin(selectedChoice)}
+            />
+          )}
         </ScrollView>
         <DevClearDbButton onCleared={() => setScreenState({ status: 'onboarding' })} />
       </View>
@@ -700,7 +666,7 @@ export default function TodayScheduleScreen() {
           <ProgramProgressBar currentWeek={weekNumber} totalWeeks={TOTAL_WEEKS} />
 
           <Animated.View style={!reducedMotion ? resumePulseStyle : undefined}>
-            <CtaButton label={ctaLabel} onPress={handleStartOrResume} />
+            <CtaButton label={ctaLabel} onPress={handleResume} />
           </Animated.View>
 
           <TouchableOpacity
@@ -841,153 +807,8 @@ const makeStyles = (c: ColorSet) =>
       letterSpacing: -0.02,
     },
     // ---------------------------------
-    // Zero State (Day 1)
+    // Choose today's workout
     // ---------------------------------
-    zeroRing: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: spacing.xxl,
-      paddingHorizontal: spacing.xxl,
-    },
-    zeroRingSvg: {
-      width: 110,
-      height: 110,
-      borderRadius: 55,
-      borderWidth: 7,
-      borderColor: c.textDim,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 18,
-    },
-    zeroPct: {
-      fontFamily: 'SpaceMono_700Bold',
-      fontSize: 20,
-      color: c.textMuted,
-    },
-    zeroLbl: {
-      fontFamily: 'BarlowCondensed_800ExtraBold',
-      fontSize: 11,
-      color: c.textMuted,
-      letterSpacing: 2,
-    },
-    zeroTitle: {
-      fontFamily: 'BarlowCondensed_800ExtraBold',
-      fontSize: 26,
-      color: c.textPrimary,
-      marginBottom: spacing.sm,
-    },
-    zeroSub: {
-      fontSize: 13,
-      color: c.textTertiary,
-      textAlign: 'center',
-      lineHeight: 20,
-      maxWidth: 240,
-    },
-    tipBox: {
-      marginHorizontal: spacing.xxl,
-      marginBottom: spacing.lg,
-      backgroundColor: c.goldSurface,
-      borderWidth: 0.5,
-      borderColor: c.goldBorder,
-      borderRadius: radii.row,
-      padding: 12,
-      flexDirection: 'row',
-      gap: 10,
-      alignItems: 'flex-start',
-    },
-    tipIcon: {
-      fontSize: 16,
-    },
-    tipText: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 12,
-      color: c.goldDim,
-      lineHeight: 17,
-      flex: 1,
-    },
-    // ---------------------------------
-    // Missed Session
-    // ---------------------------------
-    missedWarning: {
-      marginHorizontal: spacing.xxl,
-      marginTop: 14,
-      backgroundColor: c.dangerSurface,
-      borderWidth: 0.5,
-      borderColor: c.dangerBorder,
-      borderRadius: radii.card,
-      padding: 15,
-      flexDirection: 'row',
-      gap: spacing.lg,
-      alignItems: 'flex-start',
-    },
-    missedIcon: {
-      fontSize: 20,
-    },
-    missedTitle: {
-      ...typography.body,
-      fontWeight: '700',
-      color: c.dangerText,
-    },
-    missedSub: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 11,
-      color: c.dangerTextDim,
-      lineHeight: 15,
-      marginTop: 3,
-    },
-    streakResetRow: {
-      flexDirection: 'row',
-      gap: spacing.md,
-      marginHorizontal: spacing.xxl,
-      marginTop: 10,
-    },
-    streakWas: {
-      flex: 1,
-      backgroundColor: c.surfaceElevated,
-      borderWidth: 0.5,
-      borderColor: c.border,
-      borderRadius: 11,
-      padding: 11,
-      alignItems: 'center',
-    },
-    streakWasNum: {
-      fontFamily: 'SpaceMono_700Bold',
-      fontSize: 26,
-      color: c.textMuted,
-      textDecorationLine: 'line-through',
-      lineHeight: 26,
-    },
-    streakWasLbl: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 9,
-      color: c.textMuted,
-      textTransform: 'uppercase',
-      letterSpacing: 0.08,
-      marginTop: 3,
-    },
-    streakNow: {
-      flex: 1,
-      backgroundColor: c.dangerSurface,
-      borderWidth: 0.5,
-      borderColor: c.dangerBorder,
-      borderRadius: 11,
-      padding: 11,
-      alignItems: 'center',
-    },
-    streakNowNum: {
-      fontFamily: 'SpaceMono_700Bold',
-      fontSize: 26,
-      color: c.dangerText,
-      lineHeight: 26,
-    },
-    streakNowLbl: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 9,
-      color: c.dangerTextDim,
-      textTransform: 'uppercase',
-      letterSpacing: 0.08,
-      marginTop: 3,
-    },
     sectionTitle: {
       ...typography.monoLabel,
       color: c.textTertiary,
@@ -1021,6 +842,9 @@ const makeStyles = (c: ColorSet) =>
       alignItems: 'center',
       gap: 13,
     },
+    optionLocked: {
+      opacity: 0.45,
+    },
     optionIcon: {
       fontSize: 22,
     },
@@ -1049,37 +873,28 @@ const makeStyles = (c: ColorSet) =>
       fontSize: 9,
       color: c.blackText,
     },
-    // ---------------------------------
-    // Rest Day
-    // ---------------------------------
-    restContainer: {
+    tipBox: {
+      marginHorizontal: spacing.xxl,
+      marginTop: spacing.lg,
+      marginBottom: spacing.lg,
+      backgroundColor: c.goldSurface,
+      borderWidth: 0.5,
+      borderColor: c.goldBorder,
+      borderRadius: radii.row,
+      padding: 12,
+      flexDirection: 'row',
+      gap: 10,
+      alignItems: 'flex-start',
+    },
+    tipIcon: {
+      fontSize: 16,
+    },
+    tipText: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 12,
+      color: c.goldDim,
+      lineHeight: 17,
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: spacing.xxl,
-    },
-    restCenter: {
-      alignItems: 'center',
-      paddingVertical: spacing.xxxl,
-    },
-    restEmoji: {
-      fontSize: 60,
-      marginBottom: spacing.xl,
-      opacity: 0.4,
-    },
-    restTitle: {
-      fontFamily: 'BarlowCondensed_800ExtraBold',
-      fontSize: 28,
-      color: c.textPrimary,
-      marginBottom: spacing.md,
-    },
-    restDesc: {
-      fontSize: 14,
-      color: c.textTertiary,
-      textAlign: 'center',
-      lineHeight: 21,
-      maxWidth: 240,
-      marginBottom: spacing.xxxl,
     },
     // ---------------------------------
     // Resume (inProgress)
