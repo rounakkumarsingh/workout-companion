@@ -24,12 +24,7 @@ export function CtaButton({ label, onPress, disabled, style }: CtaButtonProps) {
 
   return (
     <AnimatedTouchable
-      style={[
-        styles.button,
-        disabled && styles.disabled,
-        !reducedMotion && animatedStyle,
-        style,
-      ]}
+      style={[styles.button, disabled && styles.disabled, !reducedMotion && animatedStyle, style]}
       onPress={onPress}
       onPressIn={!disabled && !reducedMotion ? onPressIn : undefined}
       onPressOut={!disabled && !reducedMotion ? onPressOut : undefined}
@@ -41,24 +36,25 @@ export function CtaButton({ label, onPress, disabled, style }: CtaButtonProps) {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  button: {
-    marginHorizontal: 20,
-    marginBottom: 8,
-    backgroundColor: c.gold,
-    borderRadius: radii.row,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  disabled: {
-    backgroundColor: c.textDim,
-  },
-  label: {
-    ...typography.cta,
-    color: c.blackText,
-    textTransform: 'uppercase',
-  },
-  labelDisabled: {
-    color: c.textMuted,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    button: {
+      marginHorizontal: 20,
+      marginBottom: 8,
+      backgroundColor: c.gold,
+      borderRadius: radii.row,
+      paddingVertical: 15,
+      alignItems: 'center',
+    },
+    disabled: {
+      backgroundColor: c.textDim,
+    },
+    label: {
+      ...typography.cta,
+      color: c.blackText,
+      textTransform: 'uppercase',
+    },
+    labelDisabled: {
+      color: c.textMuted,
+    },
+  });

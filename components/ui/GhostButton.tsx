@@ -23,11 +23,7 @@ export function GhostButton({ label, onPress, style }: GhostButtonProps) {
 
   return (
     <AnimatedTouchable
-      style={[
-        styles.button,
-        !reducedMotion && animatedStyle,
-        style,
-      ]}
+      style={[styles.button, !reducedMotion && animatedStyle, style]}
       onPress={onPress}
       onPressIn={!reducedMotion ? onPressIn : undefined}
       onPressOut={!reducedMotion ? onPressOut : undefined}
@@ -38,20 +34,21 @@ export function GhostButton({ label, onPress, style }: GhostButtonProps) {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  button: {
-    marginHorizontal: 20,
-    marginBottom: 8,
-    borderRadius: radii.row,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderWidth: 0.5,
-    borderColor: c.borderActive,
-  },
-  label: {
-    ...typography.body,
-    color: c.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.05,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    button: {
+      marginHorizontal: 20,
+      marginBottom: 8,
+      borderRadius: radii.row,
+      paddingVertical: 12,
+      alignItems: 'center',
+      borderWidth: 0.5,
+      borderColor: c.borderActive,
+    },
+    label: {
+      ...typography.body,
+      color: c.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.05,
+    },
+  });

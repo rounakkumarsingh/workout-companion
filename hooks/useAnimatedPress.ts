@@ -1,4 +1,9 @@
-import { useSharedValue, withSpring, useAnimatedStyle, type WithSpringConfig } from 'react-native-reanimated';
+import {
+  useSharedValue,
+  withSpring,
+  useAnimatedStyle,
+  type WithSpringConfig,
+} from 'react-native-reanimated';
 
 const SPRING_CONFIG: WithSpringConfig = { damping: 15, stiffness: 200 };
 

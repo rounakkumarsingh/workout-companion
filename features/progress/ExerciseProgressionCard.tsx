@@ -24,9 +24,7 @@ export function ExerciseProgressionCard({ exerciseName, history }: ExerciseProgr
   const previous = history.length > 1 ? history[history.length - 2] : null;
 
   const latestVolume = latest.sets.reduce((s, set) => s + set.weight * set.reps, 0);
-  const prevVolume = previous
-    ? previous.sets.reduce((s, set) => s + set.weight * set.reps, 0)
-    : 0;
+  const prevVolume = previous ? previous.sets.reduce((s, set) => s + set.weight * set.reps, 0) : 0;
   const change = prevVolume > 0 ? latestVolume - prevVolume : 0;
   const pctChange = prevVolume > 0 ? (change / prevVolume) * 100 : 0;
 
@@ -43,16 +41,20 @@ export function ExerciseProgressionCard({ exerciseName, history }: ExerciseProgr
         )}
       </View>
 
-      {history.slice(-3).reverse().map((entry, i) => (
-        <View key={i} style={styles.row}>
-          <Text style={styles.dateLabel}>
-            W{entry.weekNumber} · {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </Text>
-          <Text style={styles.setsLabel}>
-            {entry.sets.map((s) => `${s.weight}×${s.reps}`).join(', ')}
-          </Text>
-        </View>
-      ))}
+      {history
+        .slice(-3)
+        .reverse()
+        .map((entry, i) => (
+          <View key={i} style={styles.row}>
+            <Text style={styles.dateLabel}>
+              W{entry.weekNumber} ·{' '}
+              {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </Text>
+            <Text style={styles.setsLabel}>
+              {entry.sets.map((s) => `${s.weight}×${s.reps}`).join(', ')}
+            </Text>
+          </View>
+        ))}
     </View>
   );
 }

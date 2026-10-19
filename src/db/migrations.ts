@@ -115,7 +115,8 @@ const MIGRATIONS: { version: number; description: string; statements: string[] }
   },
   {
     version: 4,
-    description: 'Allow more than 3 warmup sets: relax workout_set_logs set_index CHECK for warmups',
+    description:
+      'Allow more than 3 warmup sets: relax workout_set_logs set_index CHECK for warmups',
     statements: [
       `CREATE TABLE workout_set_logs_new (
         id TEXT PRIMARY KEY,
@@ -179,9 +180,7 @@ export async function runMigrations(): Promise<void> {
   if (pending.length === 0) return;
 
   const columnExists = (table: string, column: string): boolean => {
-    const rows = rawDb.getAllSync<{ name: string }>(
-      `PRAGMA table_info(${table})`,
-    );
+    const rows = rawDb.getAllSync<{ name: string }>(`PRAGMA table_info(${table})`);
     return rows.some((r) => r.name === column);
   };
 

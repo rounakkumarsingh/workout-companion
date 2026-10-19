@@ -30,70 +30,71 @@ export function WeekStrip({ days }: WeekStripProps) {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  strip: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: spacing.xl,
-  },
-  dot: {
-    flex: 1,
-    height: 44,
-    borderRadius: radii.dot,
-    backgroundColor: c.surfaceInteractive,
-    borderWidth: 0.5,
-    borderColor: c.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-  },
-  done: {
-    backgroundColor: c.successSurface,
-    borderColor: c.successBorder,
-  },
-  today: {
-    backgroundColor: c.goldSurface,
-    borderColor: c.gold,
-  },
-  rest: {
-    backgroundColor: c.restSurface,
-  },
-  upcoming: {
-    backgroundColor: c.surfaceInteractive,
-  },
-  missed: {
-    backgroundColor: c.surfaceInteractive,
-    opacity: 0.5,
-  },
-  dotLabel: {
-    ...typography.monoTiny,
-    color: c.textMuted,
-    letterSpacing: 0.06,
-    textTransform: 'uppercase',
-  },
-  label_done: {
-    color: c.successDim,
-  },
-  label_today: {
-    color: c.goldDim,
-  },
-  label_rest: {},
-  label_upcoming: {},
-  label_missed: {},
-  pip: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: c.textDim,
-  },
-  pip_done: {
-    backgroundColor: c.success,
-  },
-  pip_today: {
-    backgroundColor: c.gold,
-  },
-  pip_rest: {},
-  pip_upcoming: {},
-  pip_missed: {},
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    strip: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      paddingHorizontal: spacing.xxl,
+      paddingBottom: spacing.xl,
+    },
+    dot: {
+      flex: 1,
+      height: 44,
+      borderRadius: radii.dot,
+      backgroundColor: c.surfaceInteractive,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.xs,
+    },
+    done: {
+      backgroundColor: c.successSurface,
+      borderColor: c.successBorder,
+    },
+    today: {
+      backgroundColor: c.goldSurface,
+      borderColor: c.gold,
+    },
+    rest: {
+      backgroundColor: c.restSurface,
+    },
+    upcoming: {
+      backgroundColor: c.surfaceInteractive,
+    },
+    missed: {
+      backgroundColor: c.surfaceInteractive,
+      opacity: 0.5,
+    },
+    dotLabel: {
+      ...typography.monoTiny,
+      color: c.textMuted,
+      letterSpacing: 0.06,
+      textTransform: 'uppercase',
+    },
+    label_done: {
+      color: c.successDim,
+    },
+    label_today: {
+      color: c.goldDim,
+    },
+    label_rest: {},
+    label_upcoming: {},
+    label_missed: {},
+    pip: {
+      width: 5,
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: c.textDim,
+    },
+    pip_done: {
+      backgroundColor: c.success,
+    },
+    pip_today: {
+      backgroundColor: c.gold,
+    },
+    pip_rest: {},
+    pip_upcoming: {},
+    pip_missed: {},
+  });

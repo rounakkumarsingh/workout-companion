@@ -22,9 +22,10 @@ export function Divider({ style }: DividerProps) {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  divider: {
-    height: 0.5,
-    backgroundColor: c.border,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    divider: {
+      height: 0.5,
+      backgroundColor: c.border,
+    },
+  });

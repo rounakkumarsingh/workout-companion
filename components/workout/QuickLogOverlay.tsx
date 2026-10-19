@@ -43,7 +43,14 @@ export function QuickLogOverlay({ exerciseName, visible, onClose, onLog }: Quick
           <View style={styles.stepperRow}>
             <Text style={styles.stepperLabel}>Weight</Text>
             <View style={styles.stepperControls}>
-              <TouchableOpacity style={styles.stepBtn} onPress={() => { setEditingWeight(null); setWeight(Math.max(0, weight - 2.5)); }} accessibilityLabel="Decrease weight by 2.5kg">
+              <TouchableOpacity
+                style={styles.stepBtn}
+                onPress={() => {
+                  setEditingWeight(null);
+                  setWeight(Math.max(0, weight - 2.5));
+                }}
+                accessibilityLabel="Decrease weight by 2.5kg"
+              >
                 <Text style={styles.stepBtnText}>−</Text>
               </TouchableOpacity>
               <View style={styles.stepValWrap}>
@@ -62,7 +69,14 @@ export function QuickLogOverlay({ exerciseName, visible, onClose, onLog }: Quick
                 />
                 <Text style={styles.stepUnit}> kg</Text>
               </View>
-              <TouchableOpacity style={styles.stepBtn} onPress={() => { setEditingWeight(null); setWeight(weight + 2.5); }} accessibilityLabel="Increase weight by 2.5kg">
+              <TouchableOpacity
+                style={styles.stepBtn}
+                onPress={() => {
+                  setEditingWeight(null);
+                  setWeight(weight + 2.5);
+                }}
+                accessibilityLabel="Increase weight by 2.5kg"
+              >
                 <Text style={styles.stepBtnText}>+</Text>
               </TouchableOpacity>
             </View>
@@ -71,7 +85,14 @@ export function QuickLogOverlay({ exerciseName, visible, onClose, onLog }: Quick
           <View style={styles.stepperRow}>
             <Text style={styles.stepperLabel}>Reps</Text>
             <View style={styles.stepperControls}>
-              <TouchableOpacity style={styles.stepBtn} onPress={() => { setEditingReps(null); setReps(Math.max(0, reps - 1)); }} accessibilityLabel="Decrease reps by 1">
+              <TouchableOpacity
+                style={styles.stepBtn}
+                onPress={() => {
+                  setEditingReps(null);
+                  setReps(Math.max(0, reps - 1));
+                }}
+                accessibilityLabel="Decrease reps by 1"
+              >
                 <Text style={styles.stepBtnText}>−</Text>
               </TouchableOpacity>
               <View style={styles.stepValWrap}>
@@ -90,7 +111,14 @@ export function QuickLogOverlay({ exerciseName, visible, onClose, onLog }: Quick
                 />
                 <Text style={styles.stepUnit}> reps</Text>
               </View>
-              <TouchableOpacity style={styles.stepBtn} onPress={() => { setEditingReps(null); setReps(reps + 1); }} accessibilityLabel="Increase reps by 1">
+              <TouchableOpacity
+                style={styles.stepBtn}
+                onPress={() => {
+                  setEditingReps(null);
+                  setReps(reps + 1);
+                }}
+                accessibilityLabel="Increase reps by 1"
+              >
                 <Text style={styles.stepBtnText}>+</Text>
               </TouchableOpacity>
             </View>
@@ -105,79 +133,80 @@ export function QuickLogOverlay({ exerciseName, visible, onClose, onLog }: Quick
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    padding: spacing.xxxl,
-  },
-  card: {
-    backgroundColor: c.surfaceElevated,
-    borderWidth: 0.5,
-    borderColor: c.border,
-    borderRadius: radii.card,
-    padding: spacing.xl,
-  },
-  title: {
-    ...typography.monoLabel,
-    color: c.textTertiary,
-    letterSpacing: 0.1,
-    textTransform: 'uppercase',
-    marginBottom: spacing.xs,
-  },
-  exerciseName: {
-    ...typography.subheading,
-    color: c.textPrimary,
-    marginBottom: spacing.lg,
-  },
-  stepperRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  stepperLabel: {
-    ...typography.monoSmall,
-    color: c.textMuted,
-  },
-  stepperControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  stepBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radii.dot,
-    backgroundColor: c.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepBtnText: {
-    ...typography.monoBody,
-    color: c.textSecondary,
-  },
-  stepVal: {
-    ...typography.monoBody,
-    color: c.textPrimary,
-    minWidth: 60,
-    textAlign: 'center',
-  },
-  stepValWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 60,
-  },
-  stepValInput: {
-    borderBottomWidth: 1,
-    borderBottomColor: c.gold,
-    paddingVertical: 0,
-    paddingHorizontal: 4,
-  },
-  stepUnit: {
-    ...typography.monoSmall,
-    color: c.textTertiary,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      justifyContent: 'center',
+      padding: spacing.xxxl,
+    },
+    card: {
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      borderRadius: radii.card,
+      padding: spacing.xl,
+    },
+    title: {
+      ...typography.monoLabel,
+      color: c.textTertiary,
+      letterSpacing: 0.1,
+      textTransform: 'uppercase',
+      marginBottom: spacing.xs,
+    },
+    exerciseName: {
+      ...typography.subheading,
+      color: c.textPrimary,
+      marginBottom: spacing.lg,
+    },
+    stepperRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing.md,
+    },
+    stepperLabel: {
+      ...typography.monoSmall,
+      color: c.textMuted,
+    },
+    stepperControls: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    stepBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: radii.dot,
+      backgroundColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    stepBtnText: {
+      ...typography.monoBody,
+      color: c.textSecondary,
+    },
+    stepVal: {
+      ...typography.monoBody,
+      color: c.textPrimary,
+      minWidth: 60,
+      textAlign: 'center',
+    },
+    stepValWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: 60,
+    },
+    stepValInput: {
+      borderBottomWidth: 1,
+      borderBottomColor: c.gold,
+      paddingVertical: 0,
+      paddingHorizontal: 4,
+    },
+    stepUnit: {
+      ...typography.monoSmall,
+      color: c.textTertiary,
+    },
+  });

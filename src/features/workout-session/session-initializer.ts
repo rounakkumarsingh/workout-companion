@@ -1,10 +1,7 @@
 import type { DayPrescription } from '../../data/program';
 import type { ActiveSession } from './types';
 import { hydrateActiveSession, reopenSession } from './session-executor';
-import {
-  createSessionWithLogs,
-  getSessionsStartedBetween,
-} from '../../db/repositories/sessions';
+import { createSessionWithLogs, getSessionsStartedBetween } from '../../db/repositories/sessions';
 import { getSuggestedSetValues } from './progression';
 import { generateId } from '../../lib/ids';
 import { localDayBoundsIso } from '../../lib/dates';

@@ -45,8 +45,14 @@ function FadeInView({ index, children }: { index: number; children: React.ReactN
 
   useEffect(() => {
     const delay = index * 50;
-    opacity.value = withDelay(delay, withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) }));
-    translateY.value = withDelay(delay, withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) }));
+    opacity.value = withDelay(
+      delay,
+      withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) }),
+    );
+    translateY.value = withDelay(
+      delay,
+      withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) }),
+    );
   }, [index]);
 
   const style = useAnimatedStyle(() => ({
@@ -113,14 +119,9 @@ export default function WorkoutSummaryScreen() {
     );
   }
 
-  const totalSets = session
-    ? session.exercises.reduce((sum, ex) => sum + ex.sets.length, 0)
-    : 0;
+  const totalSets = session ? session.exercises.reduce((sum, ex) => sum + ex.sets.length, 0) : 0;
   const completedSets = session
-    ? session.exercises.reduce(
-        (sum, ex) => sum + ex.sets.filter((s) => s.isComplete).length,
-        0,
-      )
+    ? session.exercises.reduce((sum, ex) => sum + ex.sets.filter((s) => s.isComplete).length, 0)
     : 0;
 
   const sessionDate = session ? new Date(session.startedAt) : new Date();
@@ -129,9 +130,7 @@ export default function WorkoutSummaryScreen() {
     month: 'short',
     day: 'numeric',
   });
-  const heroSub = session
-    ? `${dayNames[session.dayType] || session.dayType} Day · ${dateStr}`
-    : '';
+  const heroSub = session ? `${dayNames[session.dayType] || session.dayType} Day · ${dateStr}` : '';
 
   const statCards = [
     {
@@ -189,10 +188,7 @@ export default function WorkoutSummaryScreen() {
       </View>
 
       {streakCount > 0 && (
-        <StreakBanner
-          count={streakCount}
-          nextSessionLabel="Keep the streak going!"
-        />
+        <StreakBanner count={streakCount} nextSessionLabel="Keep the streak going!" />
       )}
 
       <FadeInView index={4}>
@@ -220,101 +216,102 @@ export default function WorkoutSummaryScreen() {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: c.background,
-  },
-  content: {
-    paddingBottom: 40,
-  },
-  hero: {
-    paddingVertical: 36,
-    paddingHorizontal: spacing.xxl,
-    alignItems: 'center',
-  },
-  heroIcon: {
-    fontSize: 54,
-    marginBottom: 10,
-  },
-  heroTitle: {
-    ...typography.display,
-    color: c.gold,
-    letterSpacing: -0.02,
-  },
-  heroSub: {
-    ...typography.body,
-    color: c.textTertiary,
-    marginTop: spacing.sm,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 7,
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: 14,
-  },
-  statCard: {
-    width: '48%',
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: c.surfaceInteractive,
-    borderWidth: 0.5,
-    borderColor: c.border,
-    borderRadius: radii.dot,
-    padding: 11,
-    alignItems: 'center',
-  },
-  statVal: {
-    fontFamily: 'SpaceMono_700Bold',
-    fontSize: 20,
-    lineHeight: 20,
-    color: c.textPrimary,
-  },
-  statAccent: {
-    color: c.gold,
-  },
-  statUnit: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 11,
-    color: c.textTertiary,
-  },
-  statLabel: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 9,
-    color: c.textTertiary,
-    letterSpacing: 0.08,
-    textTransform: 'uppercase',
-    marginTop: 3,
-  },
-  exList: {
-    paddingHorizontal: spacing.xxl,
-    gap: 6,
-    marginBottom: spacing.lg,
-  },
-  exRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: c.successSurface,
-    borderWidth: 0.5,
-    borderColor: c.successBorder,
-    borderRadius: radii.dot,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-  },
-  exIcon: {
-    fontSize: 18,
-    color: c.successText,
-  },
-  exName: {
-    flex: 1,
-    ...typography.body,
-    color: c.successText,
-    fontWeight: '600',
-  },
-  exDetail: {
-    ...typography.monoSmall,
-    color: c.successDim,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    content: {
+      paddingBottom: 40,
+    },
+    hero: {
+      paddingVertical: 36,
+      paddingHorizontal: spacing.xxl,
+      alignItems: 'center',
+    },
+    heroIcon: {
+      fontSize: 54,
+      marginBottom: 10,
+    },
+    heroTitle: {
+      ...typography.display,
+      color: c.gold,
+      letterSpacing: -0.02,
+    },
+    heroSub: {
+      ...typography.body,
+      color: c.textTertiary,
+      marginTop: spacing.sm,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 7,
+      paddingHorizontal: spacing.xxl,
+      paddingBottom: 14,
+    },
+    statCard: {
+      width: '48%',
+      flex: 1,
+      minWidth: '45%',
+      backgroundColor: c.surfaceInteractive,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      borderRadius: radii.dot,
+      padding: 11,
+      alignItems: 'center',
+    },
+    statVal: {
+      fontFamily: 'SpaceMono_700Bold',
+      fontSize: 20,
+      lineHeight: 20,
+      color: c.textPrimary,
+    },
+    statAccent: {
+      color: c.gold,
+    },
+    statUnit: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 11,
+      color: c.textTertiary,
+    },
+    statLabel: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 9,
+      color: c.textTertiary,
+      letterSpacing: 0.08,
+      textTransform: 'uppercase',
+      marginTop: 3,
+    },
+    exList: {
+      paddingHorizontal: spacing.xxl,
+      gap: 6,
+      marginBottom: spacing.lg,
+    },
+    exRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: c.successSurface,
+      borderWidth: 0.5,
+      borderColor: c.successBorder,
+      borderRadius: radii.dot,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+    },
+    exIcon: {
+      fontSize: 18,
+      color: c.successText,
+    },
+    exName: {
+      flex: 1,
+      ...typography.body,
+      color: c.successText,
+      fontWeight: '600',
+    },
+    exDetail: {
+      ...typography.monoSmall,
+      color: c.successDim,
+    },
+  });

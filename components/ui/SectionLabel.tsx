@@ -15,13 +15,14 @@ export function SectionLabel({ label, style }: SectionLabelProps) {
   return <Text style={[styles.label, style]}>{label}</Text>;
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  label: {
-    ...typography.monoLabel,
-    color: c.textTertiary,
-    letterSpacing: 0.12,
-    textTransform: 'uppercase',
-    paddingHorizontal: spacing.xxl,
-    marginBottom: 10,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    label: {
+      ...typography.monoLabel,
+      color: c.textTertiary,
+      letterSpacing: 0.12,
+      textTransform: 'uppercase',
+      paddingHorizontal: spacing.xxl,
+      marginBottom: 10,
+    },
+  });

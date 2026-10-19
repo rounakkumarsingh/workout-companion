@@ -130,25 +130,26 @@ export function ProgressRing({
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  wrap: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  center: {
-    position: 'absolute',
-    alignItems: 'center',
-  },
-  pct: {
-    ...typography.monoLarge,
-    color: c.textPrimary,
-  },
-  label: {
-    ...typography.monoLabel,
-    color: c.textSecondary,
-    marginTop: 3,
-    textTransform: 'uppercase',
-    letterSpacing: 0.1,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    wrap: {
+      position: 'relative',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    center: {
+      position: 'absolute',
+      alignItems: 'center',
+    },
+    pct: {
+      ...typography.monoLarge,
+      color: c.textPrimary,
+    },
+    label: {
+      ...typography.monoLabel,
+      color: c.textSecondary,
+      marginTop: 3,
+      textTransform: 'uppercase',
+      letterSpacing: 0.1,
+    },
+  });

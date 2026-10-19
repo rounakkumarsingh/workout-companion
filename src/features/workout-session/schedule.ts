@@ -156,7 +156,10 @@ export async function getWeekDayStatuses(
   return getProgramWeekDays(start, weekNumber).map((day) => {
     const dateKey = toLocalDateKey(day.date);
     let status: ProgramDayStatus;
-    if (isTrainingDay(day.dayPrescription) && keys.has(sessionKey(weekNumber, day.dayPrescription.dayType))) {
+    if (
+      isTrainingDay(day.dayPrescription) &&
+      keys.has(sessionKey(weekNumber, day.dayPrescription.dayType))
+    ) {
       status = 'done';
     } else if (dateKey === todayKey) {
       status = 'today';

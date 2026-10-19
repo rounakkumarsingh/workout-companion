@@ -29,7 +29,9 @@ export function WeekSummaryCard({
       </View>
       <View style={styles.stats}>
         <View style={styles.stat}>
-          <Text style={styles.statVal}>{sessionsCompleted}/{totalSessions}</Text>
+          <Text style={styles.statVal}>
+            {sessionsCompleted}/{totalSessions}
+          </Text>
           <Text style={styles.statLbl}>Sessions</Text>
         </View>
         <View style={styles.stat}>
@@ -41,7 +43,9 @@ export function WeekSummaryCard({
         <View style={styles.exSection}>
           <Text style={styles.exLbl}>Top exercises</Text>
           {topExercises.slice(0, 3).map((ex, i) => (
-            <Text key={i} style={styles.exName}>{ex}</Text>
+            <Text key={i} style={styles.exName}>
+              {ex}
+            </Text>
           ))}
         </View>
       )}

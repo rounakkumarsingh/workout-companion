@@ -43,9 +43,9 @@ Then scan the QR code again.
 
 | Key | Action          |
 | --- | --------------- |
-| `a`  | Open on Android |
-| `i`  | Open on iOS     |
-| `w`  | Open in web     |
+| `a` | Open on Android |
+| `i` | Open on iOS     |
+| `w` | Open in web     |
 
 ## Development builds (optional)
 

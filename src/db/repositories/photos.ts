@@ -27,23 +27,14 @@ export async function createProgressPhoto(input: CreateProgressPhotoInput) {
 
 export async function getProgressPhotoById(id: string) {
   const db = await getDb();
-  const rows = db
-    .select()
-    .from(progressPhotos)
-    .where(eq(progressPhotos.id, id))
-    .all();
+  const rows = db.select().from(progressPhotos).where(eq(progressPhotos.id, id)).all();
 
   return rows[0] ?? null;
 }
 
 export async function getProgressPhotos(limit = 50) {
   const db = await getDb();
-  return db
-    .select()
-    .from(progressPhotos)
-    .orderBy(desc(progressPhotos.takenAt))
-    .limit(limit)
-    .all();
+  return db.select().from(progressPhotos).orderBy(desc(progressPhotos.takenAt)).limit(limit).all();
 }
 
 export async function getProgressPhotosByAngle(angle: 'front' | 'side' | 'rear') {

@@ -46,7 +46,8 @@ export function PhotoCapture({ onLog }: PhotoCaptureProps) {
       />
 
       <Text style={styles.guidance}>
-        Take photos every 2–3 months from front, side, and rear. Capture externally and paste the file path above.
+        Take photos every 2–3 months from front, side, and rear. Capture externally and paste the
+        file path above.
       </Text>
 
       <TextInput

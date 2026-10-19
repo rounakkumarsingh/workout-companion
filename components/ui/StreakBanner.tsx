@@ -37,11 +37,7 @@ export function StreakBanner({ count, nextSessionLabel }: StreakBannerProps) {
   }, [count, reducedMotion]);
 
   const animatedStyle = useAnimatedStyle(() => {
-    const scale = interpolate(
-      animProgress.value,
-      [0, 0.3, 1],
-      [1, 1.15, 1],
-    );
+    const scale = interpolate(animProgress.value, [0, 0.3, 1], [1, 1.15, 1]);
     return {
       transform: [{ scale: withSpring(scale, { damping: 12, stiffness: 150 }) }],
     };
@@ -54,44 +50,43 @@ export function StreakBanner({ count, nextSessionLabel }: StreakBannerProps) {
       </Animated.Text>
       <View style={styles.textWrap}>
         <Text style={styles.text}>Day Streak</Text>
-        {nextSessionLabel && (
-          <Text style={styles.sub}>{nextSessionLabel}</Text>
-        )}
+        {nextSessionLabel && <Text style={styles.sub}>{nextSessionLabel}</Text>}
       </View>
     </View>
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  banner: {
-    marginHorizontal: spacing.xxl,
-    marginBottom: spacing.xl,
-    backgroundColor: c.goldSurface,
-    borderWidth: 0.5,
-    borderColor: c.gold,
-    borderRadius: radii.card,
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.xxl,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xl,
-  },
-  number: {
-    ...typography.monoLarge,
-    color: c.gold,
-    lineHeight: 40,
-  },
-  textWrap: {
-    flex: 1,
-  },
-  text: {
-    ...typography.body,
-    color: c.gold,
-    fontWeight: '700',
-  },
-  sub: {
-    ...typography.monoSmall,
-    color: c.goldDim,
-    marginTop: 2,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    banner: {
+      marginHorizontal: spacing.xxl,
+      marginBottom: spacing.xl,
+      backgroundColor: c.goldSurface,
+      borderWidth: 0.5,
+      borderColor: c.gold,
+      borderRadius: radii.card,
+      paddingVertical: spacing.xl,
+      paddingHorizontal: spacing.xxl,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xl,
+    },
+    number: {
+      ...typography.monoLarge,
+      color: c.gold,
+      lineHeight: 40,
+    },
+    textWrap: {
+      flex: 1,
+    },
+    text: {
+      ...typography.body,
+      color: c.gold,
+      fontWeight: '700',
+    },
+    sub: {
+      ...typography.monoSmall,
+      color: c.goldDim,
+      marginTop: 2,
+    },
+  });

@@ -26,30 +26,31 @@ export function ScreenHeader({ subtitle, title, rightElement }: ScreenHeaderProp
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.xxl,
-  },
-  left: {
-    flex: 1,
-  },
-  right: {
-    marginTop: spacing.xxl,
-  },
-  subtitle: {
-    ...typography.monoLabel,
-    color: c.textTertiary,
-    letterSpacing: 0.12,
-    textTransform: 'uppercase',
-    marginBottom: spacing.xs,
-  },
-  title: {
-    ...typography.heading,
-    color: c.textPrimary,
-    letterSpacing: -0.02,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      paddingHorizontal: spacing.xxl,
+      paddingTop: spacing.xxl,
+    },
+    left: {
+      flex: 1,
+    },
+    right: {
+      marginTop: spacing.xxl,
+    },
+    subtitle: {
+      ...typography.monoLabel,
+      color: c.textTertiary,
+      letterSpacing: 0.12,
+      textTransform: 'uppercase',
+      marginBottom: spacing.xs,
+    },
+    title: {
+      ...typography.heading,
+      color: c.textPrimary,
+      letterSpacing: -0.02,
+    },
+  });

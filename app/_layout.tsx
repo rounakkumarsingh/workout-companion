@@ -48,8 +48,7 @@ export default function RootLayout() {
         if (!cancelled) setDbStatus('ready');
       } catch (err) {
         if (!cancelled) {
-          const message =
-            err instanceof Error ? err.message : 'Unknown database error';
+          const message = err instanceof Error ? err.message : 'Unknown database error';
           console.error('[db] Migration failed:', err);
           setDbError(message);
           setDbStatus('error');
@@ -80,7 +79,7 @@ export default function RootLayout() {
     );
   }
 
-  if (dbStatus === 'error' as DbStatus) {
+  if (dbStatus === ('error' as DbStatus)) {
     return (
       <View style={styles.container}>
         <Text style={styles.errorTitle}>Database Error</Text>

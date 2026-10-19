@@ -43,36 +43,37 @@ export function TechniqueNotes({ notes }: TechniqueNotesProps) {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  container: {
-    marginHorizontal: spacing.xxl,
-    marginBottom: spacing.xl,
-  },
-  toggle: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    alignItems: 'center',
-  },
-  icon: {
-    fontSize: 10,
-    color: c.gold,
-  },
-  label: {
-    ...typography.monoLabel,
-    color: c.gold,
-    letterSpacing: 0.08,
-  },
-  content: {
-    backgroundColor: c.surfaceElevated,
-    borderWidth: 0.5,
-    borderColor: c.border,
-    borderRadius: radii.card,
-    padding: spacing.xxl,
-    marginTop: spacing.sm,
-  },
-  text: {
-    ...typography.monoBody,
-    color: c.textSecondary,
-    lineHeight: 22,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    container: {
+      marginHorizontal: spacing.xxl,
+      marginBottom: spacing.xl,
+    },
+    toggle: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      alignItems: 'center',
+    },
+    icon: {
+      fontSize: 10,
+      color: c.gold,
+    },
+    label: {
+      ...typography.monoLabel,
+      color: c.gold,
+      letterSpacing: 0.08,
+    },
+    content: {
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      borderRadius: radii.card,
+      padding: spacing.xxl,
+      marginTop: spacing.sm,
+    },
+    text: {
+      ...typography.monoBody,
+      color: c.textSecondary,
+      lineHeight: 22,
+    },
+  });

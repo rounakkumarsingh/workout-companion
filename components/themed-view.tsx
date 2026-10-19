@@ -10,9 +10,7 @@ export function ThemedView({ style, lightColor, darkColor, ...otherProps }: Them
   const colors = useColors();
   const colorScheme = useColorScheme() ?? 'light';
   const backgroundColor =
-    colorScheme === 'light'
-      ? (lightColor ?? colors.background)
-      : (darkColor ?? colors.background);
+    colorScheme === 'light' ? (lightColor ?? colors.background) : (darkColor ?? colors.background);
 
   return <View style={[{ backgroundColor }, style]} {...otherProps} />;
 }

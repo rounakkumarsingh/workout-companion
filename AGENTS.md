@@ -19,15 +19,15 @@ The PDFs in docs/ are the source of truth for the training system.
 
 ## General Rules
 
-* Do not invent features outside the defined MVP.
-* Do not redesign the training methodology.
-* Do not generate placeholder architecture.
-* Prefer iterative changes over large rewrites.
-* Preserve type safety.
-* Prefer explicit types over implicit inference.
-* Keep files focused and modular.
-* Avoid unnecessary abstractions early in development.
-* Avoid premature optimization.
+- Do not invent features outside the defined MVP.
+- Do not redesign the training methodology.
+- Do not generate placeholder architecture.
+- Prefer iterative changes over large rewrites.
+- Preserve type safety.
+- Prefer explicit types over implicit inference.
+- Keep files focused and modular.
+- Avoid unnecessary abstractions early in development.
+- Avoid premature optimization.
 
 ---
 
@@ -35,31 +35,31 @@ The PDFs in docs/ are the source of truth for the training system.
 
 This app is:
 
-* execution-focused
-* progression-focused
-* offline-first
-* mobile-first
-* structured around a fixed training system
+- execution-focused
+- progression-focused
+- offline-first
+- mobile-first
+- structured around a fixed training system
 
 This app is NOT:
 
-* a generic workout builder
-* a social platform
-* an AI coaching app
-* a calorie tracker
-* a wearable ecosystem
+- a generic workout builder
+- a social platform
+- an AI coaching app
+- a calorie tracker
+- a wearable ecosystem
 
 ---
 
 ## Coding Constraints
 
-* Use TypeScript strictly.
-* Prefer functional React components.
-* Prefer simple and readable code.
-* Avoid over-engineering state management.
-* Avoid introducing backend/cloud systems unless explicitly requested.
-* Do not introduce new dependencies without justification.
-* SQLite is the primary persistence layer.
+- Use TypeScript strictly.
+- Prefer functional React components.
+- Prefer simple and readable code.
+- Avoid over-engineering state management.
+- Avoid introducing backend/cloud systems unless explicitly requested.
+- Do not introduce new dependencies without justification.
+- SQLite is the primary persistence layer.
 
 ---
 
@@ -74,10 +74,10 @@ Agents should:
 
 Agents must NOT:
 
-* refactor unrelated areas,
-* generate large speculative systems,
-* create unused files,
-* introduce architectural drift.
+- refactor unrelated areas,
+- generate large speculative systems,
+- create unused files,
+- introduce architectural drift.
 
 ---
 
@@ -85,10 +85,10 @@ Agents must NOT:
 
 When working with PDFs:
 
-* extract structured information incrementally,
-* focus on one conceptual domain at a time,
-* avoid mixing extraction with implementation,
-* preserve terminology from the original program.
+- extract structured information incrementally,
+- focus on one conceptual domain at a time,
+- avoid mixing extraction with implementation,
+- preserve terminology from the original program.
 
 ---
 

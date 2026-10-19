@@ -46,10 +46,7 @@ export interface SessionActivity {
 }
 
 /** A working set counts only once the user actually logged it. */
-const loggedWorkingSet = and(
-  isNotNull(workoutSetLogs.loggedAt),
-  eq(workoutSetLogs.isWarmup, 0),
-);
+const loggedWorkingSet = and(isNotNull(workoutSetLogs.loggedAt), eq(workoutSetLogs.isWarmup, 0));
 
 export async function createSession(input: CreateSessionInput) {
   const db = await getDb();
@@ -115,11 +112,7 @@ export async function createSessionWithLogs(input: CreateSessionWithLogsInput) {
 
 export async function getSessionById(id: string) {
   const db = await getDb();
-  const rows = db
-    .select()
-    .from(workoutSessions)
-    .where(eq(workoutSessions.id, id))
-    .all();
+  const rows = db.select().from(workoutSessions).where(eq(workoutSessions.id, id)).all();
 
   return rows[0] ?? null;
 }
@@ -228,17 +221,13 @@ export async function getSessionsWithVolume(limit = 20): Promise<SessionWithVolu
       completedAt: workoutSessions.completedAt,
       status: workoutSessions.status,
       createdAt: workoutSessions.createdAt,
-      totalVolume:
-        sql`COALESCE(SUM(${workoutSetLogs.weight} * ${workoutSetLogs.reps}), 0)`.mapWith(
-          Number,
-        ),
+      totalVolume: sql`COALESCE(SUM(${workoutSetLogs.weight} * ${workoutSetLogs.reps}), 0)`.mapWith(
+        Number,
+      ),
       totalSets: sql`COUNT(${workoutSetLogs.id})`.mapWith(Number),
     })
     .from(workoutSessions)
-    .leftJoin(
-      exerciseLogs,
-      eq(workoutSessions.id, exerciseLogs.workoutSessionId),
-    )
+    .leftJoin(exerciseLogs, eq(workoutSessions.id, exerciseLogs.workoutSessionId))
     .leftJoin(
       workoutSetLogs,
       and(eq(exerciseLogs.id, workoutSetLogs.exerciseLogId), loggedWorkingSet),
@@ -282,12 +271,7 @@ export async function getSessionsStartedBetween(
   return db
     .select()
     .from(workoutSessions)
-    .where(
-      and(
-        gte(workoutSessions.startedAt, startIso),
-        lt(workoutSessions.startedAt, endIso),
-      ),
-    )
+    .where(and(gte(workoutSessions.startedAt, startIso), lt(workoutSessions.startedAt, endIso)))
     .orderBy(desc(workoutSessions.startedAt))
     .all();
 }
@@ -303,12 +287,7 @@ export async function getCompletedSessionsSince(
       startedAt: workoutSessions.startedAt,
     })
     .from(workoutSessions)
-    .where(
-      and(
-        eq(workoutSessions.status, 'completed'),
-        gte(workoutSessions.startedAt, sinceIso),
-      ),
-    )
+    .where(and(eq(workoutSessions.status, 'completed'), gte(workoutSessions.startedAt, sinceIso)))
     .orderBy(desc(workoutSessions.startedAt))
     .all();
 }
@@ -337,21 +316,14 @@ export async function getAllWorkoutDates(): Promise<string[]> {
   return Array.from(new Set(rows.map((r) => isoToLocalDateKey(r.startedAt))));
 }
 
-export async function getAdherenceRate(
-  weekNumber: number,
-): Promise<number> {
+export async function getAdherenceRate(weekNumber: number): Promise<number> {
   const db = await getDb();
   const row = db
     .select({
       count: sql`COUNT(*)`.mapWith(Number),
     })
     .from(workoutSessions)
-    .where(
-      and(
-        eq(workoutSessions.weekNumber, weekNumber),
-        eq(workoutSessions.status, 'completed'),
-      ),
-    )
+    .where(and(eq(workoutSessions.weekNumber, weekNumber), eq(workoutSessions.status, 'completed')))
     .all();
 
   return row[0]?.count ?? 0;

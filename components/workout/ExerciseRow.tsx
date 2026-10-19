@@ -31,7 +31,15 @@ const CHECK_PATH = 'M6 12l4 4 8-8';
 const CHECK_LENGTH = 28;
 const SHIMMER_WIDTH = 4;
 
-export function ExerciseRow({ exercise, status, progressionStatus, icon, spec, onPress, onLongPress }: ExerciseRowProps) {
+export function ExerciseRow({
+  exercise,
+  status,
+  progressionStatus,
+  icon,
+  spec,
+  onPress,
+  onLongPress,
+}: ExerciseRowProps) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const reducedMotion = useReducedMotion();
@@ -167,137 +175,138 @@ export function ExerciseRow({ exercise, status, progressionStatus, icon, spec, o
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  row: {
-    backgroundColor: c.surfaceElevated,
-    borderWidth: 0.5,
-    borderColor: c.border,
-    borderRadius: radii.row,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.lg,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  rowDone: {
-    borderColor: c.successBorder,
-    backgroundColor: c.successSurface,
-  },
-  rowActive: {
-    borderColor: c.gold,
-    backgroundColor: c.goldSurface,
-  },
-  shimmer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: SHIMMER_WIDTH,
-    height: '100%',
-    backgroundColor: c.gold,
-    opacity: 0.12,
-  },
-  flashOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: c.success,
-    borderRadius: radii.row,
-  },
-  iconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: radii.icon,
-    backgroundColor: c.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    position: 'relative',
-  },
-  iconDone: {
-    backgroundColor: c.successDim,
-  },
-  iconActive: {
-    backgroundColor: c.goldDim,
-  },
-  icon: {
-    fontSize: 13,
-    position: 'relative',
-  },
-  info: {
-    flex: 1,
-    position: 'relative',
-  },
-  name: {
-    ...typography.exerciseName,
-    color: c.textPrimary,
-  },
-  nameDone: {
-    color: c.successText,
-  },
-  nameActive: {
-    color: c.gold,
-  },
-  specRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  spec: {
-    ...typography.monoBody,
-    color: c.textTertiary,
-  },
-  specDone: {
-    color: c.successDim,
-  },
-  specActive: {
-    color: c.goldDim,
-  },
-  check: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    borderColor: c.textMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    position: 'relative',
-  },
-  checkDone: {
-    backgroundColor: c.success,
-    borderColor: c.success,
-  },
-  checkActive: {
-    borderColor: c.gold,
-  },
-  chevron: {
-    fontSize: 16,
-    color: c.textMuted,
-    fontWeight: '700',
-    lineHeight: 18,
-  },
-  chevronActive: {
-    color: c.gold,
-  },
-  progressionBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: c.successDim,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: spacing.sm,
-    flexShrink: 0,
-  },
-  progressionAlmost: {
-    backgroundColor: c.goldDim,
-  },
-  progressionIcon: {
-    fontSize: 12,
-    color: c.successText,
-    fontWeight: '700',
-  },
-  progressionAlmostIcon: {
-    color: c.gold,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    row: {
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      borderRadius: radii.row,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: 14,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.lg,
+      overflow: 'hidden',
+      position: 'relative',
+    },
+    rowDone: {
+      borderColor: c.successBorder,
+      backgroundColor: c.successSurface,
+    },
+    rowActive: {
+      borderColor: c.gold,
+      backgroundColor: c.goldSurface,
+    },
+    shimmer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: SHIMMER_WIDTH,
+      height: '100%',
+      backgroundColor: c.gold,
+      opacity: 0.12,
+    },
+    flashOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: c.success,
+      borderRadius: radii.row,
+    },
+    iconWrap: {
+      width: 34,
+      height: 34,
+      borderRadius: radii.icon,
+      backgroundColor: c.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+      position: 'relative',
+    },
+    iconDone: {
+      backgroundColor: c.successDim,
+    },
+    iconActive: {
+      backgroundColor: c.goldDim,
+    },
+    icon: {
+      fontSize: 13,
+      position: 'relative',
+    },
+    info: {
+      flex: 1,
+      position: 'relative',
+    },
+    name: {
+      ...typography.exerciseName,
+      color: c.textPrimary,
+    },
+    nameDone: {
+      color: c.successText,
+    },
+    nameActive: {
+      color: c.gold,
+    },
+    specRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 2,
+    },
+    spec: {
+      ...typography.monoBody,
+      color: c.textTertiary,
+    },
+    specDone: {
+      color: c.successDim,
+    },
+    specActive: {
+      color: c.goldDim,
+    },
+    check: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      borderWidth: 1.5,
+      borderColor: c.textMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+      position: 'relative',
+    },
+    checkDone: {
+      backgroundColor: c.success,
+      borderColor: c.success,
+    },
+    checkActive: {
+      borderColor: c.gold,
+    },
+    chevron: {
+      fontSize: 16,
+      color: c.textMuted,
+      fontWeight: '700',
+      lineHeight: 18,
+    },
+    chevronActive: {
+      color: c.gold,
+    },
+    progressionBadge: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: c.successDim,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: spacing.sm,
+      flexShrink: 0,
+    },
+    progressionAlmost: {
+      backgroundColor: c.goldDim,
+    },
+    progressionIcon: {
+      fontSize: 12,
+      color: c.successText,
+      fontWeight: '700',
+    },
+    progressionAlmostIcon: {
+      color: c.gold,
+    },
+  });

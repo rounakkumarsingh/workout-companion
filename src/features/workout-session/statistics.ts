@@ -33,9 +33,13 @@ export function computeSessionDuration(session: ActiveSession): number {
   return getElapsedMinutes(session);
 }
 
-export async function detectPersonalRecords(
-  session: ActiveSession,
-): Promise<{ exerciseName: string; set: { setIndex: number; weight: number; reps: number }; previousBestWeight: number | null }[]> {
+export async function detectPersonalRecords(session: ActiveSession): Promise<
+  {
+    exerciseName: string;
+    set: { setIndex: number; weight: number; reps: number };
+    previousBestWeight: number | null;
+  }[]
+> {
   const prs: {
     exerciseName: string;
     set: { setIndex: number; weight: number; reps: number };

@@ -51,15 +51,15 @@ export async function getSuggestedSetValues(
   const last = await getLastCompletedSessionForExercise(exerciseName, options);
   return Array.from({ length: setCount }, (_, i) => {
     if (!last || last.sets.length === 0) return { weight: 0, reps: 0 };
-    const match =
-      last.sets.find((s) => s.setIndex === i + 1) ?? last.sets[last.sets.length - 1];
+    const match = last.sets.find((s) => s.setIndex === i + 1) ?? last.sets[last.sets.length - 1];
     return { weight: match.weight, reps: match.reps };
   });
 }
 
-function extractRepsAndWeights(
-  data: LastSession | { reps: number[] } | null,
-): { reps: number[]; weights: number[] } {
+function extractRepsAndWeights(data: LastSession | { reps: number[] } | null): {
+  reps: number[];
+  weights: number[];
+} {
   if (!data) return { reps: [], weights: [] };
   if ('sets' in data) {
     return {
@@ -76,7 +76,7 @@ export async function checkProgression(
   history?: LastSession | { reps: number[] } | null,
 ): Promise<ProgressionSuggestion> {
   const topOfRange = parseRepRangeTop(repRange);
-  const sessionData = history ?? await getLastCompletedSessionForExercise(exerciseName);
+  const sessionData = history ?? (await getLastCompletedSessionForExercise(exerciseName));
   const { reps: lastReps, weights: lastWeights } = extractRepsAndWeights(sessionData);
 
   const allAtTop = lastReps.length > 0 && lastReps.every((r) => r >= topOfRange);

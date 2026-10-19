@@ -19,29 +19,30 @@ export function StreakBadge({ count }: StreakBadgeProps) {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  badge: {
-    backgroundColor: c.surfaceInteractive,
-    borderWidth: 0.5,
-    borderColor: c.borderActive,
-    borderRadius: radii.dot,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-  },
-  num: {
-    fontFamily: 'SpaceMono_700Bold',
-    fontSize: 26,
-    lineHeight: 26,
-    color: c.gold,
-  },
-  label: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 9,
-    lineHeight: 10,
-    color: c.textTertiary,
-    letterSpacing: 0.08,
-    textTransform: 'uppercase',
-    marginTop: 1,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    badge: {
+      backgroundColor: c.surfaceInteractive,
+      borderWidth: 0.5,
+      borderColor: c.borderActive,
+      borderRadius: radii.dot,
+      paddingVertical: 7,
+      paddingHorizontal: 12,
+      alignItems: 'center',
+    },
+    num: {
+      fontFamily: 'SpaceMono_700Bold',
+      fontSize: 26,
+      lineHeight: 26,
+      color: c.gold,
+    },
+    label: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 9,
+      lineHeight: 10,
+      color: c.textTertiary,
+      letterSpacing: 0.08,
+      textTransform: 'uppercase',
+      marginTop: 1,
+    },
+  });

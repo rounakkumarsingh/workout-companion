@@ -31,11 +31,7 @@ export async function createCardioSession(input: CreateCardioSessionInput) {
 
 export async function getCardioSessionById(id: string) {
   const db = await getDb();
-  const rows = db
-    .select()
-    .from(cardioSessions)
-    .where(eq(cardioSessions.id, id))
-    .all();
+  const rows = db.select().from(cardioSessions).where(eq(cardioSessions.id, id)).all();
 
   return rows[0] ?? null;
 }
@@ -52,17 +48,10 @@ export async function getCardioSessionsByWeek(weekNumber: number) {
 
 export async function getCardioSessions(limit = 50) {
   const db = await getDb();
-  return db
-    .select()
-    .from(cardioSessions)
-    .orderBy(desc(cardioSessions.loggedAt))
-    .limit(limit)
-    .all();
+  return db.select().from(cardioSessions).orderBy(desc(cardioSessions.loggedAt)).limit(limit).all();
 }
 
-export async function getCardioMinutesByWeek(
-  weekNumber: number,
-): Promise<number> {
+export async function getCardioMinutesByWeek(weekNumber: number): Promise<number> {
   const db = await getDb();
   const rows = db
     .select({

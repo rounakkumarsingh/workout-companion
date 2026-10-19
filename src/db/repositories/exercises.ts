@@ -1,10 +1,6 @@
 import { eq, asc, and, ne, desc, inArray, isNotNull, sql } from 'drizzle-orm';
 import { getDb } from '../client';
-import {
-  exerciseLogs,
-  workoutSetLogs,
-  workoutSessions,
-} from '../drizzle-schema';
+import { exerciseLogs, workoutSetLogs, workoutSessions } from '../drizzle-schema';
 
 export interface CreateExerciseLogInput {
   id: string;
@@ -58,11 +54,7 @@ export async function createExerciseLog(input: CreateExerciseLogInput) {
 
 export async function getExerciseLogById(id: string) {
   const db = await getDb();
-  const rows = db
-    .select()
-    .from(exerciseLogs)
-    .where(eq(exerciseLogs.id, id))
-    .all();
+  const rows = db.select().from(exerciseLogs).where(eq(exerciseLogs.id, id)).all();
 
   return rows[0] ?? null;
 }
@@ -98,7 +90,7 @@ export async function getExerciseLogsWithSetsBySession(
     .orderBy(asc(workoutSetLogs.setIndex))
     .all();
 
-  const setsByLogId = new Map<string, typeof workoutSetLogs.$inferSelect[]>();
+  const setsByLogId = new Map<string, (typeof workoutSetLogs.$inferSelect)[]>();
   for (const set of allSets) {
     const existing = setsByLogId.get(set.exerciseLogId);
     if (existing) {
@@ -133,11 +125,7 @@ export async function createSetLog(input: CreateSetLogInput) {
 
 export async function getSetLogById(id: string) {
   const db = await getDb();
-  const rows = db
-    .select()
-    .from(workoutSetLogs)
-    .where(eq(workoutSetLogs.id, id))
-    .all();
+  const rows = db.select().from(workoutSetLogs).where(eq(workoutSetLogs.id, id)).all();
 
   return rows[0] ?? null;
 }
@@ -188,14 +176,8 @@ export async function getExerciseHistory(
       loggedRpe: workoutSetLogs.loggedRpe,
     })
     .from(workoutSetLogs)
-    .innerJoin(
-      exerciseLogs,
-      eq(workoutSetLogs.exerciseLogId, exerciseLogs.id),
-    )
-    .innerJoin(
-      workoutSessions,
-      eq(exerciseLogs.workoutSessionId, workoutSessions.id),
-    )
+    .innerJoin(exerciseLogs, eq(workoutSetLogs.exerciseLogId, exerciseLogs.id))
+    .innerJoin(workoutSessions, eq(exerciseLogs.workoutSessionId, workoutSessions.id))
     .where(historyFilter(exerciseName, options.excludeSessionId))
     .orderBy(desc(workoutSessions.startedAt), desc(workoutSetLogs.setIndex))
     .limit(limit)
@@ -215,14 +197,8 @@ export async function getBestWorkingWeight(
       best: sql<number | null>`MAX(${workoutSetLogs.weight})`,
     })
     .from(workoutSetLogs)
-    .innerJoin(
-      exerciseLogs,
-      eq(workoutSetLogs.exerciseLogId, exerciseLogs.id),
-    )
-    .innerJoin(
-      workoutSessions,
-      eq(exerciseLogs.workoutSessionId, workoutSessions.id),
-    )
+    .innerJoin(exerciseLogs, eq(workoutSetLogs.exerciseLogId, exerciseLogs.id))
+    .innerJoin(workoutSessions, eq(exerciseLogs.workoutSessionId, workoutSessions.id))
     .where(historyFilter(exerciseName, excludeSessionId))
     .all();
 
@@ -238,14 +214,8 @@ export async function getVolumeByExercise(): Promise<{ exerciseName: string; vol
       volume: sql`SUM(${workoutSetLogs.weight} * ${workoutSetLogs.reps})`.mapWith(Number),
     })
     .from(workoutSetLogs)
-    .innerJoin(
-      exerciseLogs,
-      eq(workoutSetLogs.exerciseLogId, exerciseLogs.id),
-    )
-    .innerJoin(
-      workoutSessions,
-      eq(exerciseLogs.workoutSessionId, workoutSessions.id),
-    )
+    .innerJoin(exerciseLogs, eq(workoutSetLogs.exerciseLogId, exerciseLogs.id))
+    .innerJoin(workoutSessions, eq(exerciseLogs.workoutSessionId, workoutSessions.id))
     .where(
       and(
         isNotNull(workoutSetLogs.loggedAt),
@@ -258,9 +228,7 @@ export async function getVolumeByExercise(): Promise<{ exerciseName: string; vol
     .all();
 }
 
-export async function getTotalVolume(
-  sessionId: string,
-): Promise<number> {
+export async function getTotalVolume(sessionId: string): Promise<number> {
   const db = await getDb();
   const rows = db
     .select({
@@ -269,10 +237,7 @@ export async function getTotalVolume(
       ),
     })
     .from(workoutSetLogs)
-    .innerJoin(
-      exerciseLogs,
-      eq(workoutSetLogs.exerciseLogId, exerciseLogs.id),
-    )
+    .innerJoin(exerciseLogs, eq(workoutSetLogs.exerciseLogId, exerciseLogs.id))
     .where(
       and(
         eq(exerciseLogs.workoutSessionId, sessionId),
@@ -302,10 +267,7 @@ export async function updateSetLog(id: string, input: UpdateSetLogInput) {
 
   if (Object.keys(updates).length === 0) return getSetLogById(id);
 
-  db.update(workoutSetLogs)
-    .set(updates)
-    .where(eq(workoutSetLogs.id, id))
-    .run();
+  db.update(workoutSetLogs).set(updates).where(eq(workoutSetLogs.id, id)).run();
 
   return getSetLogById(id);
 }
@@ -318,10 +280,7 @@ export async function updateExerciseLog(id: string, input: UpdateExerciseLogInpu
 
   if (Object.keys(updates).length === 0) return getExerciseLogById(id);
 
-  db.update(exerciseLogs)
-    .set(updates)
-    .where(eq(exerciseLogs.id, id))
-    .run();
+  db.update(exerciseLogs).set(updates).where(eq(exerciseLogs.id, id)).run();
 
   return getExerciseLogById(id);
 }
@@ -331,16 +290,11 @@ export async function updateExerciseLogStatus(
   status: 'pending' | 'active' | 'completed',
 ) {
   const db = await getDb();
-  db.update(exerciseLogs)
-    .set({ status })
-    .where(eq(exerciseLogs.id, id))
-    .run();
+  db.update(exerciseLogs).set({ status }).where(eq(exerciseLogs.id, id)).run();
   return getExerciseLogById(id);
 }
 
-export async function createWarmupSetLog(
-  input: CreateSetLogInput & { isWarmup: boolean },
-) {
+export async function createWarmupSetLog(input: CreateSetLogInput & { isWarmup: boolean }) {
   const db = await getDb();
   db.insert(workoutSetLogs)
     .values({

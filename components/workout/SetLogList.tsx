@@ -22,8 +22,8 @@ export function SetLogList({ sets, allSetsLogged, currentSetIndex }: SetLogListP
         const status = isLogged
           ? 'done'
           : set.setIndex === currentSetIndex || (allSetsLogged && set.setIndex === sets.length)
-          ? 'current'
-          : 'pending';
+            ? 'current'
+            : 'pending';
         return (
           <SetLogRow
             key={set.setIndex}
@@ -38,10 +38,11 @@ export function SetLogList({ sets, allSetsLogged, currentSetIndex }: SetLogListP
   );
 }
 
-const makeStyles = (_c: ColorSet) => StyleSheet.create({
-  list: {
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: spacing.lg,
-    gap: 7,
-  },
-});
+const makeStyles = (_c: ColorSet) =>
+  StyleSheet.create({
+    list: {
+      paddingHorizontal: spacing.xxl,
+      paddingBottom: spacing.lg,
+      gap: 7,
+    },
+  });

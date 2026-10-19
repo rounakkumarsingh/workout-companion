@@ -34,42 +34,43 @@ export function RpeSelector({ selected, onSelect }: RpeSelectorProps) {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  wrap: {
-    marginBottom: spacing.xl,
-  },
-  label: {
-    ...typography.monoTiny,
-    color: c.textTertiary,
-    letterSpacing: 0.08,
-    textTransform: 'uppercase',
-    paddingHorizontal: spacing.xxl,
-    marginBottom: spacing.sm,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.xxl,
-  },
-  btn: {
-    flex: 1,
-    backgroundColor: c.surfaceInteractive,
-    borderWidth: 0.5,
-    borderColor: c.borderActive,
-    borderRadius: radii.icon,
-    paddingVertical: 14,
-    alignItems: 'center',
-    minHeight: 44,
-  },
-  selected: {
-    backgroundColor: c.goldSurface,
-    borderColor: c.gold,
-  },
-  btnText: {
-    ...typography.monoSmall,
-    color: c.textSecondary,
-  },
-  selectedText: {
-    color: c.gold,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    wrap: {
+      marginBottom: spacing.xl,
+    },
+    label: {
+      ...typography.monoTiny,
+      color: c.textTertiary,
+      letterSpacing: 0.08,
+      textTransform: 'uppercase',
+      paddingHorizontal: spacing.xxl,
+      marginBottom: spacing.sm,
+    },
+    row: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      paddingHorizontal: spacing.xxl,
+    },
+    btn: {
+      flex: 1,
+      backgroundColor: c.surfaceInteractive,
+      borderWidth: 0.5,
+      borderColor: c.borderActive,
+      borderRadius: radii.icon,
+      paddingVertical: 14,
+      alignItems: 'center',
+      minHeight: 44,
+    },
+    selected: {
+      backgroundColor: c.goldSurface,
+      borderColor: c.gold,
+    },
+    btnText: {
+      ...typography.monoSmall,
+      color: c.textSecondary,
+    },
+    selectedText: {
+      color: c.gold,
+    },
+  });

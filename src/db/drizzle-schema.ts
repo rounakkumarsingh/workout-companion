@@ -1,13 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { TOTAL_WEEKS } from '../data/program';
-import {
-  sqliteTable,
-  text,
-  integer,
-  real,
-  index,
-  check,
-} from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index, check } from 'drizzle-orm/sqlite-core';
 
 // ============================================================
 // Workout Sessions
@@ -29,18 +22,12 @@ export const workoutSessions = sqliteTable(
   (table) => [
     index('idx_workout_sessions_week').on(table.weekNumber),
     index('idx_workout_sessions_status').on(table.status),
-    check(
-      'chk_sessions_week',
-      sql`${table.weekNumber} BETWEEN 1 AND ${TOTAL_WEEKS}`,
-    ),
+    check('chk_sessions_week', sql`${table.weekNumber} BETWEEN 1 AND ${TOTAL_WEEKS}`),
     check(
       'chk_sessions_day_type',
       sql`${table.dayType} IN ('Upper', 'Lower', 'Pull', 'Push', 'Legs')`,
     ),
-    check(
-      'chk_sessions_status',
-      sql`${table.status} IN ('in_progress', 'completed', 'abandoned')`,
-    ),
+    check('chk_sessions_status', sql`${table.status} IN ('in_progress', 'completed', 'abandoned')`),
   ],
 );
 
@@ -67,10 +54,7 @@ export const exerciseLogs = sqliteTable(
   (table) => [
     index('idx_exercise_logs_session').on(table.workoutSessionId),
     index('idx_exercise_logs_exercise').on(table.exerciseName),
-    check(
-      'chk_exercise_status',
-      sql`${table.status} IN ('pending', 'active', 'completed')`,
-    ),
+    check('chk_exercise_status', sql`${table.status} IN ('pending', 'active', 'completed')`),
   ],
 );
 
@@ -126,10 +110,7 @@ export const bodyweightEntries = sqliteTable(
   },
   (table) => [
     index('idx_bodyweight_entries_date').on(table.measuredAt),
-    check(
-      'chk_bodyweight_unit',
-      sql`${table.unit} IN ('lbs', 'kg')`,
-    ),
+    check('chk_bodyweight_unit', sql`${table.unit} IN ('lbs', 'kg')`),
   ],
 );
 
@@ -153,18 +134,12 @@ export const cardioSessions = sqliteTable(
   },
   (table) => [
     index('idx_cardio_sessions_week').on(table.weekNumber),
-    check(
-      'chk_cardio_week',
-      sql`${table.weekNumber} BETWEEN 1 AND ${TOTAL_WEEKS}`,
-    ),
+    check('chk_cardio_week', sql`${table.weekNumber} BETWEEN 1 AND ${TOTAL_WEEKS}`),
     check(
       'chk_cardio_intensity',
       sql`${table.intensityType} IN ('low_moderate', 'high_intensity')`,
     ),
-    check(
-      'chk_cardio_duration',
-      sql`${table.durationMinutes} > 0`,
-    ),
+    check('chk_cardio_duration', sql`${table.durationMinutes} > 0`),
   ],
 );
 
@@ -186,10 +161,7 @@ export const progressPhotos = sqliteTable(
   },
   (table) => [
     index('idx_progress_photos_date').on(table.takenAt),
-    check(
-      'chk_photos_angle',
-      sql`${table.angle} IN ('front', 'side', 'rear')`,
-    ),
+    check('chk_photos_angle', sql`${table.angle} IN ('front', 'side', 'rear')`),
   ],
 );
 

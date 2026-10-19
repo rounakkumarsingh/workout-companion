@@ -1,6 +1,13 @@
 import type { DayType, ExercisePrescription } from '../../data/program';
 import { PROGRAM } from '../../data/program';
-import type { ActiveSession, ActiveExercise, ActiveSet, ExerciseStatus, ExerciseHistoryComparison, SessionProgress } from './types';
+import type {
+  ActiveSession,
+  ActiveExercise,
+  ActiveSet,
+  ExerciseStatus,
+  ExerciseHistoryComparison,
+  SessionProgress,
+} from './types';
 import {
   getSessionById,
   updateSessionStatus,
@@ -329,8 +336,6 @@ export async function getExerciseHistoryComparison(
 
 export function getElapsedMinutes(session: ActiveSession): number {
   const start = new Date(session.startedAt).getTime();
-  const end = session.completedAt
-    ? new Date(session.completedAt).getTime()
-    : Date.now();
+  const end = session.completedAt ? new Date(session.completedAt).getTime() : Date.now();
   return Math.floor((end - start) / 60000);
 }

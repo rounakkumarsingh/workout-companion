@@ -51,15 +51,11 @@ export default function ProgramCompletedScreen() {
         )}
         <View style={styles.statCard}>
           <Text style={[styles.statLabel, { color: colors.textTertiary }]}>Sessions</Text>
-          <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-            {totalSessions}
-          </Text>
+          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{totalSessions}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statLabel, { color: colors.textTertiary }]}>Adherence</Text>
-          <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-            {adherenceRate}%
-          </Text>
+          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{adherenceRate}%</Text>
         </View>
       </View>
 

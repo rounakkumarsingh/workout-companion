@@ -17,7 +17,9 @@ export function ProgramProgressBar({ currentWeek, totalWeeks = 12 }: ProgramProg
   return (
     <View style={styles.wrap}>
       <View style={styles.labelRow}>
-        <Text style={styles.label}>Week {currentWeek} of {totalWeeks}</Text>
+        <Text style={styles.label}>
+          Week {currentWeek} of {totalWeeks}
+        </Text>
         <Text style={styles.pct}>{pct}%</Text>
       </View>
       <View style={styles.track}>
@@ -27,32 +29,33 @@ export function ProgramProgressBar({ currentWeek, totalWeeks = 12 }: ProgramProg
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  wrap: {
-    marginHorizontal: spacing.xxl,
-    marginBottom: spacing.xl,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xs,
-  },
-  label: {
-    ...typography.monoSmall,
-    color: c.textTertiary,
-  },
-  pct: {
-    ...typography.monoSmall,
-    color: c.gold,
-  },
-  track: {
-    height: 4,
-    backgroundColor: c.textDim,
-    borderRadius: 2,
-  },
-  fill: {
-    height: 4,
-    backgroundColor: c.gold,
-    borderRadius: 2,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    wrap: {
+      marginHorizontal: spacing.xxl,
+      marginBottom: spacing.xl,
+    },
+    labelRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: spacing.xs,
+    },
+    label: {
+      ...typography.monoSmall,
+      color: c.textTertiary,
+    },
+    pct: {
+      ...typography.monoSmall,
+      color: c.gold,
+    },
+    track: {
+      height: 4,
+      backgroundColor: c.textDim,
+      borderRadius: 2,
+    },
+    fill: {
+      height: 4,
+      backgroundColor: c.gold,
+      borderRadius: 2,
+    },
+  });
