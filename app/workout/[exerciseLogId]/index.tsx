@@ -118,6 +118,7 @@ export default function ExerciseDetailScreen() {
   const [comparison, setComparison] = useState<ExerciseHistoryComparison | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(true);
   const hasLoggedSetsRef = useRef(false);
+  const loggingSetRef = useRef(false);
 
   const handleRestExpired = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -339,6 +340,9 @@ export default function ExerciseDetailScreen() {
   const [editingReps, setEditingReps] = useState<string | null>(null);
 
   const handleLogSet = useCallback(async () => {
+    // Ref, not state: a double tap re-enters before state has committed and
+    // would write the set twice and schedule the rest twice.
+    if (loggingSetRef.current) return;
     if (state.phase !== 'active' || state.loggingPhase !== 'logging') return;
     const { session, exercise, currentSetIndex, weight, reps, selectedRpe } = state;
     const targetSet = exercise.sets.find((s) => s.setIndex === currentSetIndex);
@@ -350,6 +354,7 @@ export default function ExerciseDetailScreen() {
     }
     setValidationError(null);
 
+    loggingSetRef.current = true;
     try {
       const result = await updateSet(session, targetSet.setLogId, {
         weight,
@@ -414,6 +419,8 @@ export default function ExerciseDetailScreen() {
     } catch (e) {
       console.error('[exercise] Failed to log set:', e);
       Alert.alert('Error', 'Failed to log set. Please try again.');
+    } finally {
+      loggingSetRef.current = false;
     }
   }, [state, exerciseLogId]);
 

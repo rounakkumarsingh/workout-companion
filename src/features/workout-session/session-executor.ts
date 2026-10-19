@@ -106,11 +106,16 @@ export async function updateSet(
   setLogId: string,
   updates: { weight?: number; reps?: number; loggedRpe?: number | null },
 ): Promise<{ session: ActiveSession; success: boolean; reason?: string }> {
-  const weight = updates.weight ?? 0;
-  const reps = updates.reps ?? 0;
-
-  if (weight <= 0 || reps <= 0) {
-    return { session, success: false, reason: 'Weight and reps must be greater than 0' };
+  // Validate only the fields that were supplied: `?? 0` made an omitted field
+  // indistinguishable from an explicit 0 and rejected every partial update.
+  if (updates.weight !== undefined && updates.weight <= 0) {
+    return { session, success: false, reason: 'Weight must be greater than 0' };
+  }
+  if (updates.reps !== undefined && updates.reps <= 0) {
+    return { session, success: false, reason: 'Reps must be greater than 0' };
+  }
+  if (updates.weight === undefined && updates.reps === undefined) {
+    return { session, success: false, reason: 'No set data provided' };
   }
 
   const now = new Date().toISOString();
