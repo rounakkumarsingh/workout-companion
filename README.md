@@ -66,6 +66,12 @@ npm run format        # oxfmt, rewrite files
 npm run format:check  # oxfmt, fail if anything is unformatted
 ```
 
+The one-off formatting commit is listed in `.git-blame-ignore-revs`. To skip it in `git blame`:
+
+```sh
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
 ## Tech stack
 
 - Expo SDK 54
