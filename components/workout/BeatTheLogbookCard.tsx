@@ -1,6 +1,11 @@
 import { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import type { ExerciseHistoryComparison } from '@/src/features/workout-session/types';
 import { typography, radii, spacing } from '@/src/theme';
 import { useColors } from '@/src/theme';
@@ -33,7 +38,9 @@ export function BeatTheLogbookCard({ comparison, isLoading }: BeatTheLogbookCard
           {comparison.lastSession?.sets.map((set, i) => (
             <View key={i} style={styles.setRow}>
               <Text style={styles.setLabel}>Set {set.setIndex}: </Text>
-              <Text style={styles.setValue}>{set.weight}kg × {set.reps} reps</Text>
+              <Text style={styles.setValue}>
+                {set.weight}kg × {set.reps} reps
+              </Text>
             </View>
           ))}
           {comparison.prs.length > 0 && (
@@ -70,90 +77,90 @@ function LoadingSkeleton() {
     opacity: opacity.value,
   }));
 
-  return (
-    <Animated.View style={[skeletonStyles.skeleton, animatedStyle]} />
-  );
+  return <Animated.View style={[skeletonStyles.skeleton, animatedStyle]} />;
 }
 
-const makeSkeletonStyles = (c: ColorSet) => StyleSheet.create({
-  skeleton: {
-    backgroundColor: c.surfaceCard,
-    height: 120,
-    borderRadius: radii.card,
-    marginBottom: spacing.xl,
-    marginHorizontal: spacing.xxl,
-  },
-});
+const makeSkeletonStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    skeleton: {
+      backgroundColor: c.surfaceCard,
+      height: 120,
+      borderRadius: radii.card,
+      marginBottom: spacing.xl,
+      marginHorizontal: spacing.xxl,
+    },
+  });
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  card: {
-    backgroundColor: c.surfaceElevated,
-    borderWidth: 0.5,
-    borderColor: c.border,
-    borderRadius: radii.card,
-    padding: spacing.xxl,
-    marginBottom: spacing.xl,
-    marginHorizontal: spacing.xxl,
-  },
-  label: {
-    ...typography.monoTiny,
-    color: c.textTertiary,
-    letterSpacing: 0.12,
-    textTransform: 'uppercase',
-    marginBottom: 10,
-  },
-  firstTime: {
-    ...typography.monoBody,
-    color: c.textMuted,
-    textAlign: 'center',
-  },
-  lastTime: {
-    ...typography.monoSmall,
-    color: c.textSecondary,
-    marginBottom: spacing.sm,
-  },
-  setRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  setLabel: {
-    ...typography.monoSmall,
-    color: c.textMuted,
-  },
-  setValue: {
-    ...typography.monoSmall,
-    color: c.textPrimary,
-  },
-  prBadge: {
-    backgroundColor: c.goldSurface,
-    borderWidth: 0.5,
-    borderColor: c.goldDim,
-    borderRadius: radii.dot,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    alignSelf: 'flex-start',
-    marginTop: spacing.md,
-  },
-  prText: {
-    ...typography.monoSmall,
-    color: c.gold,
-  },
-  weightBanner: {
-    backgroundColor: c.goldSurface,
-    borderWidth: 0.5,
-    borderColor: c.goldDim,
-    borderRadius: radii.dot,
-    padding: spacing.md,
-    marginTop: spacing.md,
-  },
-  weightTitle: {
-    ...typography.monoSmall,
-    color: c.gold,
-  },
-  weightSub: {
-    ...typography.monoTiny,
-    color: c.textSecondary,
-    marginTop: spacing.xs,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      borderRadius: radii.card,
+      padding: spacing.xxl,
+      marginBottom: spacing.xl,
+      marginHorizontal: spacing.xxl,
+    },
+    label: {
+      ...typography.monoTiny,
+      color: c.textTertiary,
+      letterSpacing: 0.12,
+      textTransform: 'uppercase',
+      marginBottom: 10,
+    },
+    firstTime: {
+      ...typography.monoBody,
+      color: c.textMuted,
+      textAlign: 'center',
+    },
+    lastTime: {
+      ...typography.monoSmall,
+      color: c.textSecondary,
+      marginBottom: spacing.sm,
+    },
+    setRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.xs,
+    },
+    setLabel: {
+      ...typography.monoSmall,
+      color: c.textMuted,
+    },
+    setValue: {
+      ...typography.monoSmall,
+      color: c.textPrimary,
+    },
+    prBadge: {
+      backgroundColor: c.goldSurface,
+      borderWidth: 0.5,
+      borderColor: c.goldDim,
+      borderRadius: radii.dot,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      alignSelf: 'flex-start',
+      marginTop: spacing.md,
+    },
+    prText: {
+      ...typography.monoSmall,
+      color: c.gold,
+    },
+    weightBanner: {
+      backgroundColor: c.goldSurface,
+      borderWidth: 0.5,
+      borderColor: c.goldDim,
+      borderRadius: radii.dot,
+      padding: spacing.md,
+      marginTop: spacing.md,
+    },
+    weightTitle: {
+      ...typography.monoSmall,
+      color: c.gold,
+    },
+    weightSub: {
+      ...typography.monoTiny,
+      color: c.textSecondary,
+      marginTop: spacing.xs,
+    },
+  });

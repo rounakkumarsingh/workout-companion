@@ -4,8 +4,18 @@ import { colors, typography, spacing, radii } from '@/src/theme';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 interface WorkoutCalendarProps {
@@ -38,7 +48,10 @@ export function WorkoutCalendar({ workoutDates, onMonthChange }: WorkoutCalendar
     } else {
       setCurrentMonth((m) => m - 1);
     }
-    onMonthChange?.(currentMonth === 0 ? 11 : currentMonth - 1, currentMonth === 0 ? currentYear - 1 : currentYear);
+    onMonthChange?.(
+      currentMonth === 0 ? 11 : currentMonth - 1,
+      currentMonth === 0 ? currentYear - 1 : currentYear,
+    );
   };
 
   const handleNextMonth = () => {
@@ -48,11 +61,16 @@ export function WorkoutCalendar({ workoutDates, onMonthChange }: WorkoutCalendar
     } else {
       setCurrentMonth((m) => m + 1);
     }
-    onMonthChange?.(currentMonth === 11 ? 0 : currentMonth + 1, currentMonth === 11 ? currentYear + 1 : currentYear);
+    onMonthChange?.(
+      currentMonth === 11 ? 0 : currentMonth + 1,
+      currentMonth === 11 ? currentYear + 1 : currentYear,
+    );
   };
 
   const isToday = (day: number) => {
-    return day === now.getDate() && currentMonth === now.getMonth() && currentYear === now.getFullYear();
+    return (
+      day === now.getDate() && currentMonth === now.getMonth() && currentYear === now.getFullYear()
+    );
   };
 
   const isWorkoutDay = (day: number) => {
@@ -71,13 +89,21 @@ export function WorkoutCalendar({ workoutDates, onMonthChange }: WorkoutCalendar
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handlePrevMonth} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} accessibilityLabel="Previous month">
+        <TouchableOpacity
+          onPress={handlePrevMonth}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityLabel="Previous month"
+        >
           <Text style={styles.navArrow}>←</Text>
         </TouchableOpacity>
         <Text style={styles.monthLabel}>
           {MONTHS[currentMonth]} {currentYear}
         </Text>
-        <TouchableOpacity onPress={handleNextMonth} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} accessibilityLabel="Next month">
+        <TouchableOpacity
+          onPress={handleNextMonth}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityLabel="Next month"
+        >
           <Text style={styles.navArrow}>→</Text>
         </TouchableOpacity>
       </View>

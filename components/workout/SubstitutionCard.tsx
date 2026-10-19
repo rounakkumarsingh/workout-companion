@@ -57,31 +57,38 @@ function OptionCard({
   );
 }
 
-const makeOptionStyles = (c: ColorSet) => StyleSheet.create({
-  optionCard: {
-    backgroundColor: c.surfaceInteractive,
-    borderWidth: 0.5,
-    borderColor: c.borderActive,
-    borderRadius: radii.row,
-    padding: spacing.xl,
-    marginBottom: spacing.sm,
-  },
-  optionPrefix: {
-    ...typography.monoSmall,
-    color: c.gold,
-  },
-  optionName: {
-    ...typography.body,
-    color: c.textPrimary,
-  },
-  optionDetail: {
-    ...typography.monoSmall,
-    color: c.textSecondary,
-    marginTop: spacing.xs,
-  },
-});
+const makeOptionStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    optionCard: {
+      backgroundColor: c.surfaceInteractive,
+      borderWidth: 0.5,
+      borderColor: c.borderActive,
+      borderRadius: radii.row,
+      padding: spacing.xl,
+      marginBottom: spacing.sm,
+    },
+    optionPrefix: {
+      ...typography.monoSmall,
+      color: c.gold,
+    },
+    optionName: {
+      ...typography.body,
+      color: c.textPrimary,
+    },
+    optionDetail: {
+      ...typography.monoSmall,
+      color: c.textSecondary,
+      marginTop: spacing.xs,
+    },
+  });
 
-export function SubstitutionCard({ currentExerciseName, options, onSelect, disabled, prescription }: SubstitutionCardProps) {
+export function SubstitutionCard({
+  currentExerciseName,
+  options,
+  onSelect,
+  disabled,
+  prescription,
+}: SubstitutionCardProps) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   if (options.length === 0) return null;
@@ -111,32 +118,33 @@ export function SubstitutionCard({ currentExerciseName, options, onSelect, disab
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  card: {
-    backgroundColor: c.surfaceElevated,
-    borderWidth: 0.5,
-    borderColor: c.border,
-    borderRadius: radii.card,
-    padding: spacing.xxl,
-    marginBottom: spacing.xl,
-    marginHorizontal: spacing.xxl,
-  },
-  label: {
-    ...typography.monoTiny,
-    color: c.textTertiary,
-    letterSpacing: 0.12,
-    textTransform: 'uppercase',
-    marginBottom: spacing.sm,
-  },
-  locked: {
-    ...typography.monoBody,
-    color: c.textMuted,
-    textAlign: 'center',
-  },
-  equalNote: {
-    ...typography.monoTiny,
-    color: c.textMuted,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      borderRadius: radii.card,
+      padding: spacing.xxl,
+      marginBottom: spacing.xl,
+      marginHorizontal: spacing.xxl,
+    },
+    label: {
+      ...typography.monoTiny,
+      color: c.textTertiary,
+      letterSpacing: 0.12,
+      textTransform: 'uppercase',
+      marginBottom: spacing.sm,
+    },
+    locked: {
+      ...typography.monoBody,
+      color: c.textMuted,
+      textAlign: 'center',
+    },
+    equalNote: {
+      ...typography.monoTiny,
+      color: c.textMuted,
+      textAlign: 'center',
+      marginTop: spacing.sm,
+    },
+  });

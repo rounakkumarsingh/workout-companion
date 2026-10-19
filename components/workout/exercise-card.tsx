@@ -45,11 +45,14 @@ export function ExerciseCard({
       {prescription && (
         <View style={styles.metaRow}>
           <View style={styles.metaChip}>
-            <Text style={styles.metaChipText}>{prescription.workingSets}×{prescription.repRange}</Text>
+            <Text style={styles.metaChipText}>
+              {prescription.workingSets}×{prescription.repRange}
+            </Text>
           </View>
           <View style={styles.metaChip}>
             <Text style={styles.metaChipText}>
-              RPE {prescription.earlySetRpe
+              RPE{' '}
+              {prescription.earlySetRpe
                 ? `${prescription.earlySetRpe} / ${prescription.lastSetRpe}`
                 : prescription.lastSetRpe}
             </Text>
@@ -80,58 +83,59 @@ export function ExerciseCard({
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  card: {
-    backgroundColor: c.surfaceElevated,
-    borderRadius: 14,
-    marginHorizontal: 16,
-    marginVertical: 6,
-    padding: 16,
-  },
-  header: {
-    marginBottom: 8,
-  },
-  exerciseName: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: c.textPrimary,
-  },
-  substitutionNote: {
-    fontSize: 12,
-    color: c.textSecondary,
-    fontStyle: 'italic',
-    marginTop: 2,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 12,
-  },
-  metaChip: {
-    backgroundColor: c.surfaceInteractive,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  metaChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: c.success,
-    fontVariant: ['tabular-nums'],
-  },
-  columnHeaders: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-    marginBottom: 4,
-  },
-  columnLabel: {
-    flex: 1,
-    fontSize: 11,
-    fontWeight: '700',
-    color: c.textTertiary,
-    textAlign: 'center',
-    letterSpacing: 0.5,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: c.surfaceElevated,
+      borderRadius: 14,
+      marginHorizontal: 16,
+      marginVertical: 6,
+      padding: 16,
+    },
+    header: {
+      marginBottom: 8,
+    },
+    exerciseName: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: c.textPrimary,
+    },
+    substitutionNote: {
+      fontSize: 12,
+      color: c.textSecondary,
+      fontStyle: 'italic',
+      marginTop: 2,
+    },
+    metaRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginBottom: 12,
+    },
+    metaChip: {
+      backgroundColor: c.surfaceInteractive,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    metaChipText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: c.success,
+      fontVariant: ['tabular-nums'],
+    },
+    columnHeaders: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 4,
+      marginBottom: 4,
+    },
+    columnLabel: {
+      flex: 1,
+      fontSize: 11,
+      fontWeight: '700',
+      color: c.textTertiary,
+      textAlign: 'center',
+      letterSpacing: 0.5,
+    },
+  });

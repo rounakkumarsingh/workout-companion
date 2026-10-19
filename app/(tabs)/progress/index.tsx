@@ -4,7 +4,11 @@ import { useFocusEffect } from 'expo-router';
 import { useColors, typography, spacing, radii } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { getSessionsWithVolume, getSessionCountByWeek, getAllWorkoutDates } from '@/src/db/repositories/sessions';
+import {
+  getSessionsWithVolume,
+  getSessionCountByWeek,
+  getAllWorkoutDates,
+} from '@/src/db/repositories/sessions';
 import { getExerciseHistory, getVolumeByExercise } from '@/src/db/repositories/exercises';
 import { getProgramStart } from '@/src/features/workout-session';
 import { getLatestBodyweightEntry, createBodyweightEntry } from '@/src/db/repositories/bodyweight';
@@ -34,8 +38,14 @@ export default function HistoryScreen() {
   const [volumeBars, setVolumeBars] = useState<VolumeBar[]>([]);
   const [adherenceWeeks, setAdherenceWeeks] = useState<AdherenceWeek[]>([]);
   const [topExercises, setTopExercises] = useState<string[]>([]);
-  const [exerciseHistoryMap, setExerciseHistoryMap] = useState<Record<string, { date: string; weekNumber: number; sets: { weight: number; reps: number }[] }[]>>({});
-  const [latestBodyweight, setLatestBodyweight] = useState<{ weight: number; unit: string; measuredAt: string } | null>(null);
+  const [exerciseHistoryMap, setExerciseHistoryMap] = useState<
+    Record<string, { date: string; weekNumber: number; sets: { weight: number; reps: number }[] }[]>
+  >({});
+  const [latestBodyweight, setLatestBodyweight] = useState<{
+    weight: number;
+    unit: string;
+    measuredAt: string;
+  } | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -66,10 +76,12 @@ export default function HistoryScreen() {
 
           const bars: VolumeBar[] = [];
           for (let w = 1; w <= 12; w++) {
-            const weekSessions = sessions.filter((s) =>
-              s.weekNumber === w &&
-              (s.status === 'completed' || s.status === 'abandoned') &&
-              (!programStart || s.startedAt >= programStart.toISOString()));
+            const weekSessions = sessions.filter(
+              (s) =>
+                s.weekNumber === w &&
+                (s.status === 'completed' || s.status === 'abandoned') &&
+                (!programStart || s.startedAt >= programStart.toISOString()),
+            );
             const volume = weekSessions.reduce((sum, s) => sum + (s.totalVolume ?? 0), 0);
             bars.push({ weekNumber: w, volume, isFuture: weekSessions.length === 0 });
           }
@@ -78,10 +90,16 @@ export default function HistoryScreen() {
           const sorted = exerciseVolumes.slice(0, 5).map((e) => e.exerciseName);
           setTopExercises(sorted);
 
-          const historyMap: Record<string, { date: string; weekNumber: number; sets: { weight: number; reps: number }[] }[]> = {};
+          const historyMap: Record<
+            string,
+            { date: string; weekNumber: number; sets: { weight: number; reps: number }[] }[]
+          > = {};
           for (const exName of sorted.slice(0, 3)) {
             const rows = await getExerciseHistory(exName, 30);
-            const bySession = new Map<string, { date: string; weekNumber: number; sets: { weight: number; reps: number }[] }>();
+            const bySession = new Map<
+              string,
+              { date: string; weekNumber: number; sets: { weight: number; reps: number }[] }
+            >();
             for (const r of rows) {
               const key = r.sessionId;
               if (!bySession.has(key)) {
@@ -98,7 +116,9 @@ export default function HistoryScreen() {
           if (!cancelled) setLoading(false);
         }
       })();
-      return () => { cancelled = true; };
+      return () => {
+        cancelled = true;
+      };
     }, []),
   );
 
@@ -137,13 +157,7 @@ export default function HistoryScreen() {
           <Text style={styles.sectionTitle}>Exercise Progression</Text>
           {topExercises.slice(0, 3).map((exName) => {
             const history = exerciseHistoryMap[exName] ?? [];
-            return (
-              <ExerciseProgressionCard
-                key={exName}
-                exerciseName={exName}
-                history={history}
-              />
-            );
+            return <ExerciseProgressionCard key={exName} exerciseName={exName} history={history} />;
           })}
         </View>
       )}
@@ -152,7 +166,15 @@ export default function HistoryScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Bodyweight</Text>
         <BodyweightInput
-          lastValue={latestBodyweight ? { weight: latestBodyweight.weight, unit: latestBodyweight.unit, date: latestBodyweight.measuredAt } : null}
+          lastValue={
+            latestBodyweight
+              ? {
+                  weight: latestBodyweight.weight,
+                  unit: latestBodyweight.unit,
+                  date: latestBodyweight.measuredAt,
+                }
+              : null
+          }
           onLog={async (weight, unit) => {
             try {
               await createBodyweightEntry({

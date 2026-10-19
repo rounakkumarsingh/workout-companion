@@ -25,26 +25,27 @@ export function DemoVideoLink({ url }: DemoVideoLinkProps) {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: c.surfaceInteractive,
-    borderWidth: 0.5,
-    borderColor: c.borderActive,
-    borderRadius: radii.row,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xxl,
-    marginBottom: spacing.xl,
-    marginHorizontal: spacing.xxl,
-  },
-  icon: {
-    fontSize: 14,
-    color: c.textSecondary,
-  },
-  label: {
-    ...typography.monoSmall,
-    color: c.textSecondary,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      backgroundColor: c.surfaceInteractive,
+      borderWidth: 0.5,
+      borderColor: c.borderActive,
+      borderRadius: radii.row,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.xxl,
+      marginBottom: spacing.xl,
+      marginHorizontal: spacing.xxl,
+    },
+    icon: {
+      fontSize: 14,
+      color: c.textSecondary,
+    },
+    label: {
+      ...typography.monoSmall,
+      color: c.textSecondary,
+    },
+  });

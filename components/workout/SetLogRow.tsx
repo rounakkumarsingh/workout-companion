@@ -32,61 +32,62 @@ export function SetLogRow({ index, reps, weight, status }: SetLogRowProps) {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  row: {
-    backgroundColor: c.surfaceElevated,
-    borderWidth: 0.5,
-    borderColor: c.border,
-    borderRadius: radii.dot,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.lg,
-  },
-  rowDone: {
-    borderColor: c.successBorder,
-    backgroundColor: c.successSurface,
-  },
-  rowCurrent: {
-    borderColor: c.gold,
-    backgroundColor: c.goldSurface,
-  },
-  num: {
-    ...typography.monoSmall,
-    color: c.textTertiary,
-    width: 36,
-  },
-  numDone: {
-    color: c.successDim,
-  },
-  numCurrent: {
-    color: c.goldDim,
-  },
-  reps: {
-    flex: 1,
-    ...typography.bodyLarge,
-    color: c.textPrimary,
-  },
-  repsDone: {
-    color: c.successText,
-  },
-  repsCurrent: {
-    color: c.gold,
-  },
-  kg: {
-    ...typography.monoBody,
-    color: c.textTertiary,
-  },
-  kgDone: {
-    color: c.successDim,
-  },
-  check: {
-    fontSize: 14,
-    color: c.success,
-  },
-  arrow: {
-    fontSize: 12,
-    color: c.gold,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    row: {
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      borderRadius: radii.dot,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: 14,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.lg,
+    },
+    rowDone: {
+      borderColor: c.successBorder,
+      backgroundColor: c.successSurface,
+    },
+    rowCurrent: {
+      borderColor: c.gold,
+      backgroundColor: c.goldSurface,
+    },
+    num: {
+      ...typography.monoSmall,
+      color: c.textTertiary,
+      width: 36,
+    },
+    numDone: {
+      color: c.successDim,
+    },
+    numCurrent: {
+      color: c.goldDim,
+    },
+    reps: {
+      flex: 1,
+      ...typography.bodyLarge,
+      color: c.textPrimary,
+    },
+    repsDone: {
+      color: c.successText,
+    },
+    repsCurrent: {
+      color: c.gold,
+    },
+    kg: {
+      ...typography.monoBody,
+      color: c.textTertiary,
+    },
+    kgDone: {
+      color: c.successDim,
+    },
+    check: {
+      fontSize: 14,
+      color: c.success,
+    },
+    arrow: {
+      fontSize: 12,
+      color: c.gold,
+    },
+  });

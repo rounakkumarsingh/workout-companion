@@ -81,33 +81,34 @@ export default function TabLayout() {
   );
 }
 
-const makeTabStyles = (c: ColorSet) => StyleSheet.create({
-  tabBar: {
-    backgroundColor: c.surface,
-    borderTopWidth: 0.5,
-    borderTopColor: c.border,
-    paddingTop: 12,
-    paddingBottom: 8,
-    height: 70,
-  },
-  tabLabel: {
-    ...typography.monoTiny,
-    letterSpacing: 0.08,
-    textTransform: 'uppercase',
-    marginTop: 3,
-  },
-  iconWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 4,
-    borderRadius: 8,
-  },
-  activeWrap: {},
-  icon: {
-    fontSize: 16,
-    color: c.textMuted,
-  },
-  activeIcon: {
-    color: c.gold,
-  },
-});
+const makeTabStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    tabBar: {
+      backgroundColor: c.surface,
+      borderTopWidth: 0.5,
+      borderTopColor: c.border,
+      paddingTop: 12,
+      paddingBottom: 8,
+      height: 70,
+    },
+    tabLabel: {
+      ...typography.monoTiny,
+      letterSpacing: 0.08,
+      textTransform: 'uppercase',
+      marginTop: 3,
+    },
+    iconWrap: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 4,
+      borderRadius: 8,
+    },
+    activeWrap: {},
+    icon: {
+      fontSize: 16,
+      color: c.textMuted,
+    },
+    activeIcon: {
+      color: c.gold,
+    },
+  });

@@ -17,7 +17,7 @@ const STEPS = [
   { num: 1, title: 'Open on workout days', sub: 'Your plan tells you what to do, when' },
   { num: 2, title: 'Log each set as you go', sub: 'Tap "Log Set" after every set' },
   { num: 3, title: 'Rest timer auto-starts', sub: 'Default 90s — adjust anytime' },
-  { num: 4, title: 'Build your streak', sub: "Don&apos;t break the chain" },
+  { num: 4, title: 'Build your streak', sub: 'Don&apos;t break the chain' },
 ];
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -29,8 +29,14 @@ function StaggeredFadeSlide({ index, children }: { index: number; children: Reac
   useEffect(() => {
     const delays = [0, 200, 400];
     const delay = delays[index] ?? 0;
-    opacity.value = withDelay(delay, withTiming(1, { duration: 300, easing: Easing.out(Easing.quad) }));
-    translateY.value = withDelay(delay, withTiming(0, { duration: 300, easing: Easing.out(Easing.quad) }));
+    opacity.value = withDelay(
+      delay,
+      withTiming(1, { duration: 300, easing: Easing.out(Easing.quad) }),
+    );
+    translateY.value = withDelay(
+      delay,
+      withTiming(0, { duration: 300, easing: Easing.out(Easing.quad) }),
+    );
   }, [index]);
 
   const style = useAnimatedStyle(() => ({
@@ -48,8 +54,8 @@ export default function WelcomeScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const programDays = useMemo(() => {
     return PROGRAM.weeks[0].days
-      .filter(d => d.activityType !== 'FullRest' && d.activityType !== 'OptionalCardioHIIT')
-      .map(d => {
+      .filter((d) => d.activityType !== 'FullRest' && d.activityType !== 'OptionalCardioHIIT')
+      .map((d) => {
         const shortDay = DAY_NAMES[d.dayIndex % 7];
         return `${shortDay} — ${d.dayType}`;
       });
@@ -61,9 +67,9 @@ export default function WelcomeScreen() {
         {reducedMotion ? (
           <>
             <Text style={styles.emoji}>💪</Text>
-            <Text style={styles.title}>Let&apos;s get{"\n"}to work.</Text>
+            <Text style={styles.title}>Let&apos;s get{'\n'}to work.</Text>
             <Text style={styles.subtitle}>
-              Your programme is loaded.{"\n"}Here&apos;s how this works.
+              Your programme is loaded.{'\n'}Here&apos;s how this works.
             </Text>
             <View style={styles.steps}>
               {STEPS.map((step, i) => (
@@ -79,7 +85,9 @@ export default function WelcomeScreen() {
               ))}
             </View>
             <View style={styles.programCard}>
-              <Text style={styles.programLabel}>Your programme — Upper/Lower + PPL 5-day Split</Text>
+              <Text style={styles.programLabel}>
+                Your programme — Upper/Lower + PPL 5-day Split
+              </Text>
               <View style={styles.chips}>
                 {programDays.map((chip, i) => (
                   <View key={i} style={styles.chip}>
@@ -99,9 +107,9 @@ export default function WelcomeScreen() {
           <>
             <StaggeredFadeSlide index={0}>
               <Text style={styles.emoji}>💪</Text>
-              <Text style={styles.title}>Let&apos;s get{"\n"}to work.</Text>
+              <Text style={styles.title}>Let&apos;s get{'\n'}to work.</Text>
               <Text style={styles.subtitle}>
-                Your programme is loaded.{"\n"}Here&apos;s how this works.
+                Your programme is loaded.{'\n'}Here&apos;s how this works.
               </Text>
             </StaggeredFadeSlide>
             <StaggeredFadeSlide index={1}>
@@ -121,7 +129,9 @@ export default function WelcomeScreen() {
             </StaggeredFadeSlide>
             <StaggeredFadeSlide index={2}>
               <View style={styles.programCard}>
-                <Text style={styles.programLabel}>Your programme — Upper/Lower + PPL 5-day Split</Text>
+                <Text style={styles.programLabel}>
+                  Your programme — Upper/Lower + PPL 5-day Split
+                </Text>
                 <View style={styles.chips}>
                   {programDays.map((chip, i) => (
                     <View key={i} style={styles.chip}>

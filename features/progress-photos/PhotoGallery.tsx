@@ -19,7 +19,9 @@ export function PhotoGallery({ photos, onAddPress }: PhotoGalleryProps) {
   for (const p of photos) {
     if (!latestByAngle[p.angle]) latestByAngle[p.angle] = p;
   }
-  const latestThree = [latestByAngle.front, latestByAngle.side, latestByAngle.rear].filter(Boolean) as ProgressPhoto[];
+  const latestThree = [latestByAngle.front, latestByAngle.side, latestByAngle.rear].filter(
+    Boolean,
+  ) as ProgressPhoto[];
 
   return (
     <View style={styles.wrap}>
@@ -34,7 +36,10 @@ export function PhotoGallery({ photos, onAddPress }: PhotoGalleryProps) {
               </View>
               <Text style={styles.thumbLabel}>{p.angle}</Text>
               <Text style={styles.thumbDate}>
-                {new Date(p.takenAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {new Date(p.takenAt).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                })}
               </Text>
             </TouchableOpacity>
           ))}

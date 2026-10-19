@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TouchableOpacity, View, Text, ActivityIndicator } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  Text,
+  ActivityIndicator,
+} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -53,7 +61,15 @@ function isTrainingDayType(dayType: string): dayType is WorkoutDayType {
   return (TRAINING_DAY_TYPES as readonly string[]).includes(dayType);
 }
 
-const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const WEEKDAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
 
 function weekdayName(date: Date = new Date()): string {
   return WEEKDAY_NAMES[date.getDay()];
@@ -240,60 +256,65 @@ export default function TodayScheduleScreen() {
           if (!cancelled) setScreenState({ status: 'error', message });
         }
       })();
-      return () => { cancelled = true; };
+      return () => {
+        cancelled = true;
+      };
     }, []),
   );
 
-  const handleCardioLog = useCallback(async (data: {
-    intensityType: 'low_moderate' | 'high_intensity';
-    activity: string;
-    durationMinutes: number;
-    note: string | null;
-  }) => {
-    if (screenState.status !== 'restDay') return;
-    try {
-      await createCardioSession({
-        id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-        weekNumber: screenState.weekNumber,
-        intensityType: data.intensityType,
-        activity: data.activity,
-        durationMinutes: data.durationMinutes,
-        note: data.note,
-        loggedAt: new Date().toISOString(),
-      });
-      Alert.alert('Cardio logged', `${data.durationMinutes} min of ${data.activity} saved.`);
-    } catch (e) {
-      console.error('[home] Failed to log cardio:', e);
-      Alert.alert('Error', 'Failed to log cardio. Please try again.');
-    }
-  }, [screenState]);
+  const handleCardioLog = useCallback(
+    async (data: {
+      intensityType: 'low_moderate' | 'high_intensity';
+      activity: string;
+      durationMinutes: number;
+      note: string | null;
+    }) => {
+      if (screenState.status !== 'restDay') return;
+      try {
+        await createCardioSession({
+          id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+          weekNumber: screenState.weekNumber,
+          intensityType: data.intensityType,
+          activity: data.activity,
+          durationMinutes: data.durationMinutes,
+          note: data.note,
+          loggedAt: new Date().toISOString(),
+        });
+        Alert.alert('Cardio logged', `${data.durationMinutes} min of ${data.activity} saved.`);
+      } catch (e) {
+        console.error('[home] Failed to log cardio:', e);
+        Alert.alert('Error', 'Failed to log cardio. Please try again.');
+      }
+    },
+    [screenState],
+  );
 
-  const startSession = useCallback(async (
-    weekNumber: number,
-    dayPrescription: DayPrescription,
-  ) => {
-    const dayType = dayPrescription.dayType;
-    if (!isTrainingDayType(dayType)) return;
-    // Guard against double taps creating two sessions.
-    if (startingRef.current) return;
-    startingRef.current = true;
-    try {
-      const { session } = await initializeSession(weekNumber, dayType, dayPrescription);
-      router.push(`/workout?sessionId=${session.id}` as Href);
-    } catch (e) {
-      console.error('[home] Failed to start session:', e);
-      Alert.alert('Error', 'Failed to start the workout. Please try again.');
-    } finally {
-      startingRef.current = false;
-    }
-  }, [router]);
+  const startSession = useCallback(
+    async (weekNumber: number, dayPrescription: DayPrescription) => {
+      const dayType = dayPrescription.dayType;
+      if (!isTrainingDayType(dayType)) return;
+      // Guard against double taps creating two sessions.
+      if (startingRef.current) return;
+      startingRef.current = true;
+      try {
+        const { session } = await initializeSession(weekNumber, dayType, dayPrescription);
+        router.push(`/workout?sessionId=${session.id}` as Href);
+      } catch (e) {
+        console.error('[home] Failed to start session:', e);
+        Alert.alert('Error', 'Failed to start the workout. Please try again.');
+      } finally {
+        startingRef.current = false;
+      }
+    },
+    [router],
+  );
 
   const handleStartOrResume = useCallback(async () => {
     if (screenState.status === 'ready' || screenState.status === 'missed') {
       // 'missed': do today's scheduled workout and skip the missed one.
       await startSession(screenState.weekNumber, screenState.dayPrescription);
     } else if (screenState.status === 'inProgress') {
-      const activeSesh = hydratedSession ?? await hydrateActiveSession(screenState.sessionId);
+      const activeSesh = hydratedSession ?? (await hydrateActiveSession(screenState.sessionId));
       if (activeSesh) {
         const activeEx = activeSesh.exercises.find((e) => e.status === 'active');
         if (activeEx) {
@@ -355,9 +376,7 @@ export default function TodayScheduleScreen() {
     return (
       <View style={styles.centered}>
         <Text style={styles.messageTitle}>No Program Started</Text>
-        <Text style={styles.messageSub}>
-          Set up your program start date to begin.
-        </Text>
+        <Text style={styles.messageSub}>Set up your program start date to begin.</Text>
         <TouchableOpacity
           style={styles.goldBtn}
           onPress={() => router.push('/(onboarding)/set-start-date')}
@@ -372,13 +391,8 @@ export default function TodayScheduleScreen() {
     return (
       <View style={styles.centered}>
         <Text style={styles.messageTitle}>Program Complete</Text>
-        <Text style={styles.messageSub}>
-          You have finished all 12 weeks.
-        </Text>
-        <TouchableOpacity
-          style={styles.goldBtn}
-          onPress={() => router.replace('/completed')}
-        >
+        <Text style={styles.messageSub}>You have finished all 12 weeks.</Text>
+        <TouchableOpacity style={styles.goldBtn} onPress={() => router.replace('/completed')}>
           <Text style={styles.goldBtnText}>View Summary →</Text>
         </TouchableOpacity>
       </View>
@@ -387,7 +401,8 @@ export default function TodayScheduleScreen() {
 
   // --- MISSED SESSION (mockup s-missed) ---
   if (screenState.status === 'missed') {
-    const { dayPrescription, weekNumber, blockName, missedDate, missedDayType, daysAgo } = screenState;
+    const { dayPrescription, weekNumber, blockName, missedDate, missedDayType, daysAgo } =
+      screenState;
     const missedDay = new Date(missedDate + 'T00:00:00');
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const displayDayName = dayNames[missedDay.getDay()];
@@ -398,7 +413,9 @@ export default function TodayScheduleScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.header}>
             <View>
-              <Text style={styles.eyebrow}>{todayDayName} · Week {weekNumber}</Text>
+              <Text style={styles.eyebrow}>
+                {todayDayName} · Week {weekNumber}
+              </Text>
               <Text style={styles.headerTitle}>Welcome back.</Text>
             </View>
           </View>
@@ -407,7 +424,9 @@ export default function TodayScheduleScreen() {
             <Text style={styles.missedIcon}>⚠️</Text>
             <View>
               <Text style={styles.missedTitle}>You missed {missedDayType} Day</Text>
-              <Text style={styles.missedSub}>{displayDayName} {displayDate} was skipped. Your streak has reset.</Text>
+              <Text style={styles.missedSub}>
+                {displayDayName} {displayDate} was skipped. Your streak has reset.
+              </Text>
             </View>
           </View>
 
@@ -427,7 +446,9 @@ export default function TodayScheduleScreen() {
           <TouchableOpacity style={styles.optionBest} onPress={handleStartOrResume}>
             <Text style={styles.optionIcon}>▶️</Text>
             <View style={styles.optionInfo}>
-              <Text style={styles.optionTitle}>Do today&apos;s workout — {dayPrescription.dayType} Day</Text>
+              <Text style={styles.optionTitle}>
+                Do today&apos;s workout — {dayPrescription.dayType} Day
+              </Text>
               <Text style={styles.optionSub}>Stay on schedule, skip the missed session</Text>
             </View>
             <View style={styles.bestBadge}>
@@ -439,11 +460,16 @@ export default function TodayScheduleScreen() {
             <Text style={styles.optionIcon}>🔁</Text>
             <View style={styles.optionInfo}>
               <Text style={styles.optionTitle}>Make up {missedDayType} Day now</Text>
-              <Text style={styles.optionSub}>Do {daysAgo === 1 ? 'yesterday\'s' : `${daysAgo} days ago`} session today instead</Text>
+              <Text style={styles.optionSub}>
+                Do {daysAgo === 1 ? "yesterday's" : `${daysAgo} days ago`} session today instead
+              </Text>
             </View>
           </TouchableOpacity>
 
-          <CtaButton label={`Start ${dayPrescription.dayType} Day →`} onPress={handleStartOrResume} />
+          <CtaButton
+            label={`Start ${dayPrescription.dayType} Day →`}
+            onPress={handleStartOrResume}
+          />
         </ScrollView>
         <DevClearDbButton onCleared={() => setScreenState({ status: 'onboarding' })} />
       </View>
@@ -491,7 +517,9 @@ export default function TodayScheduleScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.header}>
             <View>
-              <Text style={styles.eyebrow}>{weekdayName()} · Week {weekNumber}</Text>
+              <Text style={styles.eyebrow}>
+                {weekdayName()} · Week {weekNumber}
+              </Text>
               <Text style={styles.headerTitle}>{dayName} Day</Text>
             </View>
           </View>
@@ -502,12 +530,16 @@ export default function TodayScheduleScreen() {
               <Text style={styles.zeroLbl}>READY</Text>
             </View>
             <Text style={styles.zeroTitle}>Ready when you are</Text>
-            <Text style={styles.zeroSub}>Your first session is loaded. Start your first set to begin the clock.</Text>
+            <Text style={styles.zeroSub}>
+              Your first session is loaded. Start your first set to begin the clock.
+            </Text>
           </View>
 
           <View style={styles.tipBox}>
             <Text style={styles.tipIcon}>💡</Text>
-            <Text style={styles.tipText}>First time? Start lighter than you think. Increase weight next session.</Text>
+            <Text style={styles.tipText}>
+              First time? Start lighter than you think. Increase weight next session.
+            </Text>
           </View>
 
           <ProgramProgressBar currentWeek={weekNumber} totalWeeks={TOTAL_WEEKS} />
@@ -537,7 +569,10 @@ export default function TodayScheduleScreen() {
     const progress = getSessionProgress(session);
     const elapsedMin = getElapsedMinutes(session);
     const lastActivityAt = getLastActivityAt(session) ?? session.startedAt;
-    const idleMin = Math.max(0, Math.floor((Date.now() - new Date(lastActivityAt).getTime()) / 60000));
+    const idleMin = Math.max(
+      0,
+      Math.floor((Date.now() - new Date(lastActivityAt).getTime()) / 60000),
+    );
     const pct = progress.totalSets > 0 ? progress.completedSets / progress.totalSets : 0;
     const pctDisplay = `${Math.round(pct * 100)}%` as const;
     const setsDisplay = `${progress.completedSets} of ${progress.totalSets} sets`;
@@ -559,9 +594,10 @@ export default function TodayScheduleScreen() {
       ? ctaExercise.sets.filter((s) => s.isComplete).length + 1
       : null;
     const ctaExerciseName = ctaExercise?.exerciseName ?? dayPrescription.dayType;
-    const ctaLabel = ctaSetIndex != null
-      ? `Resume → Set ${ctaSetIndex} of ${ctaExerciseName}`
-      : 'Resume Session →';
+    const ctaLabel =
+      ctaSetIndex != null
+        ? `Resume → Set ${ctaSetIndex} of ${ctaExerciseName}`
+        : 'Resume Session →';
 
     // Estimate remaining time: ~2 min per remaining set
     const remainingSets = progress.totalSets - progress.completedSets;
@@ -572,7 +608,9 @@ export default function TodayScheduleScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.header}>
             <View>
-              <Text style={styles.eyebrow}>{weekdayName(startTime)} · Week {weekNumber}</Text>
+              <Text style={styles.eyebrow}>
+                {weekdayName(startTime)} · Week {weekNumber}
+              </Text>
               <Text style={styles.headerTitle}>Welcome back.</Text>
             </View>
           </View>
@@ -641,20 +679,20 @@ export default function TodayScheduleScreen() {
           <View style={styles.resumeStats}>
             <View style={styles.resumeStat}>
               <Text style={styles.resumeStatVal}>
-                {elapsedMin}<Text style={styles.resumeStatUnit}>m</Text>
+                {elapsedMin}
+                <Text style={styles.resumeStatUnit}>m</Text>
               </Text>
               <Text style={styles.resumeStatLbl}>Elapsed</Text>
             </View>
             <View style={styles.resumeStat}>
               <Text style={styles.resumeStatVal}>
-                ~{estimatedLeftMin}<Text style={styles.resumeStatUnit}>m</Text>
+                ~{estimatedLeftMin}
+                <Text style={styles.resumeStatUnit}>m</Text>
               </Text>
               <Text style={styles.resumeStatLbl}>Left</Text>
             </View>
             <View style={styles.resumeStat}>
-              <Text style={[styles.resumeStatVal, { color: colors.gold }]}>
-                {exercisesLeft}
-              </Text>
+              <Text style={[styles.resumeStatVal, { color: colors.gold }]}>{exercisesLeft}</Text>
               <Text style={styles.resumeStatLbl}>Ex. left</Text>
             </View>
           </View>
@@ -665,7 +703,12 @@ export default function TodayScheduleScreen() {
             <CtaButton label={ctaLabel} onPress={handleStartOrResume} />
           </Animated.View>
 
-          <TouchableOpacity style={styles.dangerBtn} onPress={handleAbandon} activeOpacity={0.7} accessibilityLabel="Abandon current session">
+          <TouchableOpacity
+            style={styles.dangerBtn}
+            onPress={handleAbandon}
+            activeOpacity={0.7}
+            accessibilityLabel="Abandon current session"
+          >
             <Text style={styles.dangerBtnText}>Abandon Session</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -686,9 +729,7 @@ export default function TodayScheduleScreen() {
           <Text style={styles.daySub}>
             WEEK {weekNumber} · {blockName.toUpperCase()}
           </Text>
-          <Text style={styles.dayTitle}>
-            {dayPrescription.dayType} Day
-          </Text>
+          <Text style={styles.dayTitle}>{dayPrescription.dayType} Day</Text>
         </View>
 
         <View style={styles.statsRow}>
@@ -701,9 +742,7 @@ export default function TodayScheduleScreen() {
             <Text style={styles.statLabel}>Working Sets</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statVal}>
-              {dayPrescription.exercises[0]?.repRange ?? '—'}
-            </Text>
+            <Text style={styles.statVal}>{dayPrescription.exercises[0]?.repRange ?? '—'}</Text>
             <Text style={styles.statLabel}>Rep Range</Text>
           </View>
         </View>
@@ -733,584 +772,585 @@ export default function TodayScheduleScreen() {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: c.background,
-  },
-  content: {
-    flexGrow: 1,
-    paddingBottom: 40,
-  },
-  centered: {
-    flex: 1,
-    backgroundColor: c.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xxxl,
-  },
-  errorText: {
-    ...typography.body,
-    color: c.danger,
-    textAlign: 'center',
-  },
-  messageTitle: {
-    ...typography.heading,
-    color: c.textPrimary,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  messageSub: {
-    ...typography.body,
-    color: c.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  goldBtn: {
-    marginTop: spacing.xxxl,
-    backgroundColor: c.gold,
-    borderRadius: radii.row,
-    paddingVertical: 14,
-    paddingHorizontal: spacing.xxxl,
-  },
-  goldBtnText: {
-    ...typography.cta,
-    color: c.blackText,
-    textTransform: 'uppercase',
-  },
-  // ---------------------------------
-  // Header
-  // ---------------------------------
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.xxl,
-  },
-  eyebrow: {
-    ...typography.monoLabel,
-    color: c.textTertiary,
-    letterSpacing: 0.12,
-    textTransform: 'uppercase',
-    marginBottom: spacing.xs,
-  },
-  headerTitle: {
-    ...typography.heading,
-    color: c.textPrimary,
-    letterSpacing: -0.02,
-  },
-  // ---------------------------------
-  // Zero State (Day 1)
-  // ---------------------------------
-  zeroRing: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xxl,
-    paddingHorizontal: spacing.xxl,
-  },
-  zeroRingSvg: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    borderWidth: 7,
-    borderColor: c.textDim,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 18,
-  },
-  zeroPct: {
-    fontFamily: 'SpaceMono_700Bold',
-    fontSize: 20,
-    color: c.textMuted,
-  },
-  zeroLbl: {
-    fontFamily: 'BarlowCondensed_800ExtraBold',
-    fontSize: 11,
-    color: c.textMuted,
-    letterSpacing: 2,
-  },
-  zeroTitle: {
-    fontFamily: 'BarlowCondensed_800ExtraBold',
-    fontSize: 26,
-    color: c.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  zeroSub: {
-    fontSize: 13,
-    color: c.textTertiary,
-    textAlign: 'center',
-    lineHeight: 20,
-    maxWidth: 240,
-  },
-  tipBox: {
-    marginHorizontal: spacing.xxl,
-    marginBottom: spacing.lg,
-    backgroundColor: c.goldSurface,
-    borderWidth: 0.5,
-    borderColor: c.goldBorder,
-    borderRadius: radii.row,
-    padding: 12,
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'flex-start',
-  },
-  tipIcon: {
-    fontSize: 16,
-  },
-  tipText: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 12,
-    color: c.goldDim,
-    lineHeight: 17,
-    flex: 1,
-  },
-  // ---------------------------------
-  // Missed Session
-  // ---------------------------------
-  missedWarning: {
-    marginHorizontal: spacing.xxl,
-    marginTop: 14,
-    backgroundColor: c.dangerSurface,
-    borderWidth: 0.5,
-    borderColor: c.dangerBorder,
-    borderRadius: radii.card,
-    padding: 15,
-    flexDirection: 'row',
-    gap: spacing.lg,
-    alignItems: 'flex-start',
-  },
-  missedIcon: {
-    fontSize: 20,
-  },
-  missedTitle: {
-    ...typography.body,
-    fontWeight: '700',
-    color: c.dangerText,
-  },
-  missedSub: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 11,
-    color: c.dangerTextDim,
-    lineHeight: 15,
-    marginTop: 3,
-  },
-  streakResetRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginHorizontal: spacing.xxl,
-    marginTop: 10,
-  },
-  streakWas: {
-    flex: 1,
-    backgroundColor: c.surfaceElevated,
-    borderWidth: 0.5,
-    borderColor: c.border,
-    borderRadius: 11,
-    padding: 11,
-    alignItems: 'center',
-  },
-  streakWasNum: {
-    fontFamily: 'SpaceMono_700Bold',
-    fontSize: 26,
-    color: c.textMuted,
-    textDecorationLine: 'line-through',
-    lineHeight: 26,
-  },
-  streakWasLbl: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 9,
-    color: c.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.08,
-    marginTop: 3,
-  },
-  streakNow: {
-    flex: 1,
-    backgroundColor: c.dangerSurface,
-    borderWidth: 0.5,
-    borderColor: c.dangerBorder,
-    borderRadius: 11,
-    padding: 11,
-    alignItems: 'center',
-  },
-  streakNowNum: {
-    fontFamily: 'SpaceMono_700Bold',
-    fontSize: 26,
-    color: c.dangerText,
-    lineHeight: 26,
-  },
-  streakNowLbl: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 9,
-    color: c.dangerTextDim,
-    textTransform: 'uppercase',
-    letterSpacing: 0.08,
-    marginTop: 3,
-  },
-  sectionTitle: {
-    ...typography.monoLabel,
-    color: c.textTertiary,
-    letterSpacing: 0.12,
-    textTransform: 'uppercase',
-    paddingHorizontal: spacing.xxl,
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  optionBest: {
-    marginHorizontal: spacing.xxl,
-    marginBottom: spacing.sm,
-    backgroundColor: c.goldSurface,
-    borderWidth: 0.5,
-    borderColor: c.gold,
-    borderRadius: radii.row,
-    padding: 13,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 13,
-  },
-  optionRegular: {
-    marginHorizontal: spacing.xxl,
-    marginBottom: spacing.sm,
-    backgroundColor: c.surfaceElevated,
-    borderWidth: 0.5,
-    borderColor: c.border,
-    borderRadius: radii.row,
-    padding: 13,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 13,
-  },
-  optionIcon: {
-    fontSize: 22,
-  },
-  optionInfo: {
-    flex: 1,
-  },
-  optionTitle: {
-    ...typography.body,
-    fontWeight: '700',
-    color: c.textPrimary,
-  },
-  optionSub: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 11,
-    color: c.textTertiary,
-    marginTop: 2,
-  },
-  bestBadge: {
-    backgroundColor: c.gold,
-    borderRadius: 5,
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-  },
-  bestBadgeText: {
-    fontFamily: 'SpaceMono_700Bold',
-    fontSize: 9,
-    color: c.blackText,
-  },
-  // ---------------------------------
-  // Rest Day
-  // ---------------------------------
-  restContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xxl,
-  },
-  restCenter: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxxl,
-  },
-  restEmoji: {
-    fontSize: 60,
-    marginBottom: spacing.xl,
-    opacity: 0.4,
-  },
-  restTitle: {
-    fontFamily: 'BarlowCondensed_800ExtraBold',
-    fontSize: 28,
-    color: c.textPrimary,
-    marginBottom: spacing.md,
-  },
-  restDesc: {
-    fontSize: 14,
-    color: c.textTertiary,
-    textAlign: 'center',
-    lineHeight: 21,
-    maxWidth: 240,
-    marginBottom: spacing.xxxl,
-  },
-  // ---------------------------------
-  // Resume (inProgress)
-  // ---------------------------------
-  resumeIndicator: {
-    marginHorizontal: spacing.xxl,
-    marginTop: 14,
-    backgroundColor: c.successSurface,
-    borderWidth: 0.5,
-    borderColor: c.successBorder,
-    borderRadius: radii.card,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.lg,
-  },
-  resumeDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: c.successText,
-    flexShrink: 0,
-  },
-  resumeDotDone: {
-    backgroundColor: c.success,
-  },
-  resumeDotActive: {
-    backgroundColor: c.gold,
-  },
-  resumeLabel: {
-    ...typography.body,
-    fontWeight: '700',
-    color: c.successText,
-  },
-  resumeSub: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 11,
-    color: c.successDim,
-    marginTop: 2,
-  },
-  resumeCard: {
-    marginHorizontal: spacing.xxl,
-    marginTop: 10,
-    backgroundColor: c.surfaceElevated,
-    borderWidth: 0.5,
-    borderColor: c.border,
-    borderRadius: radii.card,
-    padding: 15,
-  },
-  resumeCardTitle: {
-    fontFamily: 'BarlowCondensed_800ExtraBold',
-    fontSize: 20,
-    color: c.textPrimary,
-  },
-  resumeCardMeta: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 11,
-    color: c.textTertiary,
-    marginTop: 3,
-  },
-  resumeExList: {
-    marginTop: spacing.lg,
-    gap: 7,
-  },
-  resumeExRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  resumeExName: {
-    flex: 1,
-    ...typography.body,
-    color: c.textPrimary,
-    fontSize: 14,
-  },
-  resumeExDone: {
-    color: c.successText,
-  },
-  resumeExActive: {
-    color: c.gold,
-  },
-  resumeExSets: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 11,
-    color: c.textTertiary,
-  },
-  progressBar: {
-    marginTop: 10,
-  },
-  progressTrack: {
-    height: 4,
-    backgroundColor: c.textDim,
-    borderRadius: 2,
-  },
-  progressFill: {
-    height: 4,
-    backgroundColor: c.gold,
-    borderRadius: 2,
-  },
-  progressLabel: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 10,
-    color: c.textTertiary,
-    marginTop: spacing.xs,
-  },
-  resumeStats: {
-    flexDirection: 'row',
-    gap: 7,
-    marginHorizontal: spacing.xxl,
-    marginTop: 10,
-  },
-  resumeStat: {
-    flex: 1,
-    backgroundColor: c.surfaceInteractive,
-    borderWidth: 0.5,
-    borderColor: c.border,
-    borderRadius: radii.dot,
-    padding: 11,
-    alignItems: 'center',
-  },
-  resumeStatVal: {
-    fontFamily: 'SpaceMono_700Bold',
-    fontSize: 20,
-    color: c.textPrimary,
-    lineHeight: 20,
-  },
-  resumeStatUnit: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 10,
-    color: c.textTertiary,
-  },
-  resumeStatLbl: {
-    fontFamily: 'SpaceMono_400Regular',
-    fontSize: 9,
-    color: c.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.08,
-    marginTop: 3,
-  },
-  dangerBtn: {
-    marginHorizontal: spacing.xxl,
-    marginBottom: spacing.md,
-    backgroundColor: c.dangerSurface,
-    borderWidth: 0.5,
-    borderColor: c.dangerBorder,
-    borderRadius: radii.row,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  dangerBtnText: {
-    ...typography.body,
-    color: c.dangerText,
-    textTransform: 'uppercase',
-    letterSpacing: 0.05,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  // ---------------------------------
-  // Completed / Default
-  // ---------------------------------
-  dayHeader: {
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.lg,
-  },
-  daySub: {
-    ...typography.monoLabel,
-    color: c.textTertiary,
-    letterSpacing: 0.12,
-    textTransform: 'uppercase',
-    marginBottom: spacing.xs,
-  },
-  dayTitle: {
-    ...typography.heading,
-    color: c.textPrimary,
-    letterSpacing: -0.02,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: spacing.xl,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: c.surfaceInteractive,
-    borderWidth: 0.5,
-    borderColor: c.borderActive,
-    borderRadius: radii.dot,
-    padding: spacing.lg,
-    alignItems: 'center',
-  },
-  statVal: {
-    ...typography.monoMedium,
-    color: c.gold,
-  },
-  statLabel: {
-    ...typography.monoTiny,
-    color: c.textTertiary,
-    letterSpacing: 0.08,
-    textTransform: 'uppercase',
-    marginTop: spacing.xs,
-  },
-  exPreview: {
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.lg,
-  },
-  sectionLabel: {
-    ...typography.monoLabel,
-    color: c.textTertiary,
-    letterSpacing: 0.12,
-    textTransform: 'uppercase',
-    marginBottom: spacing.xs,
-  },
-  exRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 13,
-    borderBottomWidth: 0.5,
-    borderBottomColor: c.border,
-  },
-  exName: {
-    ...typography.body,
-    color: c.textPrimary,
-    flex: 1,
-    marginRight: spacing.lg,
-  },
-  exSpec: {
-    ...typography.body,
-    color: c.gold,
-    fontWeight: '700',
-    flexShrink: 0,
-  },
-  primaryBtn: {
-    marginHorizontal: spacing.xxl,
-    marginTop: spacing.xxxl,
-    backgroundColor: c.gold,
-    borderRadius: radii.row,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  primaryBtnText: {
-    ...typography.cta,
-    color: c.blackText,
-    textTransform: 'uppercase',
-  },
-  completedBanner: {
-    marginHorizontal: spacing.xxl,
-    marginTop: spacing.xxxl,
-    backgroundColor: c.successSurface,
-    borderWidth: 0.5,
-    borderColor: c.successBorder,
-    borderRadius: radii.card,
-    padding: spacing.xxl,
-    alignItems: 'center',
-  },
-  completedBannerIcon: {
-    fontSize: 36,
-    color: c.success,
-    marginBottom: spacing.md,
-  },
-  completedBannerTitle: {
-    ...typography.subheading,
-    color: c.successText,
-    textAlign: 'center',
-  },
-  completedBannerSub: {
-    ...typography.monoSmall,
-    color: c.successDim,
-    textAlign: 'center',
-    marginTop: spacing.xs,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    content: {
+      flexGrow: 1,
+      paddingBottom: 40,
+    },
+    centered: {
+      flex: 1,
+      backgroundColor: c.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.xxxl,
+    },
+    errorText: {
+      ...typography.body,
+      color: c.danger,
+      textAlign: 'center',
+    },
+    messageTitle: {
+      ...typography.heading,
+      color: c.textPrimary,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    messageSub: {
+      ...typography.body,
+      color: c.textSecondary,
+      textAlign: 'center',
+      lineHeight: 22,
+    },
+    goldBtn: {
+      marginTop: spacing.xxxl,
+      backgroundColor: c.gold,
+      borderRadius: radii.row,
+      paddingVertical: 14,
+      paddingHorizontal: spacing.xxxl,
+    },
+    goldBtnText: {
+      ...typography.cta,
+      color: c.blackText,
+      textTransform: 'uppercase',
+    },
+    // ---------------------------------
+    // Header
+    // ---------------------------------
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      paddingHorizontal: spacing.xxl,
+      paddingTop: spacing.xxl,
+    },
+    eyebrow: {
+      ...typography.monoLabel,
+      color: c.textTertiary,
+      letterSpacing: 0.12,
+      textTransform: 'uppercase',
+      marginBottom: spacing.xs,
+    },
+    headerTitle: {
+      ...typography.heading,
+      color: c.textPrimary,
+      letterSpacing: -0.02,
+    },
+    // ---------------------------------
+    // Zero State (Day 1)
+    // ---------------------------------
+    zeroRing: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.xxl,
+      paddingHorizontal: spacing.xxl,
+    },
+    zeroRingSvg: {
+      width: 110,
+      height: 110,
+      borderRadius: 55,
+      borderWidth: 7,
+      borderColor: c.textDim,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 18,
+    },
+    zeroPct: {
+      fontFamily: 'SpaceMono_700Bold',
+      fontSize: 20,
+      color: c.textMuted,
+    },
+    zeroLbl: {
+      fontFamily: 'BarlowCondensed_800ExtraBold',
+      fontSize: 11,
+      color: c.textMuted,
+      letterSpacing: 2,
+    },
+    zeroTitle: {
+      fontFamily: 'BarlowCondensed_800ExtraBold',
+      fontSize: 26,
+      color: c.textPrimary,
+      marginBottom: spacing.sm,
+    },
+    zeroSub: {
+      fontSize: 13,
+      color: c.textTertiary,
+      textAlign: 'center',
+      lineHeight: 20,
+      maxWidth: 240,
+    },
+    tipBox: {
+      marginHorizontal: spacing.xxl,
+      marginBottom: spacing.lg,
+      backgroundColor: c.goldSurface,
+      borderWidth: 0.5,
+      borderColor: c.goldBorder,
+      borderRadius: radii.row,
+      padding: 12,
+      flexDirection: 'row',
+      gap: 10,
+      alignItems: 'flex-start',
+    },
+    tipIcon: {
+      fontSize: 16,
+    },
+    tipText: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 12,
+      color: c.goldDim,
+      lineHeight: 17,
+      flex: 1,
+    },
+    // ---------------------------------
+    // Missed Session
+    // ---------------------------------
+    missedWarning: {
+      marginHorizontal: spacing.xxl,
+      marginTop: 14,
+      backgroundColor: c.dangerSurface,
+      borderWidth: 0.5,
+      borderColor: c.dangerBorder,
+      borderRadius: radii.card,
+      padding: 15,
+      flexDirection: 'row',
+      gap: spacing.lg,
+      alignItems: 'flex-start',
+    },
+    missedIcon: {
+      fontSize: 20,
+    },
+    missedTitle: {
+      ...typography.body,
+      fontWeight: '700',
+      color: c.dangerText,
+    },
+    missedSub: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 11,
+      color: c.dangerTextDim,
+      lineHeight: 15,
+      marginTop: 3,
+    },
+    streakResetRow: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      marginHorizontal: spacing.xxl,
+      marginTop: 10,
+    },
+    streakWas: {
+      flex: 1,
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      borderRadius: 11,
+      padding: 11,
+      alignItems: 'center',
+    },
+    streakWasNum: {
+      fontFamily: 'SpaceMono_700Bold',
+      fontSize: 26,
+      color: c.textMuted,
+      textDecorationLine: 'line-through',
+      lineHeight: 26,
+    },
+    streakWasLbl: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 9,
+      color: c.textMuted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.08,
+      marginTop: 3,
+    },
+    streakNow: {
+      flex: 1,
+      backgroundColor: c.dangerSurface,
+      borderWidth: 0.5,
+      borderColor: c.dangerBorder,
+      borderRadius: 11,
+      padding: 11,
+      alignItems: 'center',
+    },
+    streakNowNum: {
+      fontFamily: 'SpaceMono_700Bold',
+      fontSize: 26,
+      color: c.dangerText,
+      lineHeight: 26,
+    },
+    streakNowLbl: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 9,
+      color: c.dangerTextDim,
+      textTransform: 'uppercase',
+      letterSpacing: 0.08,
+      marginTop: 3,
+    },
+    sectionTitle: {
+      ...typography.monoLabel,
+      color: c.textTertiary,
+      letterSpacing: 0.12,
+      textTransform: 'uppercase',
+      paddingHorizontal: spacing.xxl,
+      marginTop: spacing.xl,
+      marginBottom: spacing.md,
+    },
+    optionBest: {
+      marginHorizontal: spacing.xxl,
+      marginBottom: spacing.sm,
+      backgroundColor: c.goldSurface,
+      borderWidth: 0.5,
+      borderColor: c.gold,
+      borderRadius: radii.row,
+      padding: 13,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 13,
+    },
+    optionRegular: {
+      marginHorizontal: spacing.xxl,
+      marginBottom: spacing.sm,
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      borderRadius: radii.row,
+      padding: 13,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 13,
+    },
+    optionIcon: {
+      fontSize: 22,
+    },
+    optionInfo: {
+      flex: 1,
+    },
+    optionTitle: {
+      ...typography.body,
+      fontWeight: '700',
+      color: c.textPrimary,
+    },
+    optionSub: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 11,
+      color: c.textTertiary,
+      marginTop: 2,
+    },
+    bestBadge: {
+      backgroundColor: c.gold,
+      borderRadius: 5,
+      paddingVertical: 2,
+      paddingHorizontal: 8,
+    },
+    bestBadgeText: {
+      fontFamily: 'SpaceMono_700Bold',
+      fontSize: 9,
+      color: c.blackText,
+    },
+    // ---------------------------------
+    // Rest Day
+    // ---------------------------------
+    restContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing.xxl,
+    },
+    restCenter: {
+      alignItems: 'center',
+      paddingVertical: spacing.xxxl,
+    },
+    restEmoji: {
+      fontSize: 60,
+      marginBottom: spacing.xl,
+      opacity: 0.4,
+    },
+    restTitle: {
+      fontFamily: 'BarlowCondensed_800ExtraBold',
+      fontSize: 28,
+      color: c.textPrimary,
+      marginBottom: spacing.md,
+    },
+    restDesc: {
+      fontSize: 14,
+      color: c.textTertiary,
+      textAlign: 'center',
+      lineHeight: 21,
+      maxWidth: 240,
+      marginBottom: spacing.xxxl,
+    },
+    // ---------------------------------
+    // Resume (inProgress)
+    // ---------------------------------
+    resumeIndicator: {
+      marginHorizontal: spacing.xxl,
+      marginTop: 14,
+      backgroundColor: c.successSurface,
+      borderWidth: 0.5,
+      borderColor: c.successBorder,
+      borderRadius: radii.card,
+      padding: 14,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.lg,
+    },
+    resumeDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: c.successText,
+      flexShrink: 0,
+    },
+    resumeDotDone: {
+      backgroundColor: c.success,
+    },
+    resumeDotActive: {
+      backgroundColor: c.gold,
+    },
+    resumeLabel: {
+      ...typography.body,
+      fontWeight: '700',
+      color: c.successText,
+    },
+    resumeSub: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 11,
+      color: c.successDim,
+      marginTop: 2,
+    },
+    resumeCard: {
+      marginHorizontal: spacing.xxl,
+      marginTop: 10,
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      borderRadius: radii.card,
+      padding: 15,
+    },
+    resumeCardTitle: {
+      fontFamily: 'BarlowCondensed_800ExtraBold',
+      fontSize: 20,
+      color: c.textPrimary,
+    },
+    resumeCardMeta: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 11,
+      color: c.textTertiary,
+      marginTop: 3,
+    },
+    resumeExList: {
+      marginTop: spacing.lg,
+      gap: 7,
+    },
+    resumeExRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    resumeExName: {
+      flex: 1,
+      ...typography.body,
+      color: c.textPrimary,
+      fontSize: 14,
+    },
+    resumeExDone: {
+      color: c.successText,
+    },
+    resumeExActive: {
+      color: c.gold,
+    },
+    resumeExSets: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 11,
+      color: c.textTertiary,
+    },
+    progressBar: {
+      marginTop: 10,
+    },
+    progressTrack: {
+      height: 4,
+      backgroundColor: c.textDim,
+      borderRadius: 2,
+    },
+    progressFill: {
+      height: 4,
+      backgroundColor: c.gold,
+      borderRadius: 2,
+    },
+    progressLabel: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 10,
+      color: c.textTertiary,
+      marginTop: spacing.xs,
+    },
+    resumeStats: {
+      flexDirection: 'row',
+      gap: 7,
+      marginHorizontal: spacing.xxl,
+      marginTop: 10,
+    },
+    resumeStat: {
+      flex: 1,
+      backgroundColor: c.surfaceInteractive,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      borderRadius: radii.dot,
+      padding: 11,
+      alignItems: 'center',
+    },
+    resumeStatVal: {
+      fontFamily: 'SpaceMono_700Bold',
+      fontSize: 20,
+      color: c.textPrimary,
+      lineHeight: 20,
+    },
+    resumeStatUnit: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 10,
+      color: c.textTertiary,
+    },
+    resumeStatLbl: {
+      fontFamily: 'SpaceMono_400Regular',
+      fontSize: 9,
+      color: c.textTertiary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.08,
+      marginTop: 3,
+    },
+    dangerBtn: {
+      marginHorizontal: spacing.xxl,
+      marginBottom: spacing.md,
+      backgroundColor: c.dangerSurface,
+      borderWidth: 0.5,
+      borderColor: c.dangerBorder,
+      borderRadius: radii.row,
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    dangerBtnText: {
+      ...typography.body,
+      color: c.dangerText,
+      textTransform: 'uppercase',
+      letterSpacing: 0.05,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    // ---------------------------------
+    // Completed / Default
+    // ---------------------------------
+    dayHeader: {
+      paddingHorizontal: spacing.xxl,
+      paddingTop: spacing.xxl,
+      paddingBottom: spacing.lg,
+    },
+    daySub: {
+      ...typography.monoLabel,
+      color: c.textTertiary,
+      letterSpacing: 0.12,
+      textTransform: 'uppercase',
+      marginBottom: spacing.xs,
+    },
+    dayTitle: {
+      ...typography.heading,
+      color: c.textPrimary,
+      letterSpacing: -0.02,
+    },
+    statsRow: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      paddingHorizontal: spacing.xxl,
+      paddingBottom: spacing.xl,
+    },
+    statCard: {
+      flex: 1,
+      backgroundColor: c.surfaceInteractive,
+      borderWidth: 0.5,
+      borderColor: c.borderActive,
+      borderRadius: radii.dot,
+      padding: spacing.lg,
+      alignItems: 'center',
+    },
+    statVal: {
+      ...typography.monoMedium,
+      color: c.gold,
+    },
+    statLabel: {
+      ...typography.monoTiny,
+      color: c.textTertiary,
+      letterSpacing: 0.08,
+      textTransform: 'uppercase',
+      marginTop: spacing.xs,
+    },
+    exPreview: {
+      paddingHorizontal: spacing.xxl,
+      paddingTop: spacing.lg,
+    },
+    sectionLabel: {
+      ...typography.monoLabel,
+      color: c.textTertiary,
+      letterSpacing: 0.12,
+      textTransform: 'uppercase',
+      marginBottom: spacing.xs,
+    },
+    exRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 13,
+      borderBottomWidth: 0.5,
+      borderBottomColor: c.border,
+    },
+    exName: {
+      ...typography.body,
+      color: c.textPrimary,
+      flex: 1,
+      marginRight: spacing.lg,
+    },
+    exSpec: {
+      ...typography.body,
+      color: c.gold,
+      fontWeight: '700',
+      flexShrink: 0,
+    },
+    primaryBtn: {
+      marginHorizontal: spacing.xxl,
+      marginTop: spacing.xxxl,
+      backgroundColor: c.gold,
+      borderRadius: radii.row,
+      paddingVertical: 15,
+      alignItems: 'center',
+    },
+    primaryBtnText: {
+      ...typography.cta,
+      color: c.blackText,
+      textTransform: 'uppercase',
+    },
+    completedBanner: {
+      marginHorizontal: spacing.xxl,
+      marginTop: spacing.xxxl,
+      backgroundColor: c.successSurface,
+      borderWidth: 0.5,
+      borderColor: c.successBorder,
+      borderRadius: radii.card,
+      padding: spacing.xxl,
+      alignItems: 'center',
+    },
+    completedBannerIcon: {
+      fontSize: 36,
+      color: c.success,
+      marginBottom: spacing.md,
+    },
+    completedBannerTitle: {
+      ...typography.subheading,
+      color: c.successText,
+      textAlign: 'center',
+    },
+    completedBannerSub: {
+      ...typography.monoSmall,
+      color: c.successDim,
+      textAlign: 'center',
+      marginTop: spacing.xs,
+    },
+  });

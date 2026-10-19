@@ -67,48 +67,49 @@ export function SetInputRow({ set, values, onValueChange, onCommit }: SetInputRo
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 4,
-    borderRadius: 10,
-  },
-  rowFocused: {
-    backgroundColor: c.surfaceInteractive,
-  },
-  setLabelBlock: {
-    width: 36,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  setNumber: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: c.textSecondary,
-    width: 18,
-    textAlign: 'center',
-    fontVariant: ['tabular-nums'],
-  },
-  loggedDot: {
-    fontSize: 8,
-    color: c.success,
-  },
-  input: {
-    flex: 1,
-    height: 48,
-    backgroundColor: c.surfaceElevated,
-    borderRadius: 10,
-    color: c.textPrimary,
-    fontSize: 17,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginHorizontal: 3,
-    fontVariant: ['tabular-nums'],
-  },
-  rpeInput: {
-    flex: 0.8,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 6,
+      paddingHorizontal: 4,
+      borderRadius: 10,
+    },
+    rowFocused: {
+      backgroundColor: c.surfaceInteractive,
+    },
+    setLabelBlock: {
+      width: 36,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    setNumber: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: c.textSecondary,
+      width: 18,
+      textAlign: 'center',
+      fontVariant: ['tabular-nums'],
+    },
+    loggedDot: {
+      fontSize: 8,
+      color: c.success,
+    },
+    input: {
+      flex: 1,
+      height: 48,
+      backgroundColor: c.surfaceElevated,
+      borderRadius: 10,
+      color: c.textPrimary,
+      fontSize: 17,
+      fontWeight: '600',
+      textAlign: 'center',
+      marginHorizontal: 3,
+      fontVariant: ['tabular-nums'],
+    },
+    rpeInput: {
+      flex: 0.8,
+    },
+  });

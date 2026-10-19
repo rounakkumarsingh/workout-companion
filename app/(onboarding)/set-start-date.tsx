@@ -36,14 +36,16 @@ export default function SetStartDateScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>
-          Set Your Start Date
-        </Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Set Your Start Date</Text>
         <Text style={[styles.subtitle, { color: colors.textTertiary }]}>
           Choose the day your program begins.
         </Text>
         <View style={styles.datePicker}>
-          <TouchableOpacity onPress={() => changeDay(-1)} style={styles.arrowButton} accessibilityLabel="Previous day">
+          <TouchableOpacity
+            onPress={() => changeDay(-1)}
+            style={styles.arrowButton}
+            accessibilityLabel="Previous day"
+          >
             <Text style={[styles.arrow, { color: colors.gold }]}>←</Text>
           </TouchableOpacity>
           <View style={styles.dateDisplay}>
@@ -62,7 +64,9 @@ export default function SetStartDateScreen() {
             disabled={isFutureOrToday}
             accessibilityLabel="Next day"
           >
-            <Text style={[styles.arrow, { color: isFutureOrToday ? colors.textDim : colors.gold }]}>→</Text>
+            <Text style={[styles.arrow, { color: isFutureOrToday ? colors.textDim : colors.gold }]}>
+              →
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -14,12 +14,7 @@ export function getSubstitutionOptions(exerciseName: string): SubstitutionOption
     }));
 }
 
-export function getSubstitutionTarget(
-  exerciseName: string,
-  slot: 1 | 2,
-): string | null {
-  const sub = PROGRAM.substitutions.find(
-    (s) => s.exerciseName === exerciseName && s.slot === slot,
-  );
+export function getSubstitutionTarget(exerciseName: string, slot: 1 | 2): string | null {
+  const sub = PROGRAM.substitutions.find((s) => s.exerciseName === exerciseName && s.slot === slot);
   return sub?.substituteName ?? null;
 }

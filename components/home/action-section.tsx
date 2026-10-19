@@ -43,41 +43,42 @@ export function ActionSection({ state, onPress }: ActionSectionProps) {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  container: {
-    paddingHorizontal: 20,
-    paddingTop: 28,
-    paddingBottom: 40,
-  },
-  primaryButton: {
-    backgroundColor: c.success,
-    borderRadius: 14,
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButtonText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: c.blackText,
-  },
-  completedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: c.surfaceElevated,
-    borderRadius: 14,
-    height: 56,
-    gap: 10,
-  },
-  completedIcon: {
-    fontSize: 20,
-    color: c.success,
-    fontWeight: '800',
-  },
-  completedText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: c.success,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    container: {
+      paddingHorizontal: 20,
+      paddingTop: 28,
+      paddingBottom: 40,
+    },
+    primaryButton: {
+      backgroundColor: c.success,
+      borderRadius: 14,
+      height: 56,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    primaryButtonText: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: c.blackText,
+    },
+    completedBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: c.surfaceElevated,
+      borderRadius: 14,
+      height: 56,
+      gap: 10,
+    },
+    completedIcon: {
+      fontSize: 20,
+      color: c.success,
+      fontWeight: '800',
+    },
+    completedText: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: c.success,
+    },
+  });

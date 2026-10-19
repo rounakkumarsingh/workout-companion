@@ -27,9 +27,7 @@ export {
 
 export type { ProgramDay, ProgramDayStatus } from './schedule';
 
-export {
-  initializeSession,
-} from './session-initializer';
+export { initializeSession } from './session-initializer';
 
 export {
   hydrateActiveSession,
@@ -56,10 +54,7 @@ export {
   getProgressionSuggestions,
 } from './progression';
 
-export {
-  getSubstitutionOptions,
-  getSubstitutionTarget,
-} from './substitution';
+export { getSubstitutionOptions, getSubstitutionTarget } from './substitution';
 
 export {
   computeTotalVolume,
@@ -69,12 +64,7 @@ export {
   computeAllStatistics,
 } from './statistics';
 
-export {
-  getActiveRest,
-  beginRest,
-  moveRestDeadline,
-  clearActiveRest,
-} from './rest-state';
+export { getActiveRest, beginRest, moveRestDeadline, clearActiveRest } from './rest-state';
 
 export type { ActiveRest } from './rest-state';
 

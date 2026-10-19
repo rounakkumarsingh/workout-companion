@@ -35,11 +35,7 @@ export async function createBodyweightEntry(input: CreateBodyweightEntryInput) {
 
 export async function getBodyweightEntryById(id: string) {
   const db = await getDb();
-  const rows = db
-    .select()
-    .from(bodyweightEntries)
-    .where(eq(bodyweightEntries.id, id))
-    .all();
+  const rows = db.select().from(bodyweightEntries).where(eq(bodyweightEntries.id, id)).all();
 
   return rows[0] ?? null;
 }
@@ -76,21 +72,13 @@ export async function getLatestBodyweightEntry() {
   return rows[0] ?? null;
 }
 
-export async function getBodyweightWeeklyAverages(
-  limit = 12,
-): Promise<WeeklyAverage[]> {
+export async function getBodyweightWeeklyAverages(limit = 12): Promise<WeeklyAverage[]> {
   const db = await getDb();
   return db
     .select({
-      year: sql`CAST(strftime('%Y', ${bodyweightEntries.measuredAt}) AS INTEGER)`.mapWith(
-        Number,
-      ),
-      week: sql`CAST(strftime('%W', ${bodyweightEntries.measuredAt}) AS INTEGER)`.mapWith(
-        Number,
-      ),
-      avgWeight: sql`ROUND(AVG(${bodyweightEntries.weight}), 1)`.mapWith(
-        Number,
-      ),
+      year: sql`CAST(strftime('%Y', ${bodyweightEntries.measuredAt}) AS INTEGER)`.mapWith(Number),
+      week: sql`CAST(strftime('%W', ${bodyweightEntries.measuredAt}) AS INTEGER)`.mapWith(Number),
+      avgWeight: sql`ROUND(AVG(${bodyweightEntries.weight}), 1)`.mapWith(Number),
       unit: bodyweightEntries.unit,
       entryCount: sql`COUNT(*)`.mapWith(Number),
     })

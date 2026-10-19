@@ -62,52 +62,48 @@ export function SetPill({ label, status, onPress }: SetPillProps) {
       activeOpacity={0.7}
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
-      <Animated.View
-        style={[styles.flashOverlay, flashStyle]}
-        pointerEvents="none"
-      />
-      <Text style={[styles.label, styles[`label_${status}`] as typeof styles.label]}>
-        {label}
-      </Text>
+      <Animated.View style={[styles.flashOverlay, flashStyle]} pointerEvents="none" />
+      <Text style={[styles.label, styles[`label_${status}`] as typeof styles.label]}>{label}</Text>
     </AnimatedTouchable>
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  pill: {
-    backgroundColor: c.surfaceInteractive,
-    borderWidth: 0.5,
-    borderColor: c.borderActive,
-    borderRadius: radii.pill,
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  pending: {},
-  current: {
-    backgroundColor: c.goldSurface,
-    borderColor: c.gold,
-  },
-  done: {
-    backgroundColor: c.successSurface,
-    borderColor: c.successBorder,
-  },
-  flashOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: c.success,
-    borderRadius: radii.pill,
-  },
-  label: {
-    ...typography.monoSmall,
-    color: c.textSecondary,
-    position: 'relative',
-  },
-  label_pending: {},
-  label_current: {
-    color: c.gold,
-  },
-  label_done: {
-    color: c.successText,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    pill: {
+      backgroundColor: c.surfaceInteractive,
+      borderWidth: 0.5,
+      borderColor: c.borderActive,
+      borderRadius: radii.pill,
+      paddingVertical: 5,
+      paddingHorizontal: 12,
+      overflow: 'hidden',
+      position: 'relative',
+    },
+    pending: {},
+    current: {
+      backgroundColor: c.goldSurface,
+      borderColor: c.gold,
+    },
+    done: {
+      backgroundColor: c.successSurface,
+      borderColor: c.successBorder,
+    },
+    flashOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: c.success,
+      borderRadius: radii.pill,
+    },
+    label: {
+      ...typography.monoSmall,
+      color: c.textSecondary,
+      position: 'relative',
+    },
+    label_pending: {},
+    label_current: {
+      color: c.gold,
+    },
+    label_done: {
+      color: c.successText,
+    },
+  });

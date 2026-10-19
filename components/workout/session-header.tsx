@@ -59,39 +59,40 @@ export function SessionHeader({ session, progress }: SessionHeaderProps) {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: c.surfaceElevated,
-    marginHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 4,
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-  },
-  statBlock: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: c.textPrimary,
-    fontVariant: ['tabular-nums'],
-  },
-  statLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: c.textTertiary,
-    marginTop: 2,
-    letterSpacing: 0.5,
-  },
-  divider: {
-    width: 1,
-    height: 32,
-    backgroundColor: c.surfaceInteractive,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: c.surfaceElevated,
+      marginHorizontal: 16,
+      marginTop: 8,
+      marginBottom: 4,
+      borderRadius: 14,
+      paddingVertical: 14,
+      paddingHorizontal: 8,
+    },
+    statBlock: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    statValue: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: c.textPrimary,
+      fontVariant: ['tabular-nums'],
+    },
+    statLabel: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: c.textTertiary,
+      marginTop: 2,
+      letterSpacing: 0.5,
+    },
+    divider: {
+      width: 1,
+      height: 32,
+      backgroundColor: c.surfaceInteractive,
+    },
+  });

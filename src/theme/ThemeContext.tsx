@@ -41,10 +41,7 @@ export function ThemeManager({ children }: { children: React.ReactNode }) {
   const colors = isDark ? darkColors : lightColors;
   const navigationTheme = isDark ? DarkTheme : DefaultTheme;
 
-  const value = useMemo<ThemeContextValue>(
-    () => ({ colors, isDark }),
-    [colors, isDark],
-  );
+  const value = useMemo<ThemeContextValue>(() => ({ colors, isDark }), [colors, isDark]);
 
   return (
     <ThemeContext.Provider value={value}>

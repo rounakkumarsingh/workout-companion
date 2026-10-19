@@ -25,7 +25,8 @@ export function BodyweightInput({ lastValue, onLog }: BodyweightInputProps) {
 
       {lastValue && (
         <Text style={styles.lastValue}>
-          Last: {lastValue.weight} {lastValue.unit} · {new Date(lastValue.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          Last: {lastValue.weight} {lastValue.unit} ·{' '}
+          {new Date(lastValue.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
         </Text>
       )}
 

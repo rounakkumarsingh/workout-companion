@@ -46,23 +46,24 @@ function StepperBtn({ label, onPress }: { label: string; onPress: () => void }) 
   );
 }
 
-const makeStepperStyles = (c: ColorSet) => StyleSheet.create({
-  adj: {
-    width: 44,
-    height: 44,
-    borderRadius: radii.dot,
-    backgroundColor: c.border,
-    borderWidth: 0.5,
-    borderColor: c.borderActive,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  adjText: {
-    ...typography.subheading,
-    color: c.textSecondary,
-    fontFamily: 'SpaceMono_400Regular',
-  },
-});
+const makeStepperStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    adj: {
+      width: 44,
+      height: 44,
+      borderRadius: radii.dot,
+      backgroundColor: c.border,
+      borderWidth: 0.5,
+      borderColor: c.borderActive,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    adjText: {
+      ...typography.subheading,
+      color: c.textSecondary,
+      fontFamily: 'SpaceMono_400Regular',
+    },
+  });
 
 export function RepsInput({ value, onChange }: RepsInputProps) {
   const colors = useColors();
@@ -89,38 +90,39 @@ export function RepsInput({ value, onChange }: RepsInputProps) {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  wrap: {
-    marginHorizontal: spacing.xxl,
-    marginBottom: spacing.xl,
-    backgroundColor: c.surfaceElevated,
-    borderWidth: 0.5,
-    borderColor: c.border,
-    borderRadius: radii.card,
-    padding: spacing.xxl,
-  },
-  label: {
-    ...typography.monoLabel,
-    color: c.textTertiary,
-    letterSpacing: 0.1,
-    textTransform: 'uppercase',
-    marginBottom: spacing.lg,
-  },
-  control: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xl,
-  },
-  valWrap: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  val: {
-    ...typography.monoHero,
-    color: c.textPrimary,
-  },
-  unit: {
-    ...typography.monoBody,
-    color: c.textTertiary,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    wrap: {
+      marginHorizontal: spacing.xxl,
+      marginBottom: spacing.xl,
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      borderRadius: radii.card,
+      padding: spacing.xxl,
+    },
+    label: {
+      ...typography.monoLabel,
+      color: c.textTertiary,
+      letterSpacing: 0.1,
+      textTransform: 'uppercase',
+      marginBottom: spacing.lg,
+    },
+    control: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xl,
+    },
+    valWrap: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    val: {
+      ...typography.monoHero,
+      color: c.textPrimary,
+    },
+    unit: {
+      ...typography.monoBody,
+      color: c.textTertiary,
+    },
+  });

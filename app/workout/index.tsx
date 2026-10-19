@@ -27,7 +27,12 @@ import { StreakBadge } from '@/components/ui/StreakBadge';
 import { WeekStrip } from '@/components/ui/WeekStrip';
 import { ExerciseRow } from '@/components/workout/ExerciseRow';
 import { QuickLogOverlay } from '@/components/workout/QuickLogOverlay';
-import type { ActiveSession, ActiveSet, SessionProgress, ProgressionSuggestion } from '@/src/features/workout-session/types';
+import type {
+  ActiveSession,
+  ActiveSet,
+  SessionProgress,
+  ProgressionSuggestion,
+} from '@/src/features/workout-session/types';
 import type { DayStatus } from '@/components/ui/WeekStrip';
 import {
   hydrateActiveSession,
@@ -64,15 +69,15 @@ const EXERCISE_ICONS: Record<string, string> = {
   'High-Cable Lateral Raise': '💪',
   'Lat Pulldown': '🔁',
   'Barbell Row': '🔁',
-  'Deadlift': '🔁',
+  Deadlift: '🔁',
   'Bicep Curl': '💪',
   'Incline Press': '🏋️',
   'DB Shoulder': '💪',
   'Lateral Raise': '💪',
   'Skull Crusher': '📐',
-  'Squat': '🦵',
+  Squat: '🦵',
   'Leg Press': '🦵',
-  'RDL': '🦵',
+  RDL: '🦵',
   'Leg Curl': '🦵',
   'Calf Raise': '🦵',
 };
@@ -93,9 +98,10 @@ function getExerciseIcon(name: string, index: number): string {
   return EXERCISE_ICONS[name] || EXERCISE_EMOJIS[index % EXERCISE_EMOJIS.length];
 }
 
-function getExerciseStatus(
-  exercise: { status: string; sets: ActiveSet[] },
-): 'done' | 'active' | 'pending' {
+function getExerciseStatus(exercise: {
+  status: string;
+  sets: ActiveSet[];
+}): 'done' | 'active' | 'pending' {
   if (exercise.status === 'completed') return 'done';
   if (exercise.sets.length > 0 && exercise.sets.every((s) => s.isComplete)) return 'done';
   if (exercise.status === 'active' || exercise.sets.some((s) => s.isComplete)) return 'active';
@@ -124,10 +130,7 @@ interface ActiveState {
   progress: SessionProgress;
 }
 
-type ScreenState =
-  | { phase: 'loading' }
-  | ActiveState
-  | { phase: 'error'; message: string };
+type ScreenState = { phase: 'loading' } | ActiveState | { phase: 'error'; message: string };
 
 export default function ActiveWorkoutScreen() {
   const router = useRouter();
@@ -140,7 +143,9 @@ export default function ActiveWorkoutScreen() {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [elapsed, setElapsed] = useState('0m');
-  const [progressionSuggestions, setProgressionSuggestions] = useState<Map<string, ProgressionSuggestion>>(new Map());
+  const [progressionSuggestions, setProgressionSuggestions] = useState<
+    Map<string, ProgressionSuggestion>
+  >(new Map());
   const [weekDays, setWeekDays] = useState<DayStatus[]>([]);
   const [quickLogExercise, setQuickLogExercise] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
@@ -150,9 +155,8 @@ export default function ActiveWorkoutScreen() {
   // Stable selectors for useEffect dependencies
   const phase = state.phase;
   const sessionId = state.phase === 'active' ? state.session.id : null;
-  const exerciseStatusKey = state.phase === 'active'
-    ? state.session.exercises.map((e) => e.status).join(',')
-    : null;
+  const exerciseStatusKey =
+    state.phase === 'active' ? state.session.exercises.map((e) => e.status).join(',') : null;
 
   const hydrate = useCallback(async (sessionId: string) => {
     try {
@@ -181,9 +185,8 @@ export default function ActiveWorkoutScreen() {
       let cancelled = false;
       (async () => {
         try {
-          const sessionId = activeRef.current?.session.id
-            ?? params.sessionId
-            ?? (await getActiveSession())?.id;
+          const sessionId =
+            activeRef.current?.session.id ?? params.sessionId ?? (await getActiveSession())?.id;
           if (!sessionId) {
             if (!cancelled) setState({ phase: 'error', message: 'No active session.' });
             return;
@@ -196,7 +199,9 @@ export default function ActiveWorkoutScreen() {
           }
         }
       })();
-      return () => { cancelled = true; };
+      return () => {
+        cancelled = true;
+      };
     }, [params.sessionId, hydrate]),
   );
 
@@ -221,28 +226,37 @@ export default function ActiveWorkoutScreen() {
         setProgressionSuggestions(map);
       });
 
-      getWeekDayStatuses(state.session.weekNumber).then((days) => {
-        setWeekDays(days.map((d) => ({
-          label: WEEKDAY_INITIALS[d.date.getDay()],
-          status: d.status,
-        })));
-      }).catch((e) => console.warn('[workout] Failed to load week strip:', e));
+      getWeekDayStatuses(state.session.weekNumber)
+        .then((days) => {
+          setWeekDays(
+            days.map((d) => ({
+              label: WEEKDAY_INITIALS[d.date.getDay()],
+              status: d.status,
+            })),
+          );
+        })
+        .catch((e) => console.warn('[workout] Failed to load week strip:', e));
 
-      getCurrentStreak().then(setStreak)
+      getCurrentStreak()
+        .then(setStreak)
         .catch((e) => console.warn('[workout] Failed to compute streak:', e));
     }
   }, [sessionId]);
 
   useEffect(() => {
     if (state.phase === 'active') {
-      const activeIndex = state.session.exercises.findIndex((e) => e.status === 'active' || e.status === 'pending');
+      const activeIndex = state.session.exercises.findIndex(
+        (e) => e.status === 'active' || e.status === 'pending',
+      );
       if (activeIndex >= 0 && flatListRef.current) {
         try {
           flatListRef.current.scrollToIndex({
             index: activeIndex,
             animated: !reducedMotion,
           });
-        } catch { /* ignore if index out of bounds */ }
+        } catch {
+          /* ignore if index out of bounds */
+        }
       }
     }
   }, [exerciseStatusKey]);
@@ -270,36 +284,49 @@ export default function ActiveWorkoutScreen() {
     transform: [{ translateX: shakeOffset.value }],
   }));
 
-  const handleViewDetail = useCallback((exerciseLogId: string) => {
-    router.push(`/workout/${exerciseLogId}` as Href);
-  }, [router]);
+  const handleViewDetail = useCallback(
+    (exerciseLogId: string) => {
+      router.push(`/workout/${exerciseLogId}` as Href);
+    },
+    [router],
+  );
 
-  const handleQuickLog = useCallback(async (weight: number, reps: number, rpe: number | null) => {
-    const current = activeRef.current;
-    if (!current || !quickLogExercise) return;
-    const exercise = current.session.exercises.find((e) => e.exerciseLogId === quickLogExercise);
-    if (!exercise) return;
-    const pendingSet = exercise.sets.find((s) => !s.isComplete);
-    if (!pendingSet) {
-      Alert.alert('All sets logged', `Every working set of ${exercise.exerciseName} is already logged.`);
-      return;
-    }
-    try {
-      const result = await updateSet(current.session, pendingSet.setLogId, { weight, reps, loggedRpe: rpe });
-      if (result.success) {
-        const updated: ActiveState = {
-          phase: 'active',
-          session: result.session,
-          progress: getSessionProgress(result.session),
-        };
-        activeRef.current = updated;
-        setState(updated);
+  const handleQuickLog = useCallback(
+    async (weight: number, reps: number, rpe: number | null) => {
+      const current = activeRef.current;
+      if (!current || !quickLogExercise) return;
+      const exercise = current.session.exercises.find((e) => e.exerciseLogId === quickLogExercise);
+      if (!exercise) return;
+      const pendingSet = exercise.sets.find((s) => !s.isComplete);
+      if (!pendingSet) {
+        Alert.alert(
+          'All sets logged',
+          `Every working set of ${exercise.exerciseName} is already logged.`,
+        );
+        return;
       }
-    } catch (e) {
-      console.error('[workout] Failed to quick log set:', e);
-      Alert.alert('Error', 'Failed to log set. Please try again.');
-    }
-  }, [quickLogExercise]);
+      try {
+        const result = await updateSet(current.session, pendingSet.setLogId, {
+          weight,
+          reps,
+          loggedRpe: rpe,
+        });
+        if (result.success) {
+          const updated: ActiveState = {
+            phase: 'active',
+            session: result.session,
+            progress: getSessionProgress(result.session),
+          };
+          activeRef.current = updated;
+          setState(updated);
+        }
+      } catch (e) {
+        console.error('[workout] Failed to quick log set:', e);
+        Alert.alert('Error', 'Failed to log set. Please try again.');
+      }
+    },
+    [quickLogExercise],
+  );
 
   const handleComplete = useCallback(() => {
     const current = activeRef.current;
@@ -310,7 +337,7 @@ export default function ActiveWorkoutScreen() {
       const unfinishedCount = session.exercises.filter((e) => e.status !== 'completed').length;
       Alert.alert(
         `${unfinishedCount} ${unfinishedCount === 1 ? 'exercise' : 'exercises'} not finished`,
-        'Complete anyway? Sets you haven\'t logged will be skipped.',
+        "Complete anyway? Sets you haven't logged will be skipped.",
         [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -329,26 +356,22 @@ export default function ActiveWorkoutScreen() {
         ],
       );
     } else {
-      Alert.alert(
-        'Complete Workout',
-        'Are you sure you want to finish this session?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Complete',
-            style: 'default',
-            onPress: async () => {
-              try {
-                const completed = await completeSession(session);
-                router.replace(`/workout/pr-celebration?sessionId=${completed.id}`);
-              } catch (e) {
-                console.error('[workout] Failed to complete session:', e);
-                Alert.alert('Error', 'Failed to complete workout. Please try again.');
-              }
-            },
+      Alert.alert('Complete Workout', 'Are you sure you want to finish this session?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Complete',
+          style: 'default',
+          onPress: async () => {
+            try {
+              const completed = await completeSession(session);
+              router.replace(`/workout/pr-celebration?sessionId=${completed.id}`);
+            } catch (e) {
+              console.error('[workout] Failed to complete session:', e);
+              Alert.alert('Error', 'Failed to complete workout. Please try again.');
+            }
           },
-        ],
-      );
+        },
+      ]);
     }
   }, [router]);
 
@@ -419,24 +442,28 @@ export default function ActiveWorkoutScreen() {
           const prog = progressionSuggestions.get(item.exerciseName);
           const progressionStatus = prog?.readyForWeightIncrease
             ? 'ready'
-            : (prog?.topOfRange ? 'almost' : null);
+            : prog?.topOfRange
+              ? 'almost'
+              : null;
           return (
             <ExerciseRow
-                exercise={item}
-                status={status}
-                progressionStatus={progressionStatus}
-                icon={getExerciseIcon(item.exerciseName, index)}
-                spec={spec}
-                onPress={() => handleViewDetail(item.exerciseLogId)}
-                onLongPress={() => setQuickLogExercise(item.exerciseLogId)}
-              />
+              exercise={item}
+              status={status}
+              progressionStatus={progressionStatus}
+              icon={getExerciseIcon(item.exerciseName, index)}
+              spec={spec}
+              onPress={() => handleViewDetail(item.exerciseLogId)}
+              onLongPress={() => setQuickLogExercise(item.exerciseLogId)}
+            />
           );
         }}
         ListHeaderComponent={
           <View>
             <View style={[styles.header, { paddingTop: insets.top + spacing.xxl }]}>
               <View>
-                <Text style={styles.eyebrow}>{getWeekdayLabel(session.startedAt, session.weekNumber)}</Text>
+                <Text style={styles.eyebrow}>
+                  {getWeekdayLabel(session.startedAt, session.weekNumber)}
+                </Text>
                 <Text style={styles.headerTitle}>{getDayName(session.dayType)}</Text>
               </View>
               <StreakBadge count={streak} />
@@ -461,7 +488,9 @@ export default function ActiveWorkoutScreen() {
 
             <Divider style={{ marginHorizontal: spacing.xxl, marginBottom: spacing.xl }} />
             <SectionLabel label="Exercises" />
-            <Text style={styles.logHint}>Tap any exercise to log weight, reps, and RPE for each set</Text>
+            <Text style={styles.logHint}>
+              Tap any exercise to log weight, reps, and RPE for each set
+            </Text>
           </View>
         }
         ListHeaderComponentStyle={styles.listHeader}
@@ -484,11 +513,14 @@ export default function ActiveWorkoutScreen() {
                 onPress={handleComplete}
                 activeOpacity={0.85}
               >
-                <Text style={styles.completeBtnText}>
-                  Complete Workout
-                </Text>
+                <Text style={styles.completeBtnText}>Complete Workout</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.abandonBtn} onPress={handleAbandon} activeOpacity={0.7} accessibilityLabel="End current session">
+              <TouchableOpacity
+                style={styles.abandonBtn}
+                onPress={handleAbandon}
+                activeOpacity={0.7}
+                accessibilityLabel="End current session"
+              >
                 <Text style={styles.abandonBtnText}>End Session</Text>
               </TouchableOpacity>
             </View>
@@ -501,7 +533,9 @@ export default function ActiveWorkoutScreen() {
 
       {quickLogExercise && (
         <QuickLogOverlay
-          exerciseName={session.exercises.find((e) => e.exerciseLogId === quickLogExercise)?.exerciseName ?? ''}
+          exerciseName={
+            session.exercises.find((e) => e.exerciseLogId === quickLogExercise)?.exerciseName ?? ''
+          }
           visible={quickLogExercise !== null}
           onClose={() => setQuickLogExercise(null)}
           onLog={handleQuickLog}
@@ -511,128 +545,129 @@ export default function ActiveWorkoutScreen() {
   );
 }
 
-const makeStyles = (c: ColorSet) => StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: c.background,
-  },
-  centered: {
-    flex: 1,
-    backgroundColor: c.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xxxl,
-  },
-  errorText: {
-    ...typography.body,
-    color: c.danger,
-    textAlign: 'center',
-    marginBottom: spacing.xs,
-  },
-  errorSub: {
-    ...typography.monoSmall,
-    color: c.textTertiary,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
-  },
-  dismissBtn: {
-    backgroundColor: c.surfaceElevated,
-    borderRadius: radii.row,
-    paddingHorizontal: spacing.xxxl,
-    paddingVertical: 14,
-  },
-  dismissBtnText: {
-    ...typography.body,
-    color: c.gold,
-  },
-  listHeader: {
-    paddingBottom: spacing.sm,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.xxl,
-  },
-  eyebrow: {
-    ...typography.monoLabel,
-    color: c.textTertiary,
-    letterSpacing: 0.12,
-    textTransform: 'uppercase',
-    marginBottom: spacing.xs,
-  },
-  headerTitle: {
-    ...typography.heading,
-    color: c.textPrimary,
-    letterSpacing: -0.02,
-  },
-  ringSection: {
-    alignItems: 'center',
-    paddingVertical: 18,
-  },
-  logHint: {
-    ...typography.monoSmall,
-    color: c.textMuted,
-    paddingHorizontal: spacing.xxl,
-    marginBottom: spacing.md,
-    lineHeight: 16,
-  },
-  listContent: {
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: 40,
-  },
-  footer: {
-    paddingTop: spacing.lg,
-    paddingBottom: 60,
-  },
-  allDoneBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.xl,
-  },
-  completeIcon: {
-    fontSize: 24,
-    color: c.success,
-  },
-  allDoneText: {
-    ...typography.subheading,
-    color: c.successText,
-  },
-  finishRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.lg,
-  },
-  completeBtn: {
-    flex: 1,
-    backgroundColor: c.gold,
-    borderRadius: radii.row,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  completeBtnText: {
-    ...typography.cta,
-    color: c.blackText,
-    textTransform: 'uppercase',
-    fontSize: 14,
-  },
-  abandonBtn: {
-    flex: 1,
-    borderRadius: radii.row,
-    paddingVertical: 15,
-    alignItems: 'center',
-    borderWidth: 0.5,
-    borderColor: c.danger,
-  },
-  abandonBtnText: {
-    ...typography.body,
-    color: c.danger,
-    textTransform: 'uppercase',
-    letterSpacing: 0.05,
-    fontSize: 14,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: c.background,
+    },
+    centered: {
+      flex: 1,
+      backgroundColor: c.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.xxxl,
+    },
+    errorText: {
+      ...typography.body,
+      color: c.danger,
+      textAlign: 'center',
+      marginBottom: spacing.xs,
+    },
+    errorSub: {
+      ...typography.monoSmall,
+      color: c.textTertiary,
+      textAlign: 'center',
+      marginBottom: spacing.xl,
+    },
+    dismissBtn: {
+      backgroundColor: c.surfaceElevated,
+      borderRadius: radii.row,
+      paddingHorizontal: spacing.xxxl,
+      paddingVertical: 14,
+    },
+    dismissBtnText: {
+      ...typography.body,
+      color: c.gold,
+    },
+    listHeader: {
+      paddingBottom: spacing.sm,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      paddingHorizontal: spacing.xxl,
+      paddingTop: spacing.xxl,
+    },
+    eyebrow: {
+      ...typography.monoLabel,
+      color: c.textTertiary,
+      letterSpacing: 0.12,
+      textTransform: 'uppercase',
+      marginBottom: spacing.xs,
+    },
+    headerTitle: {
+      ...typography.heading,
+      color: c.textPrimary,
+      letterSpacing: -0.02,
+    },
+    ringSection: {
+      alignItems: 'center',
+      paddingVertical: 18,
+    },
+    logHint: {
+      ...typography.monoSmall,
+      color: c.textMuted,
+      paddingHorizontal: spacing.xxl,
+      marginBottom: spacing.md,
+      lineHeight: 16,
+    },
+    listContent: {
+      paddingHorizontal: spacing.xxl,
+      paddingBottom: 40,
+    },
+    footer: {
+      paddingTop: spacing.lg,
+      paddingBottom: 60,
+    },
+    allDoneBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.md,
+      paddingVertical: spacing.xl,
+    },
+    completeIcon: {
+      fontSize: 24,
+      color: c.success,
+    },
+    allDoneText: {
+      ...typography.subheading,
+      color: c.successText,
+    },
+    finishRow: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      paddingHorizontal: spacing.xxl,
+      paddingTop: spacing.lg,
+    },
+    completeBtn: {
+      flex: 1,
+      backgroundColor: c.gold,
+      borderRadius: radii.row,
+      paddingVertical: 15,
+      alignItems: 'center',
+    },
+    completeBtnText: {
+      ...typography.cta,
+      color: c.blackText,
+      textTransform: 'uppercase',
+      fontSize: 14,
+    },
+    abandonBtn: {
+      flex: 1,
+      borderRadius: radii.row,
+      paddingVertical: 15,
+      alignItems: 'center',
+      borderWidth: 0.5,
+      borderColor: c.danger,
+    },
+    abandonBtnText: {
+      ...typography.body,
+      color: c.danger,
+      textTransform: 'uppercase',
+      letterSpacing: 0.05,
+      fontSize: 14,
+    },
+  });

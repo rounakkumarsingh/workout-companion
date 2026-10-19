@@ -4,7 +4,11 @@ import { useFocusEffect } from 'expo-router';
 import { useColors, typography, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { resolveCurrentSchedule, getProgramStart, getProgramWeekDays } from '@/src/features/workout-session';
+import {
+  resolveCurrentSchedule,
+  getProgramStart,
+  getProgramWeekDays,
+} from '@/src/features/workout-session';
 import { PROGRAM } from '@/src/data/program';
 import type { Week } from '@/src/data/program';
 
@@ -46,7 +50,9 @@ export default function WeekScreen() {
           if (!cancelled) setLoading(false);
         }
       })();
-      return () => { cancelled = true; };
+      return () => {
+        cancelled = true;
+      };
     }, []),
   );
 
@@ -68,21 +74,17 @@ export default function WeekScreen() {
           const isTraining = day.activityType === 'Training';
           const exCount = day.exercises.length;
           return (
-            <View
-              key={day.dayIndex}
-              style={[
-                styles.dayCard,
-                !isTraining && styles.restCard,
-              ]}
-            >
+            <View key={day.dayIndex} style={[styles.dayCard, !isTraining && styles.restCard]}>
               <View style={styles.dayHeader}>
                 <Text style={styles.dayLabel}>{dayLabels[i] ?? `DAY ${i + 1}`}</Text>
                 <Text style={[styles.dayName, !isTraining && styles.restName]}>
-                  {isTraining ? `${day.dayType} Day` : day.activityType === 'OptionalCardioHIIT' ? 'Cardio / HIIT' : 'Rest Day'}
+                  {isTraining
+                    ? `${day.dayType} Day`
+                    : day.activityType === 'OptionalCardioHIIT'
+                      ? 'Cardio / HIIT'
+                      : 'Rest Day'}
                 </Text>
-                {isTraining && (
-                  <Text style={styles.dayBadge}>{exCount} ex.</Text>
-                )}
+                {isTraining && <Text style={styles.dayBadge}>{exCount} ex.</Text>}
               </View>
               {isTraining && (
                 <View style={styles.chips}>
