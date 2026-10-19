@@ -8,14 +8,13 @@ import { useColors } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 
 interface SubstitutionOption {
-  slot: 1 | 2;
   name: string;
 }
 
 interface SubstitutionCardProps {
   currentExerciseName: string;
   options: SubstitutionOption[];
-  onSelect: (slot: 1 | 2) => void;
+  onSelect: (exerciseName: string) => void;
   disabled: boolean;
   prescription: ExercisePrescription | undefined;
 }
@@ -98,11 +97,11 @@ export function SubstitutionCard({ currentExerciseName, options, onSelect, disab
         <>
           {options.map((opt, i) => (
             <OptionCard
-              key={opt.slot}
+              key={opt.name}
               prefix={i === 0 ? 'A' : 'B'}
               name={opt.name}
               prescription={prescription}
-              onPress={() => onSelect(opt.slot)}
+              onPress={() => onSelect(opt.name)}
             />
           ))}
           <Text style={styles.equalNote}>Both equally valid per program</Text>

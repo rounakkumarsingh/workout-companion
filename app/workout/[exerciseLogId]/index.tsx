@@ -26,13 +26,12 @@ import {
   updateSet,
   completeSession,
   getExerciseHistoryComparison,
-  substituteExercise,
+  swapExercise,
   logWarmupSet,
   getNextExercise,
   setExerciseStatus,
-  invalidateCachedSession,
 } from '@/src/features/workout-session';
-import { getSubstitutionOptions, getSubstitutionTarget } from '@/src/features/workout-session/substitution';
+import { getSubstitutionOptions } from '@/src/features/workout-session/substitution';
 import { getActiveSession } from '@/src/db/repositories/sessions';
 
 function parseRestSeconds(rest: string): number {
@@ -365,37 +364,28 @@ export default function ExerciseDetailScreen() {
     }
   }, [state, router]);
 
-  const handleSubstitution = useCallback(async (slot: 1 | 2) => {
+  const handleSubstitution = useCallback(async (targetName: string) => {
     if (state.phase !== 'active') return;
     try {
-      const current = state.session.exercises.find((e) => e.exerciseLogId === exerciseLogId);
-      if (!current) return;
-
-      if (slot === 1 && current.exerciseName !== current.prescribedExerciseName) {
-        const { updateExerciseLog } = await import('@/src/db/repositories/exercises');
-        await updateExerciseLog(exerciseLogId, {
-          exerciseName: current.prescribedExerciseName,
-          substitutionNote: null,
-        });
-        invalidateCachedSession(state.session.id);
-        const updated = (await hydrateActiveSession(state.session.id))!;
-        const updatedExercise = updated.exercises.find((e) => e.exerciseLogId === exerciseLogId)!;
-        setState((prev) => {
-          if (prev.phase !== 'active') return prev;
-          return { ...prev, session: updated, exercise: updatedExercise };
-        });
-      } else {
-        const target = getSubstitutionTarget(current.prescribedExerciseName, slot);
-        if (!target) return;
-        const updated = await substituteExercise(state.session, exerciseLogId, slot);
-        const updatedExercise = updated.exercises.find((e) => e.exerciseLogId === exerciseLogId)!;
-        setState((prev) => {
-          if (prev.phase !== 'active') return prev;
-          return { ...prev, session: updated, exercise: updatedExercise };
-        });
+      const updated = await swapExercise(state.session, exerciseLogId, targetName);
+      const updatedExercise = updated.exercises.find((e) => e.exerciseLogId === exerciseLogId)!;
+      setState((prev) => {
+        if (prev.phase !== 'active') return prev;
+        return { ...prev, session: updated, exercise: updatedExercise };
+      });
+      if (updatedExercise.prescription?.repRange) {
+        setComparisonLoading(true);
+        const comp = await getExerciseHistoryComparison(
+          updatedExercise.exerciseName,
+          updatedExercise.prescription.repRange,
+          updated.id,
+        );
+        setComparison(comp);
+        setComparisonLoading(false);
       }
     } catch (e) {
       console.error('[exercise] Failed to substitute exercise:', e);
+      Alert.alert('Error', 'Failed to change exercise. Please try again.');
     }
   }, [state, exerciseLogId]);
 
@@ -463,12 +453,12 @@ export default function ExerciseDetailScreen() {
   const rawOptions = getSubstitutionOptions(exercise.prescribedExerciseName);
   const substitutionOptions = isSubstituted
     ? [
-        { slot: 1 as const, name: exercise.prescribedExerciseName },
+        { name: exercise.prescribedExerciseName },
         ...rawOptions
           .filter((o) => o.substituteName !== exercise.exerciseName)
-          .map((o) => ({ slot: 2 as const, name: o.substituteName })),
+          .map((o) => ({ name: o.substituteName })),
       ]
-    : rawOptions.map((o) => ({ slot: o.slot, name: o.substituteName }));
+    : rawOptions.map((o) => ({ name: o.substituteName }));
   const substitutionDisabled = exercise.sets.some((s) => s.weight > 0 || s.reps > 0);
   const nextExercise = getNextExercise(session, exerciseLogId);
 

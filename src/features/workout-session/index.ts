@@ -16,9 +16,16 @@ export {
   getProgramStartDate,
   setProgramStartDate,
   clearProgramStartDate,
+  getProgramStart,
+  getProgramDay,
+  getProgramWeekDays,
   resolveCurrentSchedule,
   wasTrainingDayMissed,
+  getWeekDayStatuses,
+  getCurrentStreak,
 } from './schedule';
+
+export type { ProgramDay, ProgramDayStatus } from './schedule';
 
 export {
   initializeSession,
@@ -27,11 +34,15 @@ export {
 export {
   hydrateActiveSession,
   updateSet,
-  substituteExercise,
+  swapExercise,
   completeSession,
   abandonSession,
+  reopenSession,
+  finalizeStaleSessions,
   setExerciseStatus,
   getNextExercise,
+  getNextIncompleteExercise,
+  getLastActivityAt,
   logWarmupSet,
   getExerciseHistoryComparison,
   getSessionProgress,
@@ -40,7 +51,7 @@ export {
 
 export {
   getLastCompletedSessionForExercise,
-  prefillFromHistory,
+  getSuggestedSetValues,
   checkProgression,
   getProgressionSuggestions,
 } from './progression';
@@ -57,10 +68,3 @@ export {
   detectPersonalRecords,
   computeAllStatistics,
 } from './statistics';
-
-export {
-  getCachedSession,
-  setCachedSession,
-  invalidateCachedSession,
-  clearCache,
-} from './session-cache';

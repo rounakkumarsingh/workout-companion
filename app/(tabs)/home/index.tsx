@@ -15,7 +15,8 @@ import { CtaButton } from '@/components/ui/CtaButton';
 import { GhostButton } from '@/components/ui/GhostButton';
 import { ProgramProgressBar } from '@/components/ui/ProgramProgressBar';
 import { resolveCurrentSchedule, wasTrainingDayMissed, hydrateActiveSession, abandonSession, getSessionProgress, getElapsedMinutes } from '@/src/features/workout-session';
-import { getActiveSession, getSessionsForToday, getSessionsWithVolume } from '@/src/db/repositories/sessions';
+import { getActiveSession, getSessionsStartedBetween, getSessionsWithVolume } from '@/src/db/repositories/sessions';
+import { localDayBoundsIso } from '@/src/lib/dates';
 import { initializeSession } from '@/src/features/workout-session/session-initializer';
 import { createCardioSession } from '@/src/db/repositories/cardio';
 import { PROGRAM, TOTAL_WEEKS } from '@/src/data/program';
@@ -79,7 +80,8 @@ async function computeScreenState(): Promise<HomeScreenState> {
     };
   }
 
-  const todaySessions = await getSessionsForToday();
+  const { startIso, endIso } = localDayBoundsIso(new Date());
+  const todaySessions = await getSessionsStartedBetween(startIso, endIso);
   const matchingSession = todaySessions.find(
     (s: { weekNumber: number; dayType: string }) =>
       s.weekNumber === weekNumber && s.dayType === dayPrescription.dayType,

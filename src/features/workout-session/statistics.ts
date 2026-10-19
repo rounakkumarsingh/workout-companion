@@ -1,6 +1,6 @@
 import type { ActiveSession, PerExerciseVolume, SessionStatistics } from './types';
 import { getElapsedMinutes } from './session-executor';
-import { getExerciseHistory } from '../../db/repositories/exercises';
+import { getBestWorkingWeight } from '../../db/repositories/exercises';
 
 function computeSetVolume(weight: number, reps: number): number {
   return weight * reps;
@@ -10,7 +10,7 @@ export function computeTotalVolume(session: ActiveSession): number {
   let total = 0;
   for (const exercise of session.exercises) {
     for (const set of exercise.sets) {
-      total += computeSetVolume(set.weight, set.reps);
+      if (set.isComplete) total += computeSetVolume(set.weight, set.reps);
     }
   }
   return total;
@@ -19,7 +19,7 @@ export function computeTotalVolume(session: ActiveSession): number {
 export function computePerExerciseVolume(session: ActiveSession): PerExerciseVolume[] {
   return session.exercises.map((exercise) => {
     const totalVolume = exercise.sets.reduce(
-      (sum, set) => sum + computeSetVolume(set.weight, set.reps),
+      (sum, set) => sum + (set.isComplete ? computeSetVolume(set.weight, set.reps) : 0),
       0,
     );
     return {
@@ -43,19 +43,19 @@ export async function detectPersonalRecords(
   }[] = [];
 
   for (const exercise of session.exercises) {
-    const history = await getExerciseHistory(exercise.prescribedExerciseName, 100);
-    if (history.length === 0) continue;
+    // Compare against every earlier session — never this one.
+    const previousBestWeight = await getBestWorkingWeight(exercise.exerciseName, session.id);
+    if (previousBestWeight === null) continue; // first time: nothing to beat
 
-    const previousBestWeight = Math.max(...history.map((h) => h.weight));
-
-    for (const set of exercise.sets) {
-      if (set.weight > 0 && set.weight > previousBestWeight) {
-        prs.push({
-          exerciseName: exercise.exerciseName,
-          set: { setIndex: set.setIndex, weight: set.weight, reps: set.reps },
-          previousBestWeight: previousBestWeight > 0 ? previousBestWeight : null,
-        });
-      }
+    const best = exercise.sets
+      .filter((set) => set.isComplete && set.weight > previousBestWeight)
+      .sort((a, b) => b.weight - a.weight)[0];
+    if (best) {
+      prs.push({
+        exerciseName: exercise.exerciseName,
+        set: { setIndex: best.setIndex, weight: best.weight, reps: best.reps },
+        previousBestWeight,
+      });
     }
   }
 

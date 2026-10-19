@@ -4,14 +4,27 @@ import type { ActiveSession, ActiveExercise, ActiveSet, ExerciseStatus, Exercise
 import {
   getSessionById,
   updateSessionStatus,
+  getActiveSessions,
+  getSessionActivity,
 } from '../../db/repositories/sessions';
 import {
   getExerciseLogsWithSetsBySession,
   updateSetLog,
   updateExerciseLog,
+  updateExerciseLogStatus,
+  createWarmupSetLog,
 } from '../../db/repositories/exercises';
-import { getSubstitutionTarget } from './substitution';
-import { getCachedSession, setCachedSession, invalidateCachedSession } from './session-cache';
+import { getSubstitutionOptions } from './substitution';
+import {
+  getLastCompletedSessionForExercise,
+  getSuggestedSetValues,
+  checkProgression,
+} from './progression';
+import { generateId } from '../../lib/ids';
+import { startOfLocalDay } from '../../lib/dates';
+
+/** An open session from an earlier day is closed after this much inactivity. */
+const STALE_SESSION_INACTIVITY_MS = 2 * 60 * 60 * 1000;
 
 function getPrescription(
   weekNumber: number,
@@ -23,16 +36,14 @@ function getPrescription(
   return day?.exercises.find((e) => e.exerciseName === prescribedExerciseName);
 }
 
+/** Always reads from SQLite so screens never show stale data. */
 export async function hydrateActiveSession(sessionId: string): Promise<ActiveSession | null> {
-  const cached = getCachedSession(sessionId);
-  if (cached) return cached;
-
   const session = await getSessionById(sessionId);
   if (!session) return null;
 
   const logsWithSets = await getExerciseLogsWithSetsBySession(sessionId);
 
-  const result: ActiveSession = {
+  return {
     id: session.id,
     weekNumber: session.weekNumber,
     dayType: session.dayType as DayType,
@@ -48,6 +59,7 @@ export async function hydrateActiveSession(sessionId: string): Promise<ActiveSes
       const warmupSets: ActiveSet[] = [];
       const workingSets: ActiveSet[] = [];
       for (const s of sets) {
+        const isWarmup = s.isWarmup === 1;
         const set: ActiveSet = {
           setLogId: s.id,
           setIndex: s.setIndex,
@@ -55,8 +67,10 @@ export async function hydrateActiveSession(sessionId: string): Promise<ActiveSes
           reps: s.reps,
           loggedRpe: s.loggedRpe,
           loggedAt: s.loggedAt,
-          isWarmup: s.isWarmup === 1,
-          isComplete: s.weight > 0 || s.reps > 0,
+          isWarmup,
+          // Working sets are pre-filled with suggested values; a set is only
+          // complete once the user logs it (which stamps loggedAt).
+          isComplete: isWarmup || s.loggedAt !== null,
         };
         if (set.isWarmup) {
           warmupSets.push(set);
@@ -77,9 +91,6 @@ export async function hydrateActiveSession(sessionId: string): Promise<ActiveSes
       };
     }),
   };
-
-  setCachedSession(result);
-  return result;
 }
 
 export async function updateSet(
@@ -100,28 +111,44 @@ export async function updateSet(
   if (updates.reps !== undefined) setUpdates.reps = updates.reps;
   if (updates.loggedRpe !== undefined) setUpdates.loggedRpe = updates.loggedRpe;
   await updateSetLog(setLogId, setUpdates as Parameters<typeof updateSetLog>[1]);
-  invalidateCachedSession(session.id);
   const hydrated = (await hydrateActiveSession(session.id))!;
   return { session: hydrated, success: true };
 }
 
-export async function substituteExercise(
+/**
+ * Swaps an exercise to one of its listed substitutes, or back to the
+ * prescribed exercise. Unlogged sets get fresh suggested values from the
+ * new exercise's own history.
+ */
+export async function swapExercise(
   session: ActiveSession,
   exerciseLogId: string,
-  slot: 1 | 2,
+  targetName: string,
 ): Promise<ActiveSession> {
   const exercise = session.exercises.find((e) => e.exerciseLogId === exerciseLogId);
-  if (!exercise) return session;
+  if (!exercise || exercise.exerciseName === targetName) return session;
 
-  const target = getSubstitutionTarget(exercise.prescribedExerciseName, slot);
-  if (!target) return session;
+  const isRevert = targetName === exercise.prescribedExerciseName;
+  const isListedSubstitute = getSubstitutionOptions(exercise.prescribedExerciseName).some(
+    (o) => o.substituteName === targetName,
+  );
+  if (!isRevert && !isListedSubstitute) return session;
 
   await updateExerciseLog(exerciseLogId, {
-    exerciseName: target,
-    substitutionNote: `Substituted ${exercise.prescribedExerciseName} → ${target} (slot ${slot})`,
+    exerciseName: targetName,
+    substitutionNote: isRevert
+      ? null
+      : `Substituted ${exercise.prescribedExerciseName} → ${targetName}`,
   });
 
-  invalidateCachedSession(session.id);
+  const suggestions = await getSuggestedSetValues(targetName, exercise.sets.length, {
+    excludeSessionId: session.id,
+  });
+  for (const [i, set] of exercise.sets.entries()) {
+    if (set.isComplete) continue;
+    await updateSetLog(set.setLogId, suggestions[i]);
+  }
+
   return (await hydrateActiveSession(session.id))!;
 }
 
@@ -131,7 +158,6 @@ export async function completeSession(session: ActiveSession): Promise<ActiveSes
     status: 'completed',
     completedAt: new Date().toISOString(),
   });
-  invalidateCachedSession(session.id);
   return (await hydrateActiveSession(session.id))!;
 }
 
@@ -141,8 +167,39 @@ export async function abandonSession(session: ActiveSession): Promise<ActiveSess
     status: 'abandoned',
     completedAt: null,
   });
-  invalidateCachedSession(session.id);
   return (await hydrateActiveSession(session.id))!;
+}
+
+/** Puts an ended session back in progress (logged sets are kept). */
+export async function reopenSession(sessionId: string): Promise<void> {
+  await updateSessionStatus({
+    id: sessionId,
+    status: 'in_progress',
+    completedAt: null,
+  });
+}
+
+/**
+ * Closes sessions left open from an earlier day: completed when at least
+ * one working set was logged, otherwise abandoned. Sessions with recent
+ * activity (e.g. a workout running past midnight) are left alone.
+ */
+export async function finalizeStaleSessions(now: Date = new Date()): Promise<void> {
+  const todayStart = startOfLocalDay(now).getTime();
+  for (const session of await getActiveSessions()) {
+    if (new Date(session.startedAt).getTime() >= todayStart) continue;
+
+    const activity = await getSessionActivity(session.id);
+    const lastActiveAt = activity.lastLoggedAt ?? session.startedAt;
+    if (now.getTime() - new Date(lastActiveAt).getTime() < STALE_SESSION_INACTIVITY_MS) continue;
+
+    const hasLoggedSets = activity.loggedSets > 0;
+    await updateSessionStatus({
+      id: session.id,
+      status: hasLoggedSets ? 'completed' : 'abandoned',
+      completedAt: hasLoggedSets ? lastActiveAt : null,
+    });
+  }
 }
 
 export function getSessionProgress(session: ActiveSession): SessionProgress {
@@ -154,7 +211,7 @@ export function getSessionProgress(session: ActiveSession): SessionProgress {
     let exerciseHasLoggedSet = false;
     for (const set of exercise.sets) {
       totalSets++;
-      if (set.weight > 0 || set.reps > 0) {
+      if (set.isComplete) {
         completedSets++;
         exerciseHasLoggedSet = true;
       }
@@ -170,12 +227,22 @@ export function getSessionProgress(session: ActiveSession): SessionProgress {
   };
 }
 
+/** Timestamp of the most recently logged working set, if any. */
+export function getLastActivityAt(session: ActiveSession): string | null {
+  let latest: string | null = null;
+  for (const exercise of session.exercises) {
+    for (const set of exercise.sets) {
+      if (set.loggedAt && (!latest || set.loggedAt > latest)) latest = set.loggedAt;
+    }
+  }
+  return latest;
+}
+
 export async function setExerciseStatus(
   session: ActiveSession,
   exerciseLogId: string,
   status: ExerciseStatus,
 ): Promise<ActiveSession> {
-  const { updateExerciseLogStatus } = await import('../../db/repositories/exercises');
   await updateExerciseLogStatus(exerciseLogId, status);
   return (await hydrateActiveSession(session.id))!;
 }
@@ -190,17 +257,35 @@ export function getNextExercise(
   return sorted[currentIdx + 1];
 }
 
+/**
+ * The next exercise (in program order, wrapping around) that is not yet
+ * completed, or null when every other exercise is done.
+ */
+export function getNextIncompleteExercise(
+  session: ActiveSession,
+  currentExerciseLogId: string,
+): ActiveExercise | null {
+  const sorted = [...session.exercises].sort((a, b) => a.sortOrder - b.sortOrder);
+  const currentIdx = sorted.findIndex((e) => e.exerciseLogId === currentExerciseLogId);
+  for (let step = 1; step < sorted.length; step++) {
+    const candidate = sorted[(currentIdx + step + sorted.length) % sorted.length];
+    if (candidate.exerciseLogId !== currentExerciseLogId && candidate.status !== 'completed') {
+      return candidate;
+    }
+  }
+  return null;
+}
+
 export async function logWarmupSet(
   session: ActiveSession,
   exerciseLogId: string,
   data: { weight: number; reps: number },
 ): Promise<ActiveSession> {
-  const { createWarmupSetLog } = await import('../../db/repositories/exercises');
   const exercise = session.exercises.find((e) => e.exerciseLogId === exerciseLogId);
   if (!exercise) return session;
   const nextWarmupIndex = (exercise.warmupSets?.length ?? 0) + 1;
   await createWarmupSetLog({
-    id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    id: generateId(),
     exerciseLogId,
     setIndex: nextWarmupIndex,
     weight: data.weight,
@@ -209,16 +294,15 @@ export async function logWarmupSet(
     loggedAt: null,
     isWarmup: true,
   });
-  invalidateCachedSession(session.id);
   return (await hydrateActiveSession(session.id))!;
 }
 
 export async function getExerciseHistoryComparison(
   exerciseName: string,
   repRange: string,
+  excludeSessionId?: string,
 ): Promise<ExerciseHistoryComparison> {
-  const { getLastCompletedSessionForExercise, checkProgression } = await import('./progression');
-  const lastSession = await getLastCompletedSessionForExercise(exerciseName);
+  const lastSession = await getLastCompletedSessionForExercise(exerciseName, { excludeSessionId });
   const progressionSuggestion = await checkProgression(exerciseName, repRange, lastSession);
 
   const prs: { weight: number; reps: number; previousBest: number | null }[] = [];

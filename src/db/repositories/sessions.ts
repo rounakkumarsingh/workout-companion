@@ -1,7 +1,8 @@
-import { eq, desc, and, sql } from 'drizzle-orm';
+import { eq, desc, and, gte, lt, isNotNull, sql } from 'drizzle-orm';
 import { getDb } from '../client';
 import { workoutSessions, exerciseLogs, workoutSetLogs } from '../drizzle-schema';
 import type { WorkoutSessionStatus } from '../../data/program';
+import { isoToLocalDateKey } from '../../lib/dates';
 
 export interface CreateSessionInput {
   id: string;
@@ -28,6 +29,28 @@ export interface SessionWithVolume {
   totalSets: number;
 }
 
+export interface CreateSessionWithLogsInput {
+  session: CreateSessionInput;
+  exercises: {
+    id: string;
+    exerciseName: string;
+    prescribedExerciseName: string;
+    sortOrder: number;
+    sets: { id: string; setIndex: number; weight: number; reps: number }[];
+  }[];
+}
+
+export interface SessionActivity {
+  loggedSets: number;
+  lastLoggedAt: string | null;
+}
+
+/** A working set counts only once the user actually logged it. */
+const loggedWorkingSet = and(
+  isNotNull(workoutSetLogs.loggedAt),
+  eq(workoutSetLogs.isWarmup, 0),
+);
+
 export async function createSession(input: CreateSessionInput) {
   const db = await getDb();
   db.insert(workoutSessions)
@@ -41,6 +64,53 @@ export async function createSession(input: CreateSessionInput) {
     .run();
 
   return getSessionById(input.id);
+}
+
+/**
+ * Creates a session with its exercise logs and (suggested, not yet logged)
+ * working sets in a single transaction, so a crash or failed insert never
+ * leaves a half-built session behind.
+ */
+export async function createSessionWithLogs(input: CreateSessionWithLogsInput) {
+  const db = await getDb();
+  db.transaction((tx) => {
+    tx.insert(workoutSessions)
+      .values({
+        id: input.session.id,
+        weekNumber: input.session.weekNumber,
+        dayType: input.session.dayType,
+        startedAt: input.session.startedAt,
+        status: 'in_progress',
+      })
+      .run();
+    for (const exercise of input.exercises) {
+      tx.insert(exerciseLogs)
+        .values({
+          id: exercise.id,
+          workoutSessionId: input.session.id,
+          exerciseName: exercise.exerciseName,
+          prescribedExerciseName: exercise.prescribedExerciseName,
+          substitutionNote: null,
+          sortOrder: exercise.sortOrder,
+        })
+        .run();
+      for (const set of exercise.sets) {
+        tx.insert(workoutSetLogs)
+          .values({
+            id: set.id,
+            exerciseLogId: exercise.id,
+            setIndex: set.setIndex,
+            weight: set.weight,
+            reps: set.reps,
+            loggedRpe: null,
+            loggedAt: null,
+          })
+          .run();
+      }
+    }
+  });
+
+  return getSessionById(input.session.id);
 }
 
 export async function getSessionById(id: string) {
@@ -68,6 +138,34 @@ export async function getActiveSession() {
   }
 
   return rows[0] ?? null;
+}
+
+export async function getActiveSessions() {
+  const db = await getDb();
+  return db
+    .select()
+    .from(workoutSessions)
+    .where(eq(workoutSessions.status, 'in_progress'))
+    .orderBy(desc(workoutSessions.startedAt))
+    .all();
+}
+
+export async function getSessionActivity(sessionId: string): Promise<SessionActivity> {
+  const db = await getDb();
+  const rows = db
+    .select({
+      loggedSets: sql`COUNT(${workoutSetLogs.id})`.mapWith(Number),
+      lastLoggedAt: sql<string | null>`MAX(${workoutSetLogs.loggedAt})`,
+    })
+    .from(workoutSetLogs)
+    .innerJoin(exerciseLogs, eq(workoutSetLogs.exerciseLogId, exerciseLogs.id))
+    .where(and(eq(exerciseLogs.workoutSessionId, sessionId), loggedWorkingSet))
+    .all();
+
+  return {
+    loggedSets: rows[0]?.loggedSets ?? 0,
+    lastLoggedAt: rows[0]?.lastLoggedAt ?? null,
+  };
 }
 
 export async function updateSessionStatus(input: UpdateSessionStatusInput) {
@@ -143,7 +241,7 @@ export async function getSessionsWithVolume(limit = 20): Promise<SessionWithVolu
     )
     .leftJoin(
       workoutSetLogs,
-      eq(exerciseLogs.id, workoutSetLogs.exerciseLogId),
+      and(eq(exerciseLogs.id, workoutSetLogs.exerciseLogId), loggedWorkingSet),
     )
     .groupBy(workoutSessions.id)
     .orderBy(desc(workoutSessions.startedAt))
@@ -151,56 +249,92 @@ export async function getSessionsWithVolume(limit = 20): Promise<SessionWithVolu
     .all();
 }
 
-export async function getSessionCountByWeek(): Promise<{ weekNumber: number; count: number }[]> {
+/**
+ * Completed training days per program week. Counts distinct day types so a
+ * repeated or made-up session never pushes a week past its 5 training days.
+ */
+export async function getSessionCountByWeek(
+  sinceIso?: string,
+): Promise<{ weekNumber: number; count: number }[]> {
   const db = await getDb();
   return db
     .select({
       weekNumber: workoutSessions.weekNumber,
-      count: sql`COUNT(*)`.mapWith(Number),
+      count: sql`COUNT(DISTINCT ${workoutSessions.dayType})`.mapWith(Number),
     })
     .from(workoutSessions)
-    .where(eq(workoutSessions.status, 'completed'))
+    .where(
+      and(
+        eq(workoutSessions.status, 'completed'),
+        sinceIso ? gte(workoutSessions.startedAt, sinceIso) : undefined,
+      ),
+    )
     .groupBy(workoutSessions.weekNumber)
     .orderBy(workoutSessions.weekNumber)
     .all();
 }
 
-export async function getSessionsForToday(): Promise<(typeof workoutSessions.$inferSelect)[]> {
-  const db = await getDb();
-  const today = new Date().toISOString().slice(0, 10);
-  return db
-    .select()
-    .from(workoutSessions)
-    .where(sql`strftime('%Y-%m-%d', ${workoutSessions.startedAt}) = ${today}`)
-    .orderBy(desc(workoutSessions.startedAt))
-    .all();
-}
-
-export async function getSessionsForDate(dateStr: string): Promise<(typeof workoutSessions.$inferSelect)[]> {
+export async function getSessionsStartedBetween(
+  startIso: string,
+  endIso: string,
+): Promise<(typeof workoutSessions.$inferSelect)[]> {
   const db = await getDb();
   return db
     .select()
     .from(workoutSessions)
-    .where(sql`strftime('%Y-%m-%d', ${workoutSessions.startedAt}) = ${dateStr}`)
+    .where(
+      and(
+        gte(workoutSessions.startedAt, startIso),
+        lt(workoutSessions.startedAt, endIso),
+      ),
+    )
     .orderBy(desc(workoutSessions.startedAt))
     .all();
 }
 
-export async function getAllWorkoutDates(): Promise<string[]> {
+export async function getCompletedSessionsSince(
+  sinceIso: string,
+): Promise<{ weekNumber: number; dayType: string; startedAt: string }[]> {
   const db = await getDb();
-  const rows = db
+  return db
     .select({
-      date: sql`strftime('%Y-%m-%d', ${workoutSessions.startedAt})`.mapWith(String),
+      weekNumber: workoutSessions.weekNumber,
+      dayType: workoutSessions.dayType,
+      startedAt: workoutSessions.startedAt,
     })
     .from(workoutSessions)
     .where(
-      sql`${workoutSessions.status} IN ('completed', 'abandoned')`,
+      and(
+        eq(workoutSessions.status, 'completed'),
+        gte(workoutSessions.startedAt, sinceIso),
+      ),
     )
-    .groupBy(sql`strftime('%Y-%m-%d', ${workoutSessions.startedAt})`)
-    .orderBy(sql`strftime('%Y-%m-%d', ${workoutSessions.startedAt})`)
+    .orderBy(desc(workoutSessions.startedAt))
+    .all();
+}
+
+/**
+ * Local calendar days with a workout: completed sessions, plus abandoned
+ * sessions in which at least one working set was logged.
+ */
+export async function getAllWorkoutDates(): Promise<string[]> {
+  const db = await getDb();
+  const rows = db
+    .select({ startedAt: workoutSessions.startedAt })
+    .from(workoutSessions)
+    .where(
+      sql`${workoutSessions.status} = 'completed' OR (${workoutSessions.status} = 'abandoned' AND EXISTS (
+        SELECT 1 FROM ${workoutSetLogs}
+        INNER JOIN ${exerciseLogs} ON ${exerciseLogs.id} = ${workoutSetLogs.exerciseLogId}
+        WHERE ${exerciseLogs.workoutSessionId} = ${workoutSessions.id}
+          AND ${workoutSetLogs.loggedAt} IS NOT NULL
+          AND ${workoutSetLogs.isWarmup} = 0
+      ))`,
+    )
+    .orderBy(workoutSessions.startedAt)
     .all();
 
-  return rows.map((r: { date: string }) => r.date);
+  return Array.from(new Set(rows.map((r) => isoToLocalDateKey(r.startedAt))));
 }
 
 export async function getAdherenceRate(

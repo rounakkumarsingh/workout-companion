@@ -1,78 +1,70 @@
 import type { DayPrescription } from '../../data/program';
-import type { DayType } from '../../data/program';
 import type { ActiveSession } from './types';
-import { hydrateActiveSession } from './session-executor';
+import { hydrateActiveSession, reopenSession } from './session-executor';
 import {
-  createSession,
-  getSessionsForToday,
+  createSessionWithLogs,
+  getSessionsStartedBetween,
 } from '../../db/repositories/sessions';
-import { createExerciseLog, createSetLog } from '../../db/repositories/exercises';
-import { prefillFromHistory } from './progression';
-
-let idCounter = 0;
-
-function generateId(): string {
-  idCounter++;
-  const ts = Date.now().toString(36);
-  const rand = Math.random().toString(36).slice(2, 8);
-  const seq = idCounter.toString(36);
-  return `${ts}-${rand}-${seq}`;
-}
+import { getSuggestedSetValues } from './progression';
+import { generateId } from '../../lib/ids';
+import { localDayBoundsIso } from '../../lib/dates';
 
 export async function initializeSession(
   weekNumber: number,
   dayType: 'Upper' | 'Lower' | 'Pull' | 'Push' | 'Legs',
   dayPrescription: DayPrescription,
 ): Promise<{ session: ActiveSession; created: boolean }> {
-  const todaySessions = await getSessionsForToday();
-  const existing = todaySessions.find(
+  // Resume today's session for this day instead of starting a duplicate.
+  // An abandoned one ("End Session") is reopened with its logged sets.
+  const { startIso, endIso } = localDayBoundsIso(new Date());
+  const todaySessions = (await getSessionsStartedBetween(startIso, endIso)).filter(
     (s) => s.weekNumber === weekNumber && s.dayType === dayType,
   );
+  const existing =
+    todaySessions.find((s) => s.status === 'in_progress') ??
+    todaySessions.find((s) => s.status === 'abandoned');
 
   if (existing) {
+    if (existing.status === 'abandoned') {
+      await reopenSession(existing.id);
+    }
     const session = await hydrateActiveSession(existing.id);
     if (session) {
       return { session, created: false };
     }
   }
 
-  const sessionId = generateId();
-  const startedAt = new Date().toISOString();
-
-  await createSession({
-    id: sessionId,
-    weekNumber,
-    dayType,
-    startedAt,
-  });
-
+  // Read history first, then write the whole session in one transaction.
+  const exercises = [];
   for (const prescription of dayPrescription.exercises) {
-    const exerciseLogId = generateId();
-    await createExerciseLog({
-      id: exerciseLogId,
-      workoutSessionId: sessionId,
+    const suggestions = await getSuggestedSetValues(
+      prescription.exerciseName,
+      prescription.workingSets,
+    );
+    exercises.push({
+      id: generateId(),
       exerciseName: prescription.exerciseName,
       prescribedExerciseName: prescription.exerciseName,
-      substitutionNote: null,
       sortOrder: prescription.sortOrder,
-    });
-
-    const history = await prefillFromHistory(prescription.exerciseName);
-    const historyWeights = history?.weights ?? [];
-    const historyReps = history?.reps ?? [];
-
-    for (let i = 1; i <= prescription.workingSets; i++) {
-      await createSetLog({
+      sets: suggestions.map((s, i) => ({
         id: generateId(),
-        exerciseLogId,
-        setIndex: i,
-        weight: historyWeights[i - 1] ?? 0,
-        reps: historyReps[i - 1] ?? 0,
-        loggedRpe: null,
-        loggedAt: null,
-      });
-    }
+        setIndex: i + 1,
+        weight: s.weight,
+        reps: s.reps,
+      })),
+    });
   }
+
+  const sessionId = generateId();
+  await createSessionWithLogs({
+    session: {
+      id: sessionId,
+      weekNumber,
+      dayType,
+      startedAt: new Date().toISOString(),
+    },
+    exercises,
+  });
 
   const session = (await hydrateActiveSession(sessionId))!;
   return { session, created: true };
