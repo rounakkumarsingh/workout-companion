@@ -148,7 +148,7 @@ export default function PrCelebrationScreen() {
           </View>
           <View style={styles.summaryStat}>
             <Text style={styles.summaryVal}>
-              {session?.exercises.reduce((sum, ex) => sum + ex.sets.filter(s => s.weight > 0 || s.reps > 0).length, 0) ?? 0}
+              {session?.exercises.reduce((sum, ex) => sum + ex.sets.filter(s => s.isComplete).length, 0) ?? 0}
             </Text>
             <Text style={styles.summaryLbl}>Sets</Text>
           </View>

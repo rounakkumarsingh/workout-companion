@@ -1,11 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Alert, ScrollView, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useColors, typography, spacing, radii } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { getSessionsWithVolume, getSessionCountByWeek, getAllWorkoutDates } from '@/src/db/repositories/sessions';
-import { getExerciseHistory } from '@/src/db/repositories/exercises';
+import { getExerciseHistory, getVolumeByExercise } from '@/src/db/repositories/exercises';
+import { getProgramStart } from '@/src/features/workout-session';
 import { getLatestBodyweightEntry, createBodyweightEntry } from '@/src/db/repositories/bodyweight';
 import type { SessionWithVolume } from '@/src/db/repositories/sessions';
 import { WorkoutCalendar } from '@/features/progress/WorkoutCalendar';
@@ -41,11 +42,14 @@ export default function HistoryScreen() {
       let cancelled = false;
       (async () => {
         try {
-          const [dates, sessions, weeklyCounts, bwLatest] = await Promise.all([
+          const programStart = await getProgramStart();
+          const [dates, sessions, weeklyCounts, bwLatest, exerciseVolumes] = await Promise.all([
             getAllWorkoutDates(),
             getSessionsWithVolume(200),
-            getSessionCountByWeek(),
+            // Adherence covers the current program cycle only.
+            getSessionCountByWeek(programStart?.toISOString()),
             getLatestBodyweightEntry(),
+            getVolumeByExercise(),
           ]);
 
           if (cancelled) return;
@@ -62,25 +66,16 @@ export default function HistoryScreen() {
 
           const bars: VolumeBar[] = [];
           for (let w = 1; w <= 12; w++) {
-            const weekSessions = sessions.filter((s) => s.weekNumber === w && (s.status === 'completed' || s.status === 'abandoned'));
+            const weekSessions = sessions.filter((s) =>
+              s.weekNumber === w &&
+              (s.status === 'completed' || s.status === 'abandoned') &&
+              (!programStart || s.startedAt >= programStart.toISOString()));
             const volume = weekSessions.reduce((sum, s) => sum + (s.totalVolume ?? 0), 0);
             bars.push({ weekNumber: w, volume, isFuture: weekSessions.length === 0 });
           }
           setVolumeBars(bars);
 
-          const volumeByExercise: Record<string, number> = {};
-          for (const s of sessions) {
-            if (s.status !== 'completed' && s.status !== 'abandoned') continue;
-            const { getExerciseLogsBySession } = await import('@/src/db/repositories/exercises');
-            const logs = await getExerciseLogsBySession(s.id);
-            for (const log of logs) {
-              volumeByExercise[log.exerciseName] = (volumeByExercise[log.exerciseName] ?? 0) + (s.totalVolume ?? 0);
-            }
-          }
-          const sorted = Object.entries(volumeByExercise)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5)
-            .map(([name]) => name);
+          const sorted = exerciseVolumes.slice(0, 5).map((e) => e.exerciseName);
           setTopExercises(sorted);
 
           const historyMap: Record<string, { date: string; weekNumber: number; sets: { weight: number; reps: number }[] }[]> = {};
@@ -88,7 +83,7 @@ export default function HistoryScreen() {
             const rows = await getExerciseHistory(exName, 30);
             const bySession = new Map<string, { date: string; weekNumber: number; sets: { weight: number; reps: number }[] }>();
             for (const r of rows) {
-              const key = r.sessionDate;
+              const key = r.sessionId;
               if (!bySession.has(key)) {
                 bySession.set(key, { date: r.sessionDate, weekNumber: r.weekNumber, sets: [] });
               }
@@ -159,15 +154,20 @@ export default function HistoryScreen() {
         <BodyweightInput
           lastValue={latestBodyweight ? { weight: latestBodyweight.weight, unit: latestBodyweight.unit, date: latestBodyweight.measuredAt } : null}
           onLog={async (weight, unit) => {
-            await createBodyweightEntry({
-              id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-              weight,
-              unit,
-              measuredAt: new Date().toISOString(),
-              note: null,
-            });
-            const entry = await getLatestBodyweightEntry();
-            setLatestBodyweight(entry);
+            try {
+              await createBodyweightEntry({
+                id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+                weight,
+                unit,
+                measuredAt: new Date().toISOString(),
+                note: null,
+              });
+              const entry = await getLatestBodyweightEntry();
+              setLatestBodyweight(entry);
+            } catch (e) {
+              console.error('[history] Failed to log bodyweight:', e);
+              Alert.alert('Error', 'Failed to log bodyweight. Please try again.');
+            }
           }}
         />
       </View>

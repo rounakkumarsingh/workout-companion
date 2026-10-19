@@ -4,16 +4,18 @@ import { useFocusEffect } from 'expo-router';
 import { useColors, typography, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { resolveCurrentSchedule } from '@/src/features/workout-session';
+import { resolveCurrentSchedule, getProgramStart, getProgramWeekDays } from '@/src/features/workout-session';
 import { PROGRAM } from '@/src/data/program';
 import type { Week } from '@/src/data/program';
 
-const DAY_LABELS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+const WEEKDAY_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 export default function WeekScreen() {
   const colors = useColors();
   const [weekNumber, setWeekNumber] = useState<number | null>(null);
   const [week, setWeek] = useState<Week | null>(null);
+  // Weekday label for each program day (the program can start on any day).
+  const [dayLabels, setDayLabels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -22,16 +24,19 @@ export default function WeekScreen() {
       let cancelled = false;
       (async () => {
         try {
-          const schedule = await resolveCurrentSchedule();
+          const [schedule, start] = await Promise.all([
+            resolveCurrentSchedule(),
+            getProgramStart(),
+          ]);
           if (cancelled) return;
-          if (schedule.status === 'active') {
-            const w = PROGRAM.weeks[schedule.weekNumber - 1];
-            setWeekNumber(schedule.weekNumber);
-            setWeek(w);
-          } else {
-            setWeekNumber(1);
-            setWeek(PROGRAM.weeks[0]);
-          }
+          const currentWeek = schedule.status === 'active' ? schedule.weekNumber : 1;
+          setWeekNumber(currentWeek);
+          setWeek(PROGRAM.weeks[currentWeek - 1]);
+          setDayLabels(
+            start
+              ? getProgramWeekDays(start, currentWeek).map((d) => WEEKDAY_LABELS[d.date.getDay()])
+              : [],
+          );
         } catch {
           if (!cancelled) {
             setWeekNumber(1);
@@ -71,7 +76,7 @@ export default function WeekScreen() {
               ]}
             >
               <View style={styles.dayHeader}>
-                <Text style={styles.dayLabel}>{DAY_LABELS[i]}</Text>
+                <Text style={styles.dayLabel}>{dayLabels[i] ?? `DAY ${i + 1}`}</Text>
                 <Text style={[styles.dayName, !isTraining && styles.restName]}>
                   {isTraining ? `${day.dayType} Day` : day.activityType === 'OptionalCardioHIIT' ? 'Cardio / HIIT' : 'Rest Day'}
                 </Text>
