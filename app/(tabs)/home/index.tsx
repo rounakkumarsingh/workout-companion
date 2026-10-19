@@ -14,12 +14,23 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { CtaButton } from '@/components/ui/CtaButton';
 import { GhostButton } from '@/components/ui/GhostButton';
 import { ProgramProgressBar } from '@/components/ui/ProgramProgressBar';
-import { resolveCurrentSchedule, wasTrainingDayMissed, hydrateActiveSession, abandonSession, getSessionProgress, getElapsedMinutes } from '@/src/features/workout-session';
-import { getActiveSession, getSessionsStartedBetween, getSessionsWithVolume } from '@/src/db/repositories/sessions';
-import { localDayBoundsIso } from '@/src/lib/dates';
+import {
+  resolveCurrentSchedule,
+  wasTrainingDayMissed,
+  hydrateActiveSession,
+  abandonSession,
+  getSessionProgress,
+  getElapsedMinutes,
+  getLastActivityAt,
+  finalizeStaleSessions,
+  getCurrentStreak,
+} from '@/src/features/workout-session';
+import { getActiveSession, getSessionsStartedBetween } from '@/src/db/repositories/sessions';
+import { addLocalDays, localDayBoundsIso, parseLocalDateKey } from '@/src/lib/dates';
 import { initializeSession } from '@/src/features/workout-session/session-initializer';
 import { createCardioSession } from '@/src/db/repositories/cardio';
 import { PROGRAM, TOTAL_WEEKS } from '@/src/data/program';
+import type { DayPrescription } from '@/src/data/program';
 import type { HomeScreenState } from '@/components/home/types';
 import type { ActiveSession } from '@/src/features/workout-session';
 import { CardioLogger } from '@/components/cardio/CardioLogger';
@@ -42,6 +53,12 @@ function isTrainingDayType(dayType: string): dayType is WorkoutDayType {
   return (TRAINING_DAY_TYPES as readonly string[]).includes(dayType);
 }
 
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+function weekdayName(date: Date = new Date()): string {
+  return WEEKDAY_NAMES[date.getDay()];
+}
+
 async function computeScreenState(): Promise<HomeScreenState> {
   const schedule = await resolveCurrentSchedule();
 
@@ -53,7 +70,29 @@ async function computeScreenState(): Promise<HomeScreenState> {
     return { status: 'programCompleted' };
   }
 
+  // Sessions left open from an earlier day are closed before anything
+  // else, so they never block today's workout.
+  await finalizeStaleSessions();
+
   const { weekNumber, dayPrescription } = schedule;
+
+  // An open session always wins — even on a rest day, and even when it is
+  // a make-up for another day. Describe it with its own week/day.
+  const activeSession = await getActiveSession();
+  if (activeSession) {
+    const sessionDay: DayPrescription =
+      PROGRAM.weeks[activeSession.weekNumber - 1]?.days.find(
+        (d) => d.dayType === activeSession.dayType,
+      ) ?? dayPrescription;
+    return {
+      status: 'inProgress',
+      weekNumber: activeSession.weekNumber,
+      dayPrescription: sessionDay,
+      sessionId: activeSession.id,
+      blockName: getBlockName(activeSession.weekNumber),
+    };
+  }
+
   const blockName = getBlockName(weekNumber);
 
   if (
@@ -69,43 +108,24 @@ async function computeScreenState(): Promise<HomeScreenState> {
     };
   }
 
-  const activeSession = await getActiveSession();
-  if (activeSession) {
+  const { startIso, endIso } = localDayBoundsIso(new Date());
+  const todaySessions = await getSessionsStartedBetween(startIso, endIso);
+  const completedToday = todaySessions.some(
+    (s) =>
+      s.weekNumber === weekNumber &&
+      s.dayType === dayPrescription.dayType &&
+      s.status === 'completed',
+  );
+  if (completedToday) {
     return {
-      status: 'inProgress',
+      status: 'completed',
       weekNumber,
       dayPrescription,
-      sessionId: activeSession.id,
       blockName,
     };
   }
-
-  const { startIso, endIso } = localDayBoundsIso(new Date());
-  const todaySessions = await getSessionsStartedBetween(startIso, endIso);
-  const matchingSession = todaySessions.find(
-    (s: { weekNumber: number; dayType: string }) =>
-      s.weekNumber === weekNumber && s.dayType === dayPrescription.dayType,
-  );
-
-  if (matchingSession) {
-    if (matchingSession.status === 'in_progress') {
-      return {
-        status: 'inProgress',
-        weekNumber,
-        dayPrescription,
-        sessionId: matchingSession.id,
-        blockName,
-      };
-    }
-    if (matchingSession.status === 'completed') {
-      return {
-        status: 'completed',
-        weekNumber,
-        dayPrescription,
-        blockName,
-      };
-    }
-  }
+  // An abandoned session for today falls through to 'ready': Begin reopens
+  // it with its logged sets.
 
   // Check if a training day was recently missed
   const missed = await wasTrainingDayMissed();
@@ -118,6 +138,8 @@ async function computeScreenState(): Promise<HomeScreenState> {
       missedDate: missed.missedDate,
       missedDayType: missed.missedDayType,
       daysAgo: missed.daysAgo,
+      missedWeekNumber: missed.weekNumber,
+      missedDayPrescription: missed.dayPrescription,
     };
   }
 
@@ -129,8 +151,6 @@ async function computeScreenState(): Promise<HomeScreenState> {
   };
 }
 
-const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
 export default function TodayScheduleScreen() {
   const router = useRouter();
   const [screenState, setScreenState] = useState<HomeScreenState>({ status: 'loading' });
@@ -141,6 +161,8 @@ export default function TodayScheduleScreen() {
   const [missedStreakWas, setMissedStreakWas] = useState(0);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+
+  const startingRef = useRef(false);
 
   const resumePulse = useSharedValue(1);
   const pulseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -189,12 +211,9 @@ export default function TodayScheduleScreen() {
     if (screenState.status === 'missed') {
       (async () => {
         try {
-          const sessions = await getSessionsWithVolume(200);
-          const missedDateEnd = screenState.missedDate + 'T23:59:59.999Z';
-          const completedBeforeMissed = sessions.filter(
-            (s) => s.status === 'completed' && s.startedAt < missedDateEnd,
-          );
-          setMissedStreakWas(completedBeforeMissed.length);
+          // The streak as it stood on the day before the missed session.
+          const dayBefore = addLocalDays(parseLocalDateKey(screenState.missedDate), -1);
+          setMissedStreakWas(await getCurrentStreak(dayBefore, false));
         } catch {
           setMissedStreakWas(0);
         }
@@ -242,21 +261,37 @@ export default function TodayScheduleScreen() {
         note: data.note,
         loggedAt: new Date().toISOString(),
       });
+      Alert.alert('Cardio logged', `${data.durationMinutes} min of ${data.activity} saved.`);
     } catch (e) {
       console.error('[home] Failed to log cardio:', e);
+      Alert.alert('Error', 'Failed to log cardio. Please try again.');
     }
   }, [screenState]);
 
-  const handleStartOrResume = useCallback(async () => {
-    if (screenState.status === 'ready') {
-      const dayType = screenState.dayPrescription.dayType;
-      if (!isTrainingDayType(dayType)) return;
-      const { session } = await initializeSession(
-        screenState.weekNumber,
-        dayType,
-        screenState.dayPrescription,
-      );
+  const startSession = useCallback(async (
+    weekNumber: number,
+    dayPrescription: DayPrescription,
+  ) => {
+    const dayType = dayPrescription.dayType;
+    if (!isTrainingDayType(dayType)) return;
+    // Guard against double taps creating two sessions.
+    if (startingRef.current) return;
+    startingRef.current = true;
+    try {
+      const { session } = await initializeSession(weekNumber, dayType, dayPrescription);
       router.push(`/workout?sessionId=${session.id}` as Href);
+    } catch (e) {
+      console.error('[home] Failed to start session:', e);
+      Alert.alert('Error', 'Failed to start the workout. Please try again.');
+    } finally {
+      startingRef.current = false;
+    }
+  }, [router]);
+
+  const handleStartOrResume = useCallback(async () => {
+    if (screenState.status === 'ready' || screenState.status === 'missed') {
+      // 'missed': do today's scheduled workout and skip the missed one.
+      await startSession(screenState.weekNumber, screenState.dayPrescription);
     } else if (screenState.status === 'inProgress') {
       const activeSesh = hydratedSession ?? await hydrateActiveSession(screenState.sessionId);
       if (activeSesh) {
@@ -268,7 +303,12 @@ export default function TodayScheduleScreen() {
       }
       router.push(`/workout?sessionId=${screenState.sessionId}` as Href);
     }
-  }, [screenState, router, hydratedSession]);
+  }, [screenState, router, hydratedSession, startSession]);
+
+  const handleMakeUp = useCallback(async () => {
+    if (screenState.status !== 'missed') return;
+    await startSession(screenState.missedWeekNumber, screenState.missedDayPrescription);
+  }, [screenState, startSession]);
 
   const handleAbandon = useCallback(() => {
     if (screenState.status !== 'inProgress' || !hydratedSession) return;
@@ -352,7 +392,7 @@ export default function TodayScheduleScreen() {
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const displayDayName = dayNames[missedDay.getDay()];
     const displayDate = missedDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const todayDayName = dayNames[new Date().getDay()];
+    const todayDayName = weekdayName();
     return (
       <View style={styles.screen}>
         <ScrollView contentContainerStyle={styles.content}>
@@ -395,7 +435,7 @@ export default function TodayScheduleScreen() {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.optionRegular}>
+          <TouchableOpacity style={styles.optionRegular} onPress={handleMakeUp}>
             <Text style={styles.optionIcon}>🔁</Text>
             <View style={styles.optionInfo}>
               <Text style={styles.optionTitle}>Make up {missedDayType} Day now</Text>
@@ -451,8 +491,8 @@ export default function TodayScheduleScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.header}>
             <View>
-              <Text style={styles.eyebrow}>Monday · Week {weekNumber}</Text>
-              <Text style={styles.headerTitle}>{dayName} Day A</Text>
+              <Text style={styles.eyebrow}>{weekdayName()} · Week {weekNumber}</Text>
+              <Text style={styles.headerTitle}>{dayName} Day</Text>
             </View>
           </View>
 
@@ -496,6 +536,8 @@ export default function TodayScheduleScreen() {
     // Compute all real values from the hydrated session
     const progress = getSessionProgress(session);
     const elapsedMin = getElapsedMinutes(session);
+    const lastActivityAt = getLastActivityAt(session) ?? session.startedAt;
+    const idleMin = Math.max(0, Math.floor((Date.now() - new Date(lastActivityAt).getTime()) / 60000));
     const pct = progress.totalSets > 0 ? progress.completedSets / progress.totalSets : 0;
     const pctDisplay = `${Math.round(pct * 100)}%` as const;
     const setsDisplay = `${progress.completedSets} of ${progress.totalSets} sets`;
@@ -530,7 +572,7 @@ export default function TodayScheduleScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.header}>
             <View>
-              <Text style={styles.eyebrow}>Friday · Week {weekNumber}</Text>
+              <Text style={styles.eyebrow}>{weekdayName(startTime)} · Week {weekNumber}</Text>
               <Text style={styles.headerTitle}>Welcome back.</Text>
             </View>
           </View>
@@ -540,7 +582,7 @@ export default function TodayScheduleScreen() {
             <View>
               <Text style={styles.resumeLabel}>Session in progress</Text>
               <Text style={styles.resumeSub}>
-                Left {elapsedMin} min ago · {dayPrescription.dayType} Day
+                Last activity {idleMin} min ago · {dayPrescription.dayType} Day
               </Text>
             </View>
           </View>
