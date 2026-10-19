@@ -99,7 +99,7 @@ export const workoutSetLogs = sqliteTable(
     index('idx_workout_set_logs_exercise').on(table.exerciseLogId),
     check(
       'chk_set_logs_set_index',
-      sql`${table.setIndex} BETWEEN 1 AND 3`,
+      sql`${table.setIndex} >= 1 AND (${table.isWarmup} = 1 OR ${table.setIndex} <= 3)`,
     ),
     check(
       'chk_set_logs_rpe',
