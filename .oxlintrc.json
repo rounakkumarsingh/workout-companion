@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  // Mirrors what eslint-config-expo checked: React (incl. hooks), TypeScript, imports.
+  "plugins": ["react", "typescript", "import", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "builtin": true,
+    "browser": true,
+    "node": true,
+    "es2024": true
+  },
+  "globals": {
+    "__DEV__": "readonly"
+  },
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "no-unused-vars": "warn",
+    "import/no-duplicates": "warn",
+    // React Compiler rules (not checked by the previous ESLint setup).
+    // `immutability` flags every Reanimated shared-value write (`sv.value = ...`),
+    // which is that library's intended API, so it is off.
+    "react/immutability": "off",
+    "react/purity": "warn",
+    "react/set-state-in-effect": "warn"
+  },
+  "ignorePatterns": ["dist/**", ".expo/**", "node_modules/**"]
+}
