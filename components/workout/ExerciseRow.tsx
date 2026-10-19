@@ -34,7 +34,6 @@ const SHIMMER_WIDTH = 4;
 export function ExerciseRow({ exercise, status, progressionStatus, icon, spec, onPress, onLongPress }: ExerciseRowProps) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  console.log('[ExerciseRow] rendered:', exercise.exerciseName, 'status:', status);
   const reducedMotion = useReducedMotion();
   const prevStatus = useRef(status);
   const checkProgress = useSharedValue(0);
