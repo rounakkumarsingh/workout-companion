@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, BackHandler, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSequence, withRepeat, Easing } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSequence, Easing } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { useColors, typography, radii, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
@@ -28,15 +28,47 @@ import {
   getExerciseHistoryComparison,
   swapExercise,
   logWarmupSet,
-  getNextExercise,
+  getNextIncompleteExercise,
   setExerciseStatus,
+  getActiveRest,
+  beginRest,
+  moveRestDeadline,
+  clearActiveRest,
 } from '@/src/features/workout-session';
 import { getSubstitutionOptions } from '@/src/features/workout-session/substitution';
-import { getActiveSession } from '@/src/db/repositories/sessions';
+import { getExerciseLogById } from '@/src/db/repositories/exercises';
 
 function parseRestSeconds(rest: string): number {
   const match = rest.match(/(\d+)/);
   return match ? parseInt(match[1], 10) * 60 : 90;
+}
+
+/**
+ * Default weight/reps for a set: its suggested (pre-filled) values, falling
+ * back to the most recently logged set of this exercise.
+ */
+function getSetDefaults(
+  exercise: ActiveExercise,
+  setIndex: number,
+  justLogged?: { weight: number; reps: number },
+): { weight: number; reps: number } {
+  const set = exercise.sets.find((s) => s.setIndex === setIndex);
+  const lastLogged = justLogged ?? [...exercise.sets].reverse().find((s) => s.isComplete);
+  return {
+    weight: set && set.weight > 0 ? set.weight : lastLogged?.weight ?? 0,
+    reps: set && set.reps > 0 ? set.reps : lastLogged?.reps ?? 0,
+  };
+}
+
+function getRestSeconds(exercise: ActiveExercise): number {
+  return exercise.prescription ? parseRestSeconds(exercise.prescription.rest) : 90;
+}
+
+function formatRestClock(seconds: number): string {
+  const abs = Math.abs(seconds);
+  const m = Math.floor(abs / 60);
+  const sec = abs % 60;
+  return `${seconds < 0 ? '-' : ''}${m}:${String(sec).padStart(2, '0')}`;
 }
 
 type ScreenState =
@@ -52,41 +84,42 @@ type ScreenState =
       reps: number;
       selectedRpe: number | null;
       restDuration: number;
+      /** Deadline (epoch ms) of the running rest, while resting. */
+      restEndAt: number | null;
     };
 
 export default function ExerciseDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { exerciseLogId } = params as { exerciseLogId: string };
-  console.log('[exercise-detail] mounted with params:', JSON.stringify(params));
-  console.log('[exercise-detail] exerciseLogId:', exerciseLogId);
   const insets = useSafeAreaInsets();
   const [state, setState] = useState<ScreenState>({ phase: 'loading' });
   const [comparison, setComparison] = useState<ExerciseHistoryComparison | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(true);
   const hasLoggedSetsRef = useRef(false);
-  const prevLoggingPhaseRef = useRef<LoggingPhase | null>(null);
 
-  const restTimer = useRestTimer(90);
+  const handleRestExpired = useCallback(() => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+  }, []);
+  const restTimer = useRestTimer({ onExpire: handleRestExpired });
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const active = await getActiveSession();
+        const log = await getExerciseLogById(exerciseLogId);
         if (cancelled) return;
-        if (!active) {
-          setState({ phase: 'error', message: 'No active session.' });
+        if (!log) {
+          setState({ phase: 'error', message: 'Exercise not found.' });
           return;
         }
-        const session = await hydrateActiveSession(active.id);
+        const session = await hydrateActiveSession(log.workoutSessionId);
         if (cancelled) return;
         if (!session) {
           setState({ phase: 'error', message: 'Session not found.' });
           return;
         }
         const exercise = session.exercises.find((e) => e.exerciseLogId === exerciseLogId);
-        if (cancelled) return;
         if (!exercise) {
           setState({ phase: 'error', message: 'Exercise not found.' });
           return;
@@ -94,19 +127,20 @@ export default function ExerciseDetailScreen() {
 
         if (exercise.prescription?.repRange) {
           const comp = await getExerciseHistoryComparison(
-            exercise.prescribedExerciseName,
+            exercise.exerciseName,
             exercise.prescription.repRange,
+            session.id,
           );
           if (cancelled) return;
           setComparison(comp);
         }
         setComparisonLoading(false);
 
-        const someLogged = exercise.sets.some((s) => s.weight > 0 || s.reps > 0);
-        const allLogged = exercise.sets.every((s) => s.weight > 0 || s.reps > 0);
+        const someLogged = exercise.sets.some((s) => s.isComplete);
+        const nextSet = exercise.sets.find((s) => !s.isComplete);
         hasLoggedSetsRef.current = someLogged;
 
-        if (allLogged) {
+        if (!nextSet) {
           setState({
             phase: 'active',
             loggingPhase: 'sets_completed',
@@ -116,30 +150,35 @@ export default function ExerciseDetailScreen() {
             weight: 0,
             reps: 0,
             selectedRpe: null,
-            restDuration: 90,
+            restDuration: getRestSeconds(exercise),
+            restEndAt: null,
           });
           return;
         }
 
-        const lastLogged = [...exercise.sets].reverse().find((s) => s.weight > 0 || s.reps > 0);
-        const currentSetIndex = lastLogged
-          ? Math.min(lastLogged.setIndex + 1, exercise.sets.length)
-          : 1;
-        const restSeconds = exercise.prescription
-          ? parseRestSeconds(exercise.prescription.rest)
-          : 90;
-
+        // A rest started for this exercise is still running (or in
+        // overtime) — resume it instead of skipping straight to logging.
+        const activeRest = await getActiveRest();
         if (cancelled) return;
+        const resumeRest =
+          activeRest !== null &&
+          activeRest.sessionId === session.id &&
+          activeRest.exerciseLogId === exerciseLogId &&
+          exercise.sets.some((s) => s.setIndex === activeRest.nextSetIndex && !s.isComplete);
+
+        const currentSetIndex = resumeRest ? activeRest.nextSetIndex : nextSet.setIndex;
+        const defaults = getSetDefaults(exercise, currentSetIndex);
         setState({
           phase: 'active',
-          loggingPhase: someLogged ? 'logging' : 'intro',
+          loggingPhase: resumeRest ? 'resting' : someLogged ? 'logging' : 'intro',
           session,
           exercise,
           currentSetIndex,
-          weight: lastLogged?.weight ?? exercise.sets[0]?.weight ?? 0,
-          reps: lastLogged?.reps ?? 0,
+          weight: defaults.weight,
+          reps: defaults.reps,
           selectedRpe: null,
-          restDuration: restSeconds,
+          restDuration: resumeRest ? activeRest.durationSec : getRestSeconds(exercise),
+          restEndAt: resumeRest ? activeRest.endAt : null,
         });
       } catch (e) {
         console.error('[exercise-detail] Failed to load exercise:', e);
@@ -152,7 +191,7 @@ export default function ExerciseDetailScreen() {
   }, [exerciseLogId]);
 
   const allSetsLogged = state.phase === 'active'
-    ? state.exercise.sets.every((s) => s.weight > 0 || s.reps > 0)
+    ? state.exercise.sets.every((s) => s.isComplete)
     : false;
 
   const confirmLeave = useCallback(() => {
@@ -166,50 +205,45 @@ export default function ExerciseDetailScreen() {
     );
   }, [router]);
 
-  const transitionFromRest = useCallback(() => {
+  // Drive the timer from the persisted deadline while resting. It keeps
+  // running in the background and never advances on its own.
+  const restingEndAt = state.phase === 'active' && state.loggingPhase === 'resting'
+    ? state.restEndAt
+    : null;
+  const restingDuration = state.phase === 'active' ? state.restDuration : 0;
+  useEffect(() => {
+    if (restingEndAt !== null) {
+      restTimer.start(restingDuration, restingEndAt);
+    } else {
+      restTimer.stop();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restingEndAt]);
+
+  const handleMoveOn = useCallback(() => {
+    restTimer.stop();
+    clearActiveRest().catch((e) => console.warn('[exercise] Failed to clear rest:', e));
     setState((prev) => {
       if (prev.phase !== 'active') return prev;
-      const { exercise, currentSetIndex } = prev;
-      const allDone = exercise.sets.every((s) => s.weight > 0 || s.reps > 0);
-      const nextWeight = !allDone
-        ? (exercise.sets.find((s) => s.setIndex === currentSetIndex)?.weight ?? 0)
-        : 0;
+      const allDone = prev.exercise.sets.every((s) => s.isComplete);
       return {
         ...prev,
         loggingPhase: (allDone ? 'sets_completed' : 'logging') as LoggingPhase,
-        weight: nextWeight,
+        restEndAt: null,
         selectedRpe: null,
       };
     });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-  }, []);
+  }, [restTimer]);
 
-  const handleSkipRest = useCallback(() => {
-    restTimer.stop();
-    transitionFromRest();
-  }, [restTimer, transitionFromRest]);
-
-  useEffect(() => {
+  const handleAdjustRest = useCallback((deltaSec: number) => {
     if (state.phase !== 'active') return;
-    const prev = prevLoggingPhaseRef.current;
-    prevLoggingPhaseRef.current = state.loggingPhase;
-
-    if (state.loggingPhase === 'resting' && prev !== 'resting') {
-      restTimer.reset(state.restDuration);
-      restTimer.start();
-    } else if (prev === 'resting' && state.loggingPhase !== 'resting') {
-      restTimer.stop();
-    }
-  }, [state.phase === 'active' ? state.loggingPhase : null]);
-
-  useEffect(() => {
-    if (state.phase !== 'active') return;
-    if (state.loggingPhase !== 'resting') return;
-    if (!restTimer.isExpired) return;
-
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-    handleSkipRest();
-  }, [restTimer.isExpired, state, handleSkipRest]);
+    const newEndAt = restTimer.adjust(deltaSec);
+    if (newEndAt === null) return;
+    const newTotal = Math.max(1, restTimer.total + deltaSec);
+    moveRestDeadline(newEndAt, newTotal, state.exercise.exerciseName)
+      .catch((e) => console.warn('[exercise] Failed to move rest deadline:', e));
+  }, [state, restTimer]);
 
   useEffect(() => {
     const hasProgress = hasLoggedSetsRef.current;
@@ -263,11 +297,16 @@ export default function ExerciseDetailScreen() {
 
   const handleStartLogging = useCallback(() => {
     if (state.phase !== 'active') return;
+    const { session, exercise } = state;
     setState((prev) => {
       if (prev.phase !== 'active') return prev;
       return { ...prev, loggingPhase: 'logging' as const };
     });
-  }, [state.phase]);
+    if (exercise.status === 'pending') {
+      setExerciseStatus(session, exercise.exerciseLogId, 'active')
+        .catch((e) => console.warn('[exercise] Failed to mark exercise active:', e));
+    }
+  }, [state]);
 
   const [validationError, setValidationError] = useState<string | null>(null);
   const [editingWeight, setEditingWeight] = useState<string | null>(null);
@@ -297,26 +336,38 @@ export default function ExerciseDetailScreen() {
       }
       const updatedSession = result.session;
       hasLoggedSetsRef.current = true;
+      setEditingWeight(null);
+      setEditingReps(null);
 
       const updatedExercise = updatedSession.exercises.find((e) => e.exerciseLogId === exerciseLogId)!;
-      const allDone = updatedExercise.sets.every((s) => s.weight > 0 || s.reps > 0);
+      const nextSet = updatedExercise.sets.find((s) => !s.isComplete);
 
-      if (!allDone) {
-        const nextIndex = currentSetIndex + 1;
-        const restSeconds = updatedExercise.prescription
-          ? parseRestSeconds(updatedExercise.prescription.rest)
-          : 90;
+      if (nextSet) {
+        const restSeconds = getRestSeconds(updatedExercise);
+        const restEndAt = Date.now() + restSeconds * 1000;
+        const defaults = getSetDefaults(updatedExercise, nextSet.setIndex, { weight, reps });
         setState({
           phase: 'active',
           loggingPhase: 'resting',
           session: updatedSession,
           exercise: updatedExercise,
-          currentSetIndex: nextIndex,
-          weight: updatedExercise.sets.find((s) => s.setIndex === nextIndex)?.weight ?? 0,
-          reps: 0,
+          currentSetIndex: nextSet.setIndex,
+          weight: defaults.weight,
+          reps: defaults.reps,
           selectedRpe: null,
           restDuration: restSeconds,
+          restEndAt,
         });
+        beginRest(
+          {
+            sessionId: updatedSession.id,
+            exerciseLogId,
+            nextSetIndex: nextSet.setIndex,
+            durationSec: restSeconds,
+            endAt: restEndAt,
+          },
+          updatedExercise.exerciseName,
+        ).catch((e) => console.warn('[exercise] Failed to persist rest:', e));
       } else {
         setState({
           phase: 'active',
@@ -327,8 +378,10 @@ export default function ExerciseDetailScreen() {
           weight,
           reps,
           selectedRpe: null,
-          restDuration: 90,
+          restDuration: getRestSeconds(updatedExercise),
+          restEndAt: null,
         });
+        clearActiveRest().catch((e) => console.warn('[exercise] Failed to clear rest:', e));
       }
     } catch (e) {
       console.error('[exercise] Failed to log set:', e);
@@ -340,7 +393,9 @@ export default function ExerciseDetailScreen() {
     if (state.phase !== 'active') return;
     try {
       const updatedSession = await setExerciseStatus(state.session, exerciseLogId, 'completed');
-      const next = getNextExercise(updatedSession, exerciseLogId);
+      // Go to the next unfinished exercise; only end the workout once every
+      // exercise is done.
+      const next = getNextIncompleteExercise(updatedSession, exerciseLogId);
       if (next) {
         router.replace(`/workout/${next.exerciseLogId}`);
       } else {
@@ -353,16 +408,30 @@ export default function ExerciseDetailScreen() {
     }
   }, [state, exerciseLogId, router]);
 
-  const handleFinishWorkout = useCallback(async () => {
+  const handleFinishWorkout = useCallback(() => {
     if (state.phase !== 'active') return;
-    try {
-      await completeSession(state.session);
-      router.replace('/workout/summary');
-    } catch (e) {
-      console.error('[exercise] Failed to finish workout:', e);
-      Alert.alert('Error', 'Failed to finish workout. Please try again.');
-    }
-  }, [state, router]);
+    const { session } = state;
+    Alert.alert(
+      'Finish Workout',
+      'End this session now? Sets you haven\'t logged will be skipped.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Finish',
+          onPress: async () => {
+            try {
+              restTimer.stop();
+              const completed = await completeSession(session);
+              router.replace(`/workout/pr-celebration?sessionId=${completed.id}`);
+            } catch (e) {
+              console.error('[exercise] Failed to finish workout:', e);
+              Alert.alert('Error', 'Failed to finish workout. Please try again.');
+            }
+          },
+        },
+      ],
+    );
+  }, [state, router, restTimer]);
 
   const handleSubstitution = useCallback(async (targetName: string) => {
     if (state.phase !== 'active') return;
@@ -401,6 +470,7 @@ export default function ExerciseDetailScreen() {
       hasLoggedSetsRef.current = true;
     } catch (e) {
       console.error('[exercise] Failed to log warmup set:', e);
+      Alert.alert('Error', 'Failed to log warmup set. Please try again.');
     }
   }, [state, exerciseLogId]);
 
@@ -459,8 +529,8 @@ export default function ExerciseDetailScreen() {
           .map((o) => ({ name: o.substituteName })),
       ]
     : rawOptions.map((o) => ({ name: o.substituteName }));
-  const substitutionDisabled = exercise.sets.some((s) => s.weight > 0 || s.reps > 0);
-  const nextExercise = getNextExercise(session, exerciseLogId);
+  const substitutionDisabled = exercise.sets.some((s) => s.isComplete);
+  const nextExercise = getNextIncompleteExercise(session, exerciseLogId);
 
   // --- Phase Renders ---
 
@@ -562,20 +632,16 @@ export default function ExerciseDetailScreen() {
                     style={[styles.stepVal, styles.stepValInput]}
                     keyboardType="decimal-pad"
                     value={editingWeight ?? String(state.weight)}
-                    onChangeText={setEditingWeight}
-                    onFocus={() => setEditingWeight(String(state.weight))}
-                    onBlur={() => {
-                      if (editingWeight !== null) {
-                        const num = parseFloat(editingWeight);
-                        if (!isNaN(num) && num >= 0) {
-                          setState(prev => {
-                            if (prev.phase !== 'active') return prev;
-                            return { ...prev, weight: num };
-                          });
-                        }
-                        setEditingWeight(null);
-                      }
+                    onChangeText={(text) => {
+                      setEditingWeight(text);
+                      const num = parseFloat(text.replace(',', '.'));
+                      setState(prev => {
+                        if (prev.phase !== 'active') return prev;
+                        return { ...prev, weight: !isNaN(num) && num >= 0 ? num : 0 };
+                      });
                     }}
+                    onFocus={() => setEditingWeight(String(state.weight))}
+                    onBlur={() => setEditingWeight(null)}
                     selectTextOnFocus
                   />
                   <Text style={styles.stepUnit}> kg</Text>
@@ -609,20 +675,16 @@ export default function ExerciseDetailScreen() {
                     style={[styles.stepVal, styles.stepValInput]}
                     keyboardType="number-pad"
                     value={editingReps ?? String(state.reps)}
-                    onChangeText={setEditingReps}
-                    onFocus={() => setEditingReps(String(state.reps))}
-                    onBlur={() => {
-                      if (editingReps !== null) {
-                        const num = parseInt(editingReps, 10);
-                        if (!isNaN(num) && num >= 0) {
-                          setState(prev => {
-                            if (prev.phase !== 'active') return prev;
-                            return { ...prev, reps: num };
-                          });
-                        }
-                        setEditingReps(null);
-                      }
+                    onChangeText={(text) => {
+                      setEditingReps(text);
+                      const num = parseInt(text, 10);
+                      setState(prev => {
+                        if (prev.phase !== 'active') return prev;
+                        return { ...prev, reps: !isNaN(num) && num >= 0 ? num : 0 };
+                      });
                     }}
+                    onFocus={() => setEditingReps(String(state.reps))}
+                    onBlur={() => setEditingReps(null)}
                     selectTextOnFocus
                   />
                   <Text style={styles.stepUnit}> reps</Text>
@@ -720,25 +782,23 @@ export default function ExerciseDetailScreen() {
   );
 
   const renderResting = () => {
-    const { remaining, total } = restTimer;
-    const pct = total > 0 ? remaining / total : 0;
-    const displayM = Math.floor(remaining / 60);
-    const displayS = remaining % 60;
-    const display = `${displayM}:${String(displayS).padStart(2, '0')}`;
+    const { remaining, total, isOvertime } = restTimer;
+    const pct = isOvertime ? 1 : total > 0 ? Math.min(1, remaining / total) : 0;
+    const display = formatRestClock(remaining);
     const circumference = 2 * Math.PI * 82;
     const strokeDashoffset = circumference * (1 - pct);
-    const isExpired = restTimer.isExpired;
 
-    const ringColor = isExpired ? colors.success : colors.gold;
+    const ringColor = isOvertime ? colors.success : colors.gold;
+    const nextSetLabel = `Set ${state.currentSetIndex} of ${exercise.sets.length}`;
 
     return (
       <>
         <Stack.Screen options={{ title: 'Rest', headerShown: false }} />
 
         <View style={styles.restWrap}>
-          <Text style={styles.restLabel}>REST</Text>
+          <Text style={styles.restLabel}>{isOvertime ? 'REST OVER' : 'REST'}</Text>
           <Text style={styles.restContext}>
-            Set {state.currentSetIndex - 1} · {exercise.exerciseName}
+            Up next: {nextSetLabel} · {exercise.exerciseName}
           </Text>
 
           <Animated.View style={[styles.restRing, !reducedMotion && pulseStyle]}>
@@ -759,11 +819,11 @@ export default function ExerciseDetailScreen() {
               />
             </Svg>
             <View style={styles.restTimeCenter}>
-              <Text style={[styles.restTime, isExpired && styles.restTimeExpired]}>
+              <Text style={[styles.restTime, isOvertime && styles.restTimeExpired]}>
                 {display}
               </Text>
               <Text style={styles.restTimeLabel}>
-                {isExpired ? 'Ready' : 'Remaining'}
+                {isOvertime ? 'Over rest' : 'Remaining'}
               </Text>
             </View>
           </Animated.View>
@@ -771,7 +831,7 @@ export default function ExerciseDetailScreen() {
           <View style={styles.restAdjustRow}>
             <TouchableOpacity
               style={styles.restAdjBtn}
-              onPress={() => restTimer.adjust(-15)}
+              onPress={() => handleAdjustRest(-15)}
               activeOpacity={0.7}
               accessibilityLabel="Subtract 15 seconds"
             >
@@ -779,7 +839,7 @@ export default function ExerciseDetailScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.restAdjBtn}
-              onPress={() => restTimer.adjust(15)}
+              onPress={() => handleAdjustRest(15)}
               activeOpacity={0.7}
               accessibilityLabel="Add 15 seconds"
             >
@@ -787,7 +847,7 @@ export default function ExerciseDetailScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.restAdjBtn}
-              onPress={() => restTimer.adjust(30)}
+              onPress={() => handleAdjustRest(30)}
               activeOpacity={0.7}
               accessibilityLabel="Add 30 seconds"
             >
@@ -797,13 +857,11 @@ export default function ExerciseDetailScreen() {
 
           <TouchableOpacity
             style={styles.restSkipBtn}
-            onPress={handleSkipRest}
+            onPress={handleMoveOn}
             activeOpacity={0.85}
-            accessibilityLabel="Skip rest"
+            accessibilityLabel="Move on to the next set"
           >
-            <Text style={styles.restSkipBtnText}>
-              {isExpired ? 'Start Set →' : 'Skip Rest →'}
-            </Text>
+            <Text style={styles.restSkipBtnText}>Move On →</Text>
           </TouchableOpacity>
         </View>
       </>
@@ -836,7 +894,7 @@ export default function ExerciseDetailScreen() {
 
           <GhostButton
             label="View Summary"
-            onPress={() => router.replace('/workout/summary')}
+            onPress={() => router.replace(`/workout/summary?sessionId=${session.id}`)}
           />
         </View>
       </View>
@@ -859,7 +917,11 @@ export default function ExerciseDetailScreen() {
           {phaseContent}
         </View>
       ) : (
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
           {phaseContent}
         </ScrollView>
       )}

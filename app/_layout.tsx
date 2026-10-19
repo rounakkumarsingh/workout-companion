@@ -14,8 +14,10 @@ import 'react-native-reanimated';
 
 import { runMigrations } from '../src/db/migrations';
 import { ThemeManager, colors } from '@/src/theme';
+import { configureRestNotifications } from '@/src/features/workout-session/rest-notifications';
 
 SplashScreen.preventAutoHideAsync();
+configureRestNotifications();
 
 export const unstable_settings = {
   anchor: '(tabs)',
