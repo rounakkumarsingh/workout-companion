@@ -39,4 +39,6 @@ export type HomeScreenState =
       missedDate: string;
       missedDayType: string;
       daysAgo: number;
+      missedWeekNumber: number;
+      missedDayPrescription: DayPrescription;
     };

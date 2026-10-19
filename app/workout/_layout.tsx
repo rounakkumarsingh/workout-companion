@@ -1,5 +1,10 @@
 import { Stack } from 'expo-router';
 
+// Opening an exercise directly (Resume) keeps the workout list beneath it.
+export const unstable_settings = {
+  initialRouteName: 'index',
+};
+
 export default function WorkoutLayout() {
   return (
     <Stack
