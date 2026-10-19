@@ -211,7 +211,7 @@ const EXERCISES = {
   },
   '45° Incline DB Press': {
     name: '45° Incline DB Press',
-    demoVideoUrl: 'https://youtu.be/vqQ9ok0dEgk',
+    demoVideoUrl: 'https://youtu.be/p2t9daxLpB8',
     notes: '1 second pause at the bottom of each rep while maintaining tension on the pecs.',
   },
   'Cable Crossover Ladder': {
@@ -322,7 +322,7 @@ const EXERCISES = {
   },
   'Machine Crunch': {
     name: 'Machine Crunch',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/K2yKEoazT3g',
     notes:
       'Round your lower back as you crunch. Maintain a mind-muscle connection with your 6-pack.',
   },
@@ -342,13 +342,13 @@ const EXERCISES = {
   },
   'Chest-Supported Machine Row': {
     name: 'Chest-Supported Machine Row',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/ijsSiWSzYw0',
     notes:
       'Flare elbows out at roughly 45\u00b0 and squeeze your shoulder blades together hard at the top of each rep.',
   },
   'Chest-Supported T-Bar Row': {
     name: 'Chest-Supported T-Bar Row',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/q8qlHwcuOtc',
     notes:
       'Flare elbows out at roughly 45\u00b0 and squeeze your shoulder blades together hard at the top of each rep.',
   },
@@ -359,13 +359,13 @@ const EXERCISES = {
   },
   'Machine Shrug': {
     name: 'Machine Shrug',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/ua0XuKwKQ9M',
     notes:
       'Brief pause at the top of the bottom of ROM. Think about pulling your shoulders up to your ears!',
   },
   'Cable Paused Shrug-In': {
     name: 'Cable Paused Shrug-In',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/Hy6f1Lz_PiA',
     notes:
       'Shrug up and in. Think about shrugging "up to your ears." 1\u20132 second pause in the squeeze (at the top) of each rep, then another 1\u20132 second pause in the stretch (at the bottom) of each rep.',
   },
@@ -394,23 +394,23 @@ const EXERCISES = {
   // -- Push Day Exercises --
   'Barbell Bench Press': {
     name: 'Barbell Bench Press',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/nQL5ieH39sw',
     notes: 'Set up a comfortable arch, quick pause on the chest and explode up on each rep.',
   },
   'Machine Chest Press': {
     name: 'Machine Chest Press',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/zDecGJLyVm8',
     notes: '1 second pause at the bottom of each rep while maintaining tension on the pecs.',
   },
   'Machine Shoulder Press': {
     name: 'Machine Shoulder Press',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/SCQVmN1gYsk',
     notes:
       'Ensure that your elbows break at least 90\u00b0. Mind-muscle connection with your delts. Smooth, controlled reps.',
   },
   'Seated DB Shoulder Press': {
     name: 'Seated DB Shoulder Press',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/B8PB5RPhTWQ',
     notes:
       'Ensure that your elbows break at least 90\u00b0. Mind-muscle connection with your delts. Smooth, controlled reps.',
   },
@@ -422,7 +422,7 @@ const EXERCISES = {
   },
   'Bottom-Half Seated Cable Flye': {
     name: 'Bottom-Half Seated Cable Flye',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/tsJMV9Gxw-o',
     notes:
       'All reps and sets are to be performed in the bottom half of the ROM. Focus on feeling a deep stretch in your pecs at the bottom of each rep.',
   },
@@ -532,12 +532,12 @@ const EXERCISES = {
   },
   'DB RDL': {
     name: 'DB RDL',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/VRwSgUoj7uI',
     notes: '',
   },
   'Snatch-Grip RDL': {
     name: 'Snatch-Grip RDL',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/b8fmEaXHapU',
     notes: '',
   },
   'Reverse Nordic': {
@@ -562,87 +562,87 @@ const EXERCISES = {
   },
   'Neutral-Grip Pull-Up': {
     name: 'Neutral-Grip Pull-Up',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/b0ypSz63UGo',
     notes: '',
   },
   'Incline Chest-Supported DB Row': {
     name: 'Incline Chest-Supported DB Row',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/okCWuhxJEvw',
     notes: '',
   },
   'Rope Face Pull': {
     name: 'Rope Face Pull',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/GhrVM-jPIEA',
     notes: '',
   },
   'Reverse Pec Deck': {
     name: 'Reverse Pec Deck',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/Y8fb_rtEU_4',
     notes: '',
   },
   'DB Shrug': {
     name: 'DB Shrug',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/moFqLlptX7Q',
     notes: '',
   },
   'EZ-Bar Curl': {
     name: 'EZ-Bar Curl',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/WMrgn4GG7mI',
     notes: '',
   },
   'DB Curl': {
     name: 'DB Curl',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/XxGCRSJmgwY',
     notes: '',
   },
   'EZ-Bar Preacher Curl': {
     name: 'EZ-Bar Preacher Curl',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/Dn7qgf9iSH8',
     notes: '',
   },
   'DB Preacher Curl': {
     name: 'DB Preacher Curl',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/WTkQLAethtg',
     notes: '',
   },
   'DB Bench Press': {
     name: 'DB Bench Press',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/zGXvPjlgVkk',
     notes: '',
   },
   'Cable Shoulder Press': {
     name: 'Cable Shoulder Press',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/OfjncdW_Vyc',
     notes: '',
   },
   'Low-to-High Cable Crossover': {
     name: 'Low-to-High Cable Crossover',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/1LhGmhVFe2Y',
     notes: '',
   },
   'DB Triceps Kickback': {
     name: 'DB Triceps Kickback',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/YdUUYFgpA7g',
     notes: '',
   },
   'Bench Dip': {
     name: 'Bench Dip',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/3CaIq8jZe18',
     notes: '',
   },
   'Hanging Leg Raise': {
     name: 'Hanging Leg Raise',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/rGqwkinWqYI',
     notes: '',
   },
   'Modified Candlestick': {
     name: 'Modified Candlestick',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/-XVRl8KU7x0',
     notes: '',
   },
   'Smith Machine Static Lunge': {
     name: 'Smith Machine Static Lunge',
-    demoVideoUrl: 'https://youtu.be/GOqHdmshRKY',
+    demoVideoUrl: 'https://youtu.be/SEjKxJGg_C8',
     notes: '',
   },
   'DB Walking Lunge': {
@@ -657,12 +657,12 @@ const EXERCISES = {
   },
   'DB Step-Up': {
     name: 'DB Step-Up',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/3FNfi_PrP9Y',
     notes: '',
   },
   'Goblet Squat': {
     name: 'Goblet Squat',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/S2agsLlUSII',
     notes: '',
   },
   'DB Static Lunge': {
@@ -682,47 +682,47 @@ const EXERCISES = {
   },
   'Lean-Back Machine Pulldown': {
     name: 'Lean-Back Machine Pulldown',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/CrfvmSGfT2c',
     notes: '',
   },
   'Pull-Up': {
     name: 'Pull-Up',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/5h_NehuTqe4',
     notes: '',
   },
   'DB Hammer Curl': {
     name: 'DB Hammer Curl',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/xY3sQXYhk7A',
     notes: '',
   },
   'Hammer Preacher Curl': {
     name: 'Hammer Preacher Curl',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/dEdnC3ca-Yg',
     notes: '',
   },
   'Concentration Cable Curl': {
     name: 'Concentration Cable Curl',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/BFZyW_7ld0c',
     notes: '',
   },
   'Katana Triceps Extension': {
     name: 'Katana Triceps Extension',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/R7f45Mv7yyg',
     notes: '',
   },
   'Triceps Pressdown (Rope)': {
     name: 'Triceps Pressdown (Rope)',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/bCa036rGtVU',
     notes: '',
   },
   'Swiss Ball Rollout': {
     name: 'Swiss Ball Rollout',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/FvekMyIs-yk',
     notes: '',
   },
   'Long-Lever Plank': {
     name: 'Long-Lever Plank',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/9rFS1gg0vJM',
     notes: '',
   },
   'Glute-Ham Raise': {
@@ -742,7 +742,7 @@ const EXERCISES = {
   },
   'Lean-In DB Lateral Raise': {
     name: 'Lean-In DB Lateral Raise',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/BmYuAG2j2co',
     notes: '',
   },
 } as const satisfies Record<string, Exercise>;
@@ -1311,8 +1311,10 @@ const _w1_push = trainingDay(5, 'Push', 'HypertrophyFocus', [
   ex('Barbell Bench Press', 1, 'N/A', 2, 4, 1, '8-10', null, '~6', '3-5 min'),
   ex('Machine Shoulder Press', 2, 'N/A', 2, 3, 1, '8-10', null, '~6', '2-3 min'),
   ex('Bottom-Half DB Flye', 3, 'N/A', 1, 2, 1, '10-12', null, '~7', '1-2 min'),
-  ex('Cable Triceps Kickback', 4, 'N/A', 1, 1, 1, '12-15', null, '~7', '1-2 min'),
-  ex('Lying Leg Raise', 5, 'N/A', 1, 2, 1, '10-20', null, '~7', '1-2 min'),
+  ex('High-Cable Lateral Raise', 4, 'N/A', 1, 1, 1, '10-12', null, '~7', '1-2 min'),
+  ex('Overhead Cable Triceps Extension (Bar)', 5, 'N/A', 1, 1, 1, '10-12', null, '~7', '1-2 min'),
+  ex('Cable Triceps Kickback', 6, 'N/A', 1, 1, 1, '12-15', null, '~7', '1-2 min'),
+  ex('Lying Leg Raise', 7, 'N/A', 1, 2, 1, '10-20', null, '~7', '1-2 min'),
 ]);
 
 const _w1_legs = trainingDay(6, 'Legs', 'HypertrophyFocus', [
@@ -1320,6 +1322,7 @@ const _w1_legs = trainingDay(6, 'Legs', 'HypertrophyFocus', [
   ex('Seated Leg Curl', 2, 'N/A', 1, 2, 1, '10-12', null, '~7', '1-2 min'),
   ex('Walking Lunge', 3, 'N/A', 2, 3, 1, '8-10', null, '~6', '2-3 min'),
   ex('Machine Hip Abduction', 4, 'N/A', 1, 2, 1, '10-12', null, '~7', '1-2 min'),
+  ex('Standing Calf Raise', 5, 'N/A', 1, 2, 1, '10-12', null, '~7', '1-2 min'),
 ]);
 
 // ---- Foundation Block: Week 2 ----
@@ -1357,8 +1360,10 @@ const _w2_push = trainingDay(5, 'Push', 'HypertrophyFocus', [
   ex('Barbell Bench Press', 1, 'N/A', 2, 4, 1, '8-10', null, '~7', '3-5 min'),
   ex('Machine Shoulder Press', 2, 'N/A', 2, 3, 1, '8-10', null, '~7', '2-3 min'),
   ex('Bottom-Half DB Flye', 3, 'N/A', 1, 2, 1, '10-12', null, '~8', '1-2 min'),
-  ex('Cable Triceps Kickback', 4, 'N/A', 1, 1, 1, '12-15', null, '~8', '1-2 min'),
-  ex('Lying Leg Raise', 5, 'N/A', 1, 2, 1, '10-20', null, '~8', '1-2 min'),
+  ex('High-Cable Lateral Raise', 4, 'N/A', 1, 1, 1, '10-12', null, '~8', '1-2 min'),
+  ex('Overhead Cable Triceps Extension (Bar)', 5, 'N/A', 1, 1, 1, '10-12', null, '~8', '1-2 min'),
+  ex('Cable Triceps Kickback', 6, 'N/A', 1, 1, 1, '12-15', null, '~8', '1-2 min'),
+  ex('Lying Leg Raise', 7, 'N/A', 1, 2, 1, '10-20', null, '~8', '1-2 min'),
 ]);
 
 const _w2_legs = trainingDay(6, 'Legs', 'HypertrophyFocus', [
@@ -1366,6 +1371,7 @@ const _w2_legs = trainingDay(6, 'Legs', 'HypertrophyFocus', [
   ex('Seated Leg Curl', 2, 'N/A', 1, 2, 1, '10-12', null, '~8', '1-2 min'),
   ex('Walking Lunge', 3, 'N/A', 2, 3, 1, '8-10', null, '~7', '2-3 min'),
   ex('Machine Hip Abduction', 4, 'N/A', 1, 2, 1, '10-12', null, '~8', '1-2 min'),
+  ex('Standing Calf Raise', 5, 'N/A', 1, 2, 1, '10-12', null, '~8', '1-2 min'),
 ]);
 
 // ---- Foundation Block: Week 3 ----
@@ -1382,11 +1388,11 @@ const _w3_upper = trainingDay(1, 'Upper', 'StrengthFocus', [
 ]);
 
 const _w3_lower = trainingDay(2, 'Lower', 'StrengthFocus', [
-  ex('Lying Leg Curl', 1, 'N/A', 2, 2, 2, '8-10', '~7', '~7', '1-2 min'),
+  ex('Lying Leg Curl', 1, 'N/A', 2, 2, 2, '8-10', '~7', '~8', '1-2 min'),
   ex('Smith Machine Squat', 2, 'N/A', 2, 4, 2, '6-8', '~7', '~7', '3-5 min'),
   ex('Barbell RDL', 3, 'N/A', 2, 4, 2, '6-8', '~7', '~7', '2-3 min'),
   ex('Leg Extension', 4, 'N/A', 1, 2, 2, '8-10', '~7', '~8', '1-2 min'),
-  ex('Standing Calf Raise', 5, 'N/A', 1, 2, 2, '6-8', '~7', '~7', '1-2 min'),
+  ex('Standing Calf Raise', 5, 'N/A', 1, 2, 2, '6-8', '~7', '~8', '1-2 min'),
   ex('Cable Crunch', 6, 'N/A', 1, 1, 2, '8-10', '~7', '~8', '1-2 min'),
 ]);
 
@@ -1403,8 +1409,10 @@ const _w3_push = trainingDay(5, 'Push', 'HypertrophyFocus', [
   ex('Barbell Bench Press', 1, 'N/A', 2, 4, 2, '8-10', '~7', '~7', '3-5 min'),
   ex('Machine Shoulder Press', 2, 'N/A', 2, 3, 2, '8-10', '~7', '~7', '2-3 min'),
   ex('Bottom-Half DB Flye', 3, 'N/A', 1, 2, 2, '10-12', '~7', '~8', '1-2 min'),
-  ex('Cable Triceps Kickback', 4, 'N/A', 1, 1, 2, '12-15', '~7', '~8', '1-2 min'),
-  ex('Lying Leg Raise', 5, 'N/A', 1, 2, 2, '10-20', '~7', '~8', '1-2 min'),
+  ex('High-Cable Lateral Raise', 4, 'N/A', 1, 1, 2, '10-12', '~7', '~8', '1-2 min'),
+  ex('Overhead Cable Triceps Extension (Bar)', 5, 'N/A', 1, 1, 2, '10-12', '~7', '~8', '1-2 min'),
+  ex('Cable Triceps Kickback', 6, 'N/A', 1, 1, 2, '12-15', '~7', '~8', '1-2 min'),
+  ex('Lying Leg Raise', 7, 'N/A', 1, 2, 2, '10-20', '~7', '~8', '1-2 min'),
 ]);
 
 const _w3_legs = trainingDay(6, 'Legs', 'HypertrophyFocus', [
@@ -1412,6 +1420,7 @@ const _w3_legs = trainingDay(6, 'Legs', 'HypertrophyFocus', [
   ex('Seated Leg Curl', 2, 'N/A', 1, 2, 2, '10-12', '~7', '~8', '1-2 min'),
   ex('Walking Lunge', 3, 'N/A', 2, 3, 2, '8-10', '~7', '~7', '2-3 min'),
   ex('Machine Hip Abduction', 4, 'N/A', 1, 2, 2, '10-12', '~7', '~8', '1-2 min'),
+  ex('Standing Calf Raise', 5, 'N/A', 1, 2, 2, '10-12', '~7', '~8', '1-2 min'),
 ]);
 
 // ---- Ramping Block: Week 6 (Deload / Technique Re-Acclimation) ----
@@ -1600,11 +1609,11 @@ const week4: Week = {
       ex('Bayesian Cable Curl', 7, 'N/A', 1, 1, 2, '8-10', '~7', '~8', '1-2 min'),
     ]),
     trainingDay(2, 'Lower', 'StrengthFocus', [
-      ex('Lying Leg Curl', 1, 'N/A', 2, 2, 2, '8-10', '~7', '~7', '1-2 min'),
+      ex('Lying Leg Curl', 1, 'N/A', 2, 2, 2, '8-10', '~7', '~8', '1-2 min'),
       ex('Smith Machine Squat', 2, 'N/A', 2, 4, 2, '6-8', '~7', '~7', '3-5 min'),
       ex('Barbell RDL', 3, 'N/A', 2, 4, 2, '6-8', '~7', '~7', '2-3 min'),
       ex('Leg Extension', 4, 'N/A', 1, 2, 2, '8-10', '~7', '~8', '1-2 min'),
-      ex('Standing Calf Raise', 5, 'N/A', 1, 2, 2, '6-8', '~7', '~7', '1-2 min'),
+      ex('Standing Calf Raise', 5, 'N/A', 1, 2, 2, '6-8', '~7', '~8', '1-2 min'),
       ex('Cable Crunch', 6, 'N/A', 1, 1, 2, '8-10', '~7', '~8', '1-2 min'),
     ]),
     cardioDay(),
@@ -1620,14 +1629,28 @@ const week4: Week = {
       ex('Barbell Bench Press', 1, 'N/A', 2, 4, 2, '8-10', '~7', '~7', '3-5 min'),
       ex('Machine Shoulder Press', 2, 'N/A', 2, 3, 2, '8-10', '~7', '~7', '2-3 min'),
       ex('Bottom-Half DB Flye', 3, 'N/A', 1, 2, 2, '10-12', '~7', '~8', '1-2 min'),
-      ex('Cable Triceps Kickback', 4, 'N/A', 1, 1, 2, '12-15', '~7', '~8', '1-2 min'),
-      ex('Lying Leg Raise', 5, 'N/A', 1, 2, 2, '10-20', '~7', '~8', '1-2 min'),
+      ex('High-Cable Lateral Raise', 4, 'N/A', 1, 1, 2, '10-12', '~7', '~8', '1-2 min'),
+      ex(
+        'Overhead Cable Triceps Extension (Bar)',
+        5,
+        'N/A',
+        1,
+        1,
+        2,
+        '10-12',
+        '~7',
+        '~8',
+        '1-2 min',
+      ),
+      ex('Cable Triceps Kickback', 6, 'N/A', 1, 1, 2, '12-15', '~7', '~8', '1-2 min'),
+      ex('Lying Leg Raise', 7, 'N/A', 1, 2, 2, '10-20', '~7', '~8', '1-2 min'),
     ]),
     trainingDay(6, 'Legs', 'HypertrophyFocus', [
       ex('Leg Press', 1, 'N/A', 2, 4, 2, '8-10', '~7', '~7', '2-3 min'),
       ex('Seated Leg Curl', 2, 'N/A', 1, 2, 2, '10-12', '~7', '~8', '1-2 min'),
       ex('Walking Lunge', 3, 'N/A', 2, 3, 2, '8-10', '~7', '~7', '2-3 min'),
       ex('Machine Hip Abduction', 4, 'N/A', 1, 2, 2, '10-12', '~7', '~8', '1-2 min'),
+      ex('Standing Calf Raise', 5, 'N/A', 1, 2, 2, '10-12', '~7', '~8', '1-2 min'),
     ]),
     restDay(),
   ],
@@ -1658,11 +1681,11 @@ const week5: Week = {
       ex('Bayesian Cable Curl', 7, 'N/A', 1, 1, 2, '8-10', '~7', '~8', '1-2 min'),
     ]),
     trainingDay(2, 'Lower', 'StrengthFocus', [
-      ex('Lying Leg Curl', 1, 'N/A', 2, 2, 2, '8-10', '~7', '~7', '1-2 min'),
+      ex('Lying Leg Curl', 1, 'N/A', 2, 2, 2, '8-10', '~7', '~8', '1-2 min'),
       ex('Smith Machine Squat', 2, 'N/A', 2, 4, 2, '6-8', '~7', '~7', '3-5 min'),
       ex('Barbell RDL', 3, 'N/A', 2, 4, 2, '6-8', '~7', '~7', '2-3 min'),
       ex('Leg Extension', 4, 'N/A', 1, 2, 2, '8-10', '~7', '~8', '1-2 min'),
-      ex('Standing Calf Raise', 5, 'N/A', 1, 2, 2, '6-8', '~7', '~7', '1-2 min'),
+      ex('Standing Calf Raise', 5, 'N/A', 1, 2, 2, '6-8', '~7', '~8', '1-2 min'),
       ex('Cable Crunch', 6, 'N/A', 1, 1, 2, '8-10', '~7', '~8', '1-2 min'),
     ]),
     cardioDay(),
@@ -1678,14 +1701,28 @@ const week5: Week = {
       ex('Barbell Bench Press', 1, 'N/A', 2, 4, 2, '8-10', '~7', '~7', '3-5 min'),
       ex('Machine Shoulder Press', 2, 'N/A', 2, 3, 2, '8-10', '~7', '~7', '2-3 min'),
       ex('Bottom-Half DB Flye', 3, 'N/A', 1, 2, 2, '10-12', '~7', '~8', '1-2 min'),
-      ex('Cable Triceps Kickback', 4, 'N/A', 1, 1, 2, '12-15', '~7', '~8', '1-2 min'),
-      ex('Lying Leg Raise', 5, 'N/A', 1, 2, 2, '10-20', '~7', '~8', '1-2 min'),
+      ex('High-Cable Lateral Raise', 4, 'N/A', 1, 1, 2, '10-12', '~7', '~8', '1-2 min'),
+      ex(
+        'Overhead Cable Triceps Extension (Bar)',
+        5,
+        'N/A',
+        1,
+        1,
+        2,
+        '10-12',
+        '~7',
+        '~8',
+        '1-2 min',
+      ),
+      ex('Cable Triceps Kickback', 6, 'N/A', 1, 1, 2, '12-15', '~7', '~8', '1-2 min'),
+      ex('Lying Leg Raise', 7, 'N/A', 1, 2, 2, '10-20', '~7', '~8', '1-2 min'),
     ]),
     trainingDay(6, 'Legs', 'HypertrophyFocus', [
       ex('Leg Press', 1, 'N/A', 2, 4, 2, '8-10', '~7', '~7', '2-3 min'),
       ex('Seated Leg Curl', 2, 'N/A', 1, 2, 2, '10-12', '~7', '~8', '1-2 min'),
       ex('Walking Lunge', 3, 'N/A', 2, 3, 2, '8-10', '~7', '~7', '2-3 min'),
       ex('Machine Hip Abduction', 4, 'N/A', 1, 2, 2, '10-12', '~7', '~8', '1-2 min'),
+      ex('Standing Calf Raise', 5, 'N/A', 1, 2, 2, '10-12', '~7', '~8', '1-2 min'),
     ]),
     restDay(),
   ],
