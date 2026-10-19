@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, useColorScheme } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, SpaceMono_400Regular, SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
@@ -17,6 +17,7 @@ import { ThemeManager, colors } from '@/src/theme';
 import { configureRestNotifications } from '@/src/features/workout-session/rest-notifications';
 
 SplashScreen.preventAutoHideAsync();
+
 configureRestNotifications();
 
 export const unstable_settings = {
@@ -26,7 +27,6 @@ export const unstable_settings = {
 type DbStatus = 'loading' | 'ready' | 'error';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [dbStatus, setDbStatus] = useState<DbStatus>('loading');
   const [dbError, setDbError] = useState<string | null>(null);
 
@@ -39,51 +39,60 @@ export default function RootLayout() {
     BarlowCondensed_800ExtraBold,
   });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function boot() {
-      try {
-        await runMigrations();
-        if (!cancelled) setDbStatus('ready');
-      } catch (err) {
-        if (!cancelled) {
-          const message = err instanceof Error ? err.message : 'Unknown database error';
-          console.error('[db] Migration failed:', err);
-          setDbError(message);
-          setDbStatus('error');
-        }
-      }
+  const boot = useCallback(async () => {
+    setDbStatus('loading');
+    setDbError(null);
+    try {
+      await runMigrations();
+      setDbStatus('ready');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown database error';
+      console.error('[db] Migration failed:', err);
+      setDbError(message);
+      setDbStatus('error');
     }
-
-    boot();
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
+
+  useEffect(() => {
+    void boot();
+  }, [boot]);
 
   const ready = dbStatus === 'ready' && (fontsLoaded || fontsError);
 
+  // `dbStatus === 'error'` is a terminal state, not a "still loading" one, so
+  // the splash must come down for it too — otherwise a migration failure left
+  // the app stuck behind a splash screen with no way to report the error.
+  const settled = ready || dbStatus === 'error';
+
   useEffect(() => {
-    if (ready) {
-      SplashScreen.hideAsync();
+    if (settled) {
+      SplashScreen.hideAsync().catch(() => {});
     }
-  }, [ready]);
+  }, [settled]);
+
+  // Checked before the `!ready` guard: when dbStatus is 'error', `ready` is
+  // always false, so testing it first made this branch unreachable.
+  if (dbStatus === 'error') {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorTitle}>Database Error</Text>
+        <Text style={styles.errorDetail}>{dbError}</Text>
+        <Pressable
+          style={styles.retryButton}
+          onPress={() => void boot()}
+          accessibilityRole="button"
+          accessibilityLabel="Retry database initialisation"
+        >
+          <Text style={styles.retryText}>Retry</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   if (!ready) {
     return (
       <View style={styles.container}>
         <Text style={styles.loadingText}>Initialising…</Text>
-      </View>
-    );
-  }
-
-  if (dbStatus === ('error' as DbStatus)) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorTitle}>Database Error</Text>
-        <Text style={styles.errorDetail}>{dbError}</Text>
       </View>
     );
   }
@@ -126,5 +135,20 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  retryButton: {
+    marginTop: 24,
+    minHeight: 44,
+    minWidth: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    borderRadius: 4,
+    borderWidth: 0.5,
+    borderColor: colors.goldBorder,
+  },
+  retryText: {
+    color: colors.gold,
+    fontSize: 16,
   },
 });
