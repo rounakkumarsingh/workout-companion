@@ -28,6 +28,8 @@ export function QuickLogOverlay({ exerciseName, visible, onClose, onLog }: Quick
     setWeight(0);
     setReps(0);
     setRpe(null);
+    setEditingWeight(null);
+    setEditingReps(null);
     onClose();
   };
 
@@ -49,15 +51,13 @@ export function QuickLogOverlay({ exerciseName, visible, onClose, onLog }: Quick
                   style={[styles.stepVal, styles.stepValInput]}
                   keyboardType="decimal-pad"
                   value={editingWeight ?? String(weight)}
-                  onChangeText={setEditingWeight}
-                  onFocus={() => setEditingWeight(String(weight))}
-                  onBlur={() => {
-                    if (editingWeight !== null) {
-                      const num = parseFloat(editingWeight);
-                      if (!isNaN(num) && num >= 0) setWeight(num);
-                      setEditingWeight(null);
-                    }
+                  onChangeText={(text) => {
+                    setEditingWeight(text);
+                    const num = parseFloat(text.replace(',', '.'));
+                    setWeight(!isNaN(num) && num >= 0 ? num : 0);
                   }}
+                  onFocus={() => setEditingWeight(String(weight))}
+                  onBlur={() => setEditingWeight(null)}
                   selectTextOnFocus
                 />
                 <Text style={styles.stepUnit}> kg</Text>
@@ -79,15 +79,13 @@ export function QuickLogOverlay({ exerciseName, visible, onClose, onLog }: Quick
                   style={[styles.stepVal, styles.stepValInput]}
                   keyboardType="number-pad"
                   value={editingReps ?? String(reps)}
-                  onChangeText={setEditingReps}
-                  onFocus={() => setEditingReps(String(reps))}
-                  onBlur={() => {
-                    if (editingReps !== null) {
-                      const num = parseInt(editingReps, 10);
-                      if (!isNaN(num) && num >= 0) setReps(num);
-                      setEditingReps(null);
-                    }
+                  onChangeText={(text) => {
+                    setEditingReps(text);
+                    const num = parseInt(text, 10);
+                    setReps(!isNaN(num) && num >= 0 ? num : 0);
                   }}
+                  onFocus={() => setEditingReps(String(reps))}
+                  onBlur={() => setEditingReps(null)}
                   selectTextOnFocus
                 />
                 <Text style={styles.stepUnit}> reps</Text>

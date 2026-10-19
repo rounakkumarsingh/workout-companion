@@ -18,7 +18,7 @@ export function SetLogList({ sets, allSetsLogged, currentSetIndex }: SetLogListP
   return (
     <View style={styles.list}>
       {sets.map((set) => {
-        const isLogged = set.weight > 0 || set.reps > 0;
+        const isLogged = set.isComplete;
         const status = isLogged
           ? 'done'
           : set.setIndex === currentSetIndex || (allSetsLogged && set.setIndex === sets.length)

@@ -15,7 +15,7 @@ import Animated, {
   withSequence,
   Easing,
 } from 'react-native-reanimated';
-import { useRouter, useLocalSearchParams, Stack, type Href } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect, Stack, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors, typography, radii, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
@@ -38,8 +38,10 @@ import {
   getElapsedMinutes,
   computeTotalVolume,
   getProgressionSuggestions,
+  getWeekDayStatuses,
+  getCurrentStreak,
 } from '@/src/features/workout-session';
-import { getActiveSession, getSessionsByWeek } from '@/src/db/repositories/sessions';
+import { getActiveSession } from '@/src/db/repositories/sessions';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { DevClearDbButton } from '@/components/ui/DevClearDbButton';
 
@@ -81,23 +83,22 @@ const DAY_NAMES: Record<string, string> = {
   Upper: 'Upper Body',
   Lower: 'Lower Body',
   Pull: 'Pull',
-  Push: 'Push A',
+  Push: 'Push',
   Legs: 'Legs',
 };
 
-const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const WEEKDAY_INITIALS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 function getExerciseIcon(name: string, index: number): string {
   return EXERCISE_ICONS[name] || EXERCISE_EMOJIS[index % EXERCISE_EMOJIS.length];
 }
 
 function getExerciseStatus(
-  exercise: { sets: ActiveSet[] },
+  exercise: { status: string; sets: ActiveSet[] },
 ): 'done' | 'active' | 'pending' {
-  const allDone = exercise.sets.every((s) => s.weight > 0 || s.reps > 0);
-  if (allDone) return 'done';
-  const anyLogged = exercise.sets.some((s) => s.weight > 0 || s.reps > 0);
-  if (anyLogged) return 'active';
+  if (exercise.status === 'completed') return 'done';
+  if (exercise.sets.length > 0 && exercise.sets.every((s) => s.isComplete)) return 'done';
+  if (exercise.status === 'active' || exercise.sets.some((s) => s.isComplete)) return 'active';
   return 'pending';
 }
 
@@ -112,21 +113,9 @@ function getDayName(dayType: string): string {
   return DAY_NAMES[dayType] || dayType;
 }
 
-/** Convert JS getDay() (0=Sun..6=Sat) → DAY_LABELS index (0=Mon..6=Sun). */
-function getDayIndex(date: Date): number {
-  const jsDay = date.getDay();
-  return jsDay === 0 ? 6 : jsDay - 1;
-}
-
-function getDayOfWeek(): string {
+function getWeekdayLabel(startedAt: string, weekNumber: number): string {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  return days[new Date().getDay()];
-}
-
-function getWeekdayLabel(dayType: string, weekNumber: number): string {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const today = days[new Date().getDay()];
-  return `${today} · Week ${weekNumber}`;
+  return `${days[new Date(startedAt).getDay()]} · Week ${weekNumber}`;
 }
 
 interface ActiveState {
@@ -154,6 +143,7 @@ export default function ActiveWorkoutScreen() {
   const [progressionSuggestions, setProgressionSuggestions] = useState<Map<string, ProgressionSuggestion>>(new Map());
   const [weekDays, setWeekDays] = useState<DayStatus[]>([]);
   const [quickLogExercise, setQuickLogExercise] = useState<string | null>(null);
+  const [streak, setStreak] = useState(0);
 
   const shakeOffset = useSharedValue(0);
 
@@ -184,26 +174,31 @@ export default function ActiveWorkoutScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const activeSession = await getActiveSession();
-        const sessionId = params.sessionId ?? activeSession?.id;
-        if (!sessionId) {
-          if (!cancelled) setState({ phase: 'error', message: 'No active session.' });
-          return;
+  // Reload on every focus so sets logged on the exercise screen show up
+  // when returning to this list.
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      (async () => {
+        try {
+          const sessionId = activeRef.current?.session.id
+            ?? params.sessionId
+            ?? (await getActiveSession())?.id;
+          if (!sessionId) {
+            if (!cancelled) setState({ phase: 'error', message: 'No active session.' });
+            return;
+          }
+          if (!cancelled) await hydrate(sessionId);
+        } catch (e) {
+          console.error('[workout] Failed to load active session:', e);
+          if (!cancelled) {
+            setState({ phase: 'error', message: e instanceof Error ? e.message : String(e) });
+          }
         }
-        if (!cancelled) await hydrate(sessionId);
-      } catch (e) {
-        console.error('[workout] Failed to load active session:', e);
-        if (!cancelled) {
-          setState({ phase: 'error', message: e instanceof Error ? e.message : String(e) });
-        }
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [params.sessionId, hydrate]);
+      })();
+      return () => { cancelled = true; };
+    }, [params.sessionId, hydrate]),
+  );
 
   useEffect(() => {
     if (state.phase !== 'active') return;
@@ -226,30 +221,15 @@ export default function ActiveWorkoutScreen() {
         setProgressionSuggestions(map);
       });
 
-      getSessionsByWeek(state.session.weekNumber).then((weekSessions) => {
-        const todayIdx = getDayIndex(new Date());
-        const days: DayStatus[] = DAY_LABELS.map((label, i) => {
-          if (i === todayIdx) return { label, status: 'today' as const };
-          const daySession = weekSessions.find((s) => {
-            const mappedDay = getDayIndex(new Date(s.startedAt));
-            return mappedDay === i;
-          });
-          if (daySession && (daySession.status === 'completed' || daySession.status === 'abandoned')) {
-            return { label, status: 'done' as const };
-          }
-          if (i < todayIdx && !daySession) {
-            const d = new Date();
-            d.setDate(d.getDate() - (todayIdx - i));
-            const dateStr = d.toISOString().slice(0, 10);
-            const pastSession = weekSessions.find((s) => s.startedAt.slice(0, 10) === dateStr);
-            if (!pastSession || pastSession.status !== 'in_progress') {
-              return { label, status: 'missed' as const };
-            }
-          }
-          return { label, status: 'upcoming' as const };
-        });
-        setWeekDays(days);
-      });
+      getWeekDayStatuses(state.session.weekNumber).then((days) => {
+        setWeekDays(days.map((d) => ({
+          label: WEEKDAY_INITIALS[d.date.getDay()],
+          status: d.status,
+        })));
+      }).catch((e) => console.warn('[workout] Failed to load week strip:', e));
+
+      getCurrentStreak().then(setStreak)
+        .catch((e) => console.warn('[workout] Failed to compute streak:', e));
     }
   }, [sessionId]);
 
@@ -291,10 +271,7 @@ export default function ActiveWorkoutScreen() {
   }));
 
   const handleViewDetail = useCallback((exerciseLogId: string) => {
-    console.log('[navigate] handleViewDetail called with exerciseLogId:', exerciseLogId);
-    const url = `/workout/${exerciseLogId}` as Href;
-    console.log('[navigate] pushing to:', url);
-    router.push(url);
+    router.push(`/workout/${exerciseLogId}` as Href);
   }, [router]);
 
   const handleQuickLog = useCallback(async (weight: number, reps: number, rpe: number | null) => {
@@ -302,8 +279,11 @@ export default function ActiveWorkoutScreen() {
     if (!current || !quickLogExercise) return;
     const exercise = current.session.exercises.find((e) => e.exerciseLogId === quickLogExercise);
     if (!exercise) return;
-    const pendingSet = exercise.sets.find((s) => s.weight <= 0 && s.reps <= 0);
-    if (!pendingSet) return;
+    const pendingSet = exercise.sets.find((s) => !s.isComplete);
+    if (!pendingSet) {
+      Alert.alert('All sets logged', `Every working set of ${exercise.exerciseName} is already logged.`);
+      return;
+    }
     try {
       const result = await updateSet(current.session, pendingSet.setLogId, { weight, reps, loggedRpe: rpe });
       if (result.success) {
@@ -327,10 +307,10 @@ export default function ActiveWorkoutScreen() {
     const { session } = current;
     const allComplete = session.exercises.every((e) => e.status === 'completed');
     if (!allComplete) {
-      const pendingCount = session.exercises.filter((e) => e.status === 'pending').length;
+      const unfinishedCount = session.exercises.filter((e) => e.status !== 'completed').length;
       Alert.alert(
-        `${pendingCount} exercises not started`,
-        'Complete anyway? Unstarted exercises will be skipped.',
+        `${unfinishedCount} ${unfinishedCount === 1 ? 'exercise' : 'exercises'} not finished`,
+        'Complete anyway? Sets you haven\'t logged will be skipped.',
         [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -456,10 +436,10 @@ export default function ActiveWorkoutScreen() {
           <View>
             <View style={[styles.header, { paddingTop: insets.top + spacing.xxl }]}>
               <View>
-                <Text style={styles.eyebrow}>{getWeekdayLabel(session.dayType, session.weekNumber)}</Text>
+                <Text style={styles.eyebrow}>{getWeekdayLabel(session.startedAt, session.weekNumber)}</Text>
                 <Text style={styles.headerTitle}>{getDayName(session.dayType)}</Text>
               </View>
-              <StreakBadge count={12} />
+              <StreakBadge count={streak} />
             </View>
 
             <View style={styles.ringSection}>
