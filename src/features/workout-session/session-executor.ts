@@ -20,6 +20,7 @@ import {
   getSuggestedSetValues,
   checkProgression,
 } from './progression';
+import { clearActiveRestForSession } from './rest-state';
 import { generateId } from '../../lib/ids';
 import { startOfLocalDay } from '../../lib/dates';
 
@@ -158,6 +159,7 @@ export async function completeSession(session: ActiveSession): Promise<ActiveSes
     status: 'completed',
     completedAt: new Date().toISOString(),
   });
+  await clearActiveRestForSession(session.id);
   return (await hydrateActiveSession(session.id))!;
 }
 
@@ -167,6 +169,7 @@ export async function abandonSession(session: ActiveSession): Promise<ActiveSess
     status: 'abandoned',
     completedAt: null,
   });
+  await clearActiveRestForSession(session.id);
   return (await hydrateActiveSession(session.id))!;
 }
 
@@ -199,6 +202,7 @@ export async function finalizeStaleSessions(now: Date = new Date()): Promise<voi
       status: hasLoggedSets ? 'completed' : 'abandoned',
       completedAt: hasLoggedSets ? lastActiveAt : null,
     });
+    await clearActiveRestForSession(session.id);
   }
 }
 

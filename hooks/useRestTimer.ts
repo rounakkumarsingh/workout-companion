@@ -1,138 +1,94 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { AppState } from 'react-native';
 
-interface RestTimerState {
-  remaining: number;
-  total: number;
-  isRunning: boolean;
-  isExpired: boolean;
+interface RestTimerOptions {
+  /** Called once when the countdown reaches zero (also after returning from background). */
+  onExpire?: () => void;
 }
 
-export function useRestTimer(durationSeconds: number) {
-  const [state, setState] = useState<RestTimerState>({
-    remaining: durationSeconds,
-    total: durationSeconds,
-    isRunning: false,
-    isExpired: false,
-  });
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const remainingRef = useRef(durationSeconds);
-  const backgroundTimestampRef = useRef<number | null>(null);
-
-  const clearTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
-
-  const start = useCallback(() => {
-    clearTimer();
-    remainingRef.current = state.remaining;
-    setState((prev) => ({ ...prev, isRunning: true, isExpired: false }));
-    intervalRef.current = setInterval(() => {
-      remainingRef.current -= 1;
-      if (remainingRef.current <= 0) {
-        remainingRef.current = 0;
-        clearTimer();
-        setState((prev) => ({
-          ...prev,
-          remaining: 0,
-          isRunning: false,
-          isExpired: true,
-        }));
-      } else {
-        setState((prev) => ({ ...prev, remaining: remainingRef.current }));
-      }
-    }, 1000);
-  }, [state.remaining, clearTimer]);
-
-  const stop = useCallback(() => {
-    clearTimer();
-    setState((prev) => ({ ...prev, isRunning: false }));
-  }, [clearTimer]);
-
-  const adjust = useCallback((delta: number) => {
-    remainingRef.current = Math.max(0, remainingRef.current + delta);
-    setState((prev) => ({
-      ...prev,
-      remaining: remainingRef.current,
-      isExpired: remainingRef.current === 0,
-    }));
-  }, []);
-
-  const reset = useCallback(
-    (newDuration?: number) => {
-      clearTimer();
-      const dur = newDuration ?? durationSeconds;
-      remainingRef.current = dur;
-      setState({
-        remaining: dur,
-        total: dur,
-        isRunning: false,
-        isExpired: false,
-      });
-    },
-    [durationSeconds, clearTimer],
-  );
+/**
+ * Wall-clock rest timer built around a deadline (`endAt`), so it keeps
+ * running while the app is in the background and never drifts. After the
+ * deadline it keeps counting into negative overtime until stopped.
+ */
+export function useRestTimer({ onExpire }: RestTimerOptions = {}) {
+  const [endAt, setEndAt] = useState<number | null>(null);
+  const [total, setTotal] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
+  const endAtRef = useRef<number | null>(null);
+  const expiredFiredRef = useRef(false);
+  const onExpireRef = useRef(onExpire);
 
   useEffect(() => {
-    const sub = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'background') {
-        backgroundTimestampRef.current = Date.now();
-        clearTimer();
-        setState((prev) => ({ ...prev, isRunning: false }));
-      } else if (nextState === 'active' && backgroundTimestampRef.current !== null) {
-        const elapsedMs = Date.now() - backgroundTimestampRef.current;
-        const elapsedSec = Math.floor(elapsedMs / 1000);
-        backgroundTimestampRef.current = null;
+    onExpireRef.current = onExpire;
+  }, [onExpire]);
 
-        if (elapsedSec > 0) {
-          remainingRef.current = Math.max(0, remainingRef.current - elapsedSec);
-          if (remainingRef.current <= 0) {
-            remainingRef.current = 0;
-            setState({
-              remaining: 0,
-              total: 0,
-              isRunning: false,
-              isExpired: true,
-            });
-            return;
-          }
-        }
-
-        // Restart the interval since the timer was running before backgrounding
-        setState((prev) => ({
-          ...prev,
-          remaining: remainingRef.current,
-          isRunning: true,
-        }));
-        intervalRef.current = setInterval(() => {
-          remainingRef.current -= 1;
-          if (remainingRef.current <= 0) {
-            remainingRef.current = 0;
-            clearTimer();
-            setState((prev) => ({
-              ...prev,
-              remaining: 0,
-              isRunning: false,
-              isExpired: true,
-            }));
-          } else {
-            setState((prev) => ({ ...prev, remaining: remainingRef.current }));
-          }
-        }, 1000);
-      }
+  // Tick while running; recompute immediately when returning to the foreground.
+  useEffect(() => {
+    if (endAt === null) return;
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), 500);
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'active') setNow(Date.now());
     });
     return () => {
+      clearInterval(interval);
       sub.remove();
-      clearTimer();
     };
-  }, [clearTimer]);
+  }, [endAt]);
+
+  const msLeft = endAt === null ? total * 1000 : endAt - now;
+  const isOvertime = endAt !== null && msLeft <= 0;
+  // Positive: seconds left (rounded up). Negative: whole seconds over.
+  const remaining = msLeft > 0 ? Math.ceil(msLeft / 1000) : -Math.floor(-msLeft / 1000);
 
   useEffect(() => {
-    return () => clearTimer();
-  }, [clearTimer]);
+    if (isOvertime && !expiredFiredRef.current) {
+      expiredFiredRef.current = true;
+      onExpireRef.current?.();
+    }
+  }, [isOvertime]);
 
-  return { ...state, start, stop, adjust, reset };
+  /** Starts a rest of `durationSec`, or resumes one with a known deadline. */
+  const start = useCallback((durationSec: number, existingEndAt?: number) => {
+    const deadline = existingEndAt ?? Date.now() + durationSec * 1000;
+    // Resuming a rest that already ran out should not re-fire the alert.
+    expiredFiredRef.current = existingEndAt !== undefined && existingEndAt <= Date.now();
+    endAtRef.current = deadline;
+    setTotal(durationSec);
+    setNow(Date.now());
+    setEndAt(deadline);
+  }, []);
+
+  /** Shifts the deadline; returns the new deadline (null when not running). */
+  const adjust = useCallback((deltaSec: number): number | null => {
+    const current = endAtRef.current;
+    if (current === null) return null;
+    const nowMs = Date.now();
+    let next = current + deltaSec * 1000;
+    // Shortening never pushes the deadline further into the past than now.
+    if (deltaSec < 0) next = Math.max(next, Math.min(current, nowMs));
+    if (next > nowMs) expiredFiredRef.current = false;
+    endAtRef.current = next;
+    setTotal((t) => Math.max(1, t + deltaSec));
+    setNow(nowMs);
+    setEndAt(next);
+    return next;
+  }, []);
+
+  const stop = useCallback(() => {
+    endAtRef.current = null;
+    setEndAt(null);
+  }, []);
+
+  return {
+    remaining,
+    total,
+    endAt,
+    isRunning: endAt !== null,
+    isOvertime,
+    start,
+    adjust,
+    stop,
+  };
 }

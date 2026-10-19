@@ -68,3 +68,14 @@ export {
   detectPersonalRecords,
   computeAllStatistics,
 } from './statistics';
+
+export {
+  getActiveRest,
+  beginRest,
+  moveRestDeadline,
+  clearActiveRest,
+} from './rest-state';
+
+export type { ActiveRest } from './rest-state';
+
+export { configureRestNotifications } from './rest-notifications';
