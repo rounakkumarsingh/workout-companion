@@ -260,3 +260,16 @@ export async function getCurrentStreak(): Promise<number> {
     completed.map((s) => s.startedAt),
   );
 }
+
+/** Completed training sessions in the current program cycle (out of 60). */
+export async function getCompletedSessionCount(): Promise<number> {
+  const start = await getProgramStart();
+  if (!start) return 0;
+  return (await getCompletedThisCycle(start)).length;
+}
+
+/** 1-based position of a workout in the 12-week program (60 training days). */
+export function getProgramDayNumber(weekNumber: number, dayType: string): number {
+  const position = TRAINING_DAY_TYPES.indexOf(dayType as TrainingDayType);
+  return (weekNumber - 1) * TRAINING_DAY_TYPES.length + Math.max(position, 0) + 1;
+}

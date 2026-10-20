@@ -156,6 +156,7 @@ export async function swapExercise(
 
   const suggestions = await getSuggestedSetValues(targetName, exercise.sets.length, {
     excludeSessionId: session.id,
+    repRange: exercise.prescription?.repRange,
   });
   for (const [i, set] of exercise.sets.entries()) {
     if (set.isComplete) continue;

@@ -7,8 +7,14 @@ export interface ColorSet {
   surfaceCard: string;
   border: string;
   borderActive: string;
+  /** Outline for secondary controls; meets 3:1 against `background`. */
+  borderControl: string;
 
   gold: string;
+  /** Gold used for text and icons (darker than `gold` on light backgrounds). */
+  goldText: string;
+  /** Gold used for strokes and indicators. */
+  goldStroke: string;
   goldDim: string;
   goldSurface: string;
   goldBorder: string;
@@ -35,6 +41,15 @@ export interface ColorSet {
   dangerBorder: string;
 
   blackText: string;
+
+  scrim: string;
+
+  // DayFigure body-silhouette palette
+  figureBase: string;
+  figureNeutral: string;
+  figurePrimary: string;
+  figureSecondary: string;
+  figureSecondaryStroke: string;
 }
 
 // ── Dark Mode Colors ─────────────────────────────────────────────────────
@@ -46,8 +61,11 @@ export const darkColors: ColorSet = {
   surfaceCard: '#1a1a1a',
   border: '#222222',
   borderActive: '#2a2a2a',
+  borderControl: '#6b6b6b',
 
   gold: '#e8c547',
+  goldText: '#e8c547',
+  goldStroke: '#e8c547',
   goldDim: '#9a8520',
   goldSurface: '#1a1800',
   goldBorder: '#3a3000',
@@ -56,11 +74,11 @@ export const darkColors: ColorSet = {
   successDim: '#2e5a2e',
   successSurface: '#121812',
   successBorder: '#1e3a1e',
-  successText: '#4d7a4d',
+  successText: '#6fae6f',
 
   textPrimary: '#f0ede8',
-  textSecondary: '#888888',
-  textTertiary: '#555555',
+  textSecondary: '#9a9894',
+  textTertiary: '#8a8782',
   textMuted: '#444444',
   textDim: '#2a2a2a',
 
@@ -74,6 +92,14 @@ export const darkColors: ColorSet = {
   dangerBorder: '#5a1a1a',
 
   blackText: '#0f0f0f',
+
+  scrim: 'rgba(0,0,0,0.6)',
+
+  figureBase: '#2a2a2a',
+  figureNeutral: '#3d3d3d',
+  figurePrimary: '#e8c547',
+  figureSecondary: '#9a8520',
+  figureSecondaryStroke: 'none',
 };
 
 // ── Light Mode Colors ────────────────────────────────────────────────────
@@ -85,8 +111,11 @@ export const lightColors: ColorSet = {
   surfaceCard: '#d7d2c8',
   border: '#c5c0b6',
   borderActive: '#a8a298',
+  borderControl: '#857f74',
 
   gold: '#e8c547',
+  goldText: '#6b5500',
+  goldStroke: '#8a6f00',
   goldDim: '#8a7520',
   goldSurface: '#eee5c8',
   goldBorder: '#d4c080',
@@ -99,7 +128,7 @@ export const lightColors: ColorSet = {
 
   textPrimary: '#1a1814',
   textSecondary: '#544f47',
-  textTertiary: '#7a756b',
+  textTertiary: '#5f594f',
   textMuted: '#a39e94',
   textDim: '#c5c0b6',
 
@@ -107,12 +136,20 @@ export const lightColors: ColorSet = {
   restBorder: '#c5c0b6',
 
   danger: '#d6342a',
-  dangerText: '#d6342a',
+  dangerText: '#b8281f',
   dangerTextDim: '#a06060',
   dangerSurface: '#fde8e8',
   dangerBorder: '#e0a0a0',
 
-  blackText: '#1a1814',
+  blackText: '#0f0f0f',
+
+  scrim: 'rgba(26,24,20,0.45)',
+
+  figureBase: '#c5c0b6',
+  figureNeutral: '#a8a298',
+  figurePrimary: '#8a6f00',
+  figureSecondary: '#eee5c8',
+  figureSecondaryStroke: '#8a6f00',
 };
 
 // ── Legacy Export (keeps existing components working in dark mode) ──────

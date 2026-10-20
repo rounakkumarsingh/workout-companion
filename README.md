@@ -90,7 +90,7 @@ components/     # Reusable UI components
 features/       # Domain-specific feature modules
 hooks/          # Custom React hooks
 src/            # Core logic (DB, schemas, types)
-constants/      # Design tokens, UI constants
+src/theme/      # Design tokens (colours, spacing, typography)
 docs/           # Project documentation
 ```
 

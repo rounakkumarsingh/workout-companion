@@ -17,14 +17,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams, useFocusEffect, Stack, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 import { useColors, typography, radii, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
-import { ProgressRing } from '@/components/ui/ProgressRing';
-import { StatRow } from '@/components/ui/StatRow';
-import { SectionLabel } from '@/components/ui/SectionLabel';
-import { Divider } from '@/components/ui/Divider';
-import { StreakBadge } from '@/components/ui/StreakBadge';
-import { WeekStrip, recentDayStatuses } from '@/components/ui/WeekStrip';
 import { ExerciseRow } from '@/components/workout/ExerciseRow';
 import { QuickLogOverlay } from '@/components/workout/QuickLogOverlay';
 import type {
@@ -33,7 +28,6 @@ import type {
   SessionProgress,
   ProgressionSuggestion,
 } from '@/src/features/workout-session/types';
-import type { DayStatus } from '@/components/ui/WeekStrip';
 import {
   hydrateActiveSession,
   completeSession,
@@ -41,60 +35,20 @@ import {
   updateSet,
   getSessionProgress,
   getElapsedMinutes,
-  computeTotalVolume,
   getProgressionSuggestions,
-  getRecentDays,
-  getCurrentStreak,
+  getProgramDayNumber,
 } from '@/src/features/workout-session';
 import { getActiveSession } from '@/src/db/repositories/sessions';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { DevClearDbButton } from '@/components/ui/DevClearDbButton';
 
-const EXERCISE_ICONS: Record<string, string> = {
-  'Bench Press': '🏋️',
-  'Overhead Press': '💪',
-  'Incline Dumbbell Press': '🔁',
-  'Tricep Pushdown': '📐',
-  'Barbell Bench Press': '🏋️',
-  'Machine Chest Press': '🏋️',
-  'Machine Shoulder Press': '💪',
-  'Seated DB Shoulder Press': '💪',
-  'Bottom-Half DB Flye': '📐',
-  'Bottom-Half Seated Cable Flye': '📐',
-  'Cable Triceps Kickback': '📐',
-  'EZ-Bar Skull Crusher': '📐',
-  'Triceps Pressdown (Bar)': '📐',
-  'Lying Leg Raise': '📐',
-  'Ab Wheel Rollout': '📐',
-  'High-Cable Lateral Raise': '💪',
-  'Lat Pulldown': '🔁',
-  'Barbell Row': '🔁',
-  Deadlift: '🔁',
-  'Bicep Curl': '💪',
-  'Incline Press': '🏋️',
-  'DB Shoulder': '💪',
-  'Lateral Raise': '💪',
-  'Skull Crusher': '📐',
-  Squat: '🦵',
-  'Leg Press': '🦵',
-  RDL: '🦵',
-  'Leg Curl': '🦵',
-  'Calf Raise': '🦵',
+const DAY_CODES: Record<string, string> = {
+  Upper: 'UP',
+  Lower: 'LO',
+  Pull: 'PL',
+  Push: 'PS',
+  Legs: 'LG',
 };
-
-const EXERCISE_EMOJIS = ['🏋️', '💪', '🔁', '📐', '🦵', '🔥'];
-
-const DAY_NAMES: Record<string, string> = {
-  Upper: 'Upper Body',
-  Lower: 'Lower Body',
-  Pull: 'Pull',
-  Push: 'Push',
-  Legs: 'Legs',
-};
-
-function getExerciseIcon(name: string, index: number): string {
-  return EXERCISE_ICONS[name] || EXERCISE_EMOJIS[index % EXERCISE_EMOJIS.length];
-}
 
 function getExerciseStatus(exercise: {
   status: string;
@@ -111,15 +65,6 @@ function formatElapsed(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return `${h}h ${m}m`;
-}
-
-function getDayName(dayType: string): string {
-  return DAY_NAMES[dayType] || dayType;
-}
-
-function getWeekdayLabel(startedAt: string, weekNumber: number): string {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  return `${days[new Date(startedAt).getDay()]} · Week ${weekNumber}`;
 }
 
 interface ActiveState {
@@ -145,9 +90,7 @@ export default function ActiveWorkoutScreen() {
   const [progressionSuggestions, setProgressionSuggestions] = useState<
     Map<string, ProgressionSuggestion>
   >(new Map());
-  const [weekDays, setWeekDays] = useState<DayStatus[]>([]);
   const [quickLogExercise, setQuickLogExercise] = useState<string | null>(null);
-  const [streak, setStreak] = useState(0);
 
   const shakeOffset = useSharedValue(0);
 
@@ -234,14 +177,6 @@ export default function ActiveWorkoutScreen() {
         }
         setProgressionSuggestions(map);
       });
-
-      getRecentDays()
-        .then((days) => setWeekDays(recentDayStatuses(days)))
-        .catch((e) => console.warn('[workout] Failed to load week strip:', e));
-
-      getCurrentStreak()
-        .then(setStreak)
-        .catch((e) => console.warn('[workout] Failed to compute streak:', e));
     }
   }, [sessionId]);
 
@@ -430,13 +365,55 @@ export default function ActiveWorkoutScreen() {
 
   const { session, progress } = state;
   const pct = progress.totalSets > 0 ? progress.completedSets / progress.totalSets : 0;
-  const setsDisplay = `${progress.completedSets}/${progress.totalSets}`;
-  const volume = computeTotalVolume(session);
-  const formattedVolume = volume >= 1000 ? `${(volume / 1000).toFixed(1)}k` : `${volume}`;
+  const exercisesDone = session.exercises.filter((e) => getExerciseStatus(e) === 'done').length;
+  const allComplete = session.exercises.every((e) => e.status === 'completed');
+  const dayCode = DAY_CODES[session.dayType] ?? session.dayType;
+  const dayNumber = getProgramDayNumber(session.weekNumber, session.dayType);
+  const quickEx = quickLogExercise
+    ? session.exercises.find((e) => e.exerciseLogId === quickLogExercise)
+    : undefined;
+  const quickSet = quickEx?.sets.find((s) => !s.isComplete);
+  const quickSetNo = quickEx ? quickEx.sets.filter((s) => s.isComplete).length + 1 : 0;
 
   return (
     <View style={styles.screen}>
       <Stack.Screen options={{ title: 'Workout', headerShown: false }} />
+
+      <View style={[styles.topBar, { marginTop: insets.top }]}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.back()}
+          accessibilityLabel="Back to Today"
+          accessibilityRole="button"
+        >
+          <Svg width={24} height={24} viewBox="0 0 24 24">
+            <Path
+              d="M15 5l-7 7 7 7"
+              stroke={colors.textPrimary}
+              strokeWidth={1.75}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </Svg>
+        </TouchableOpacity>
+        <Text style={styles.topTitle}>
+          {dayCode} · Day {dayNumber}
+        </Text>
+        <View style={styles.timer} accessibilityRole="timer" accessibilityLabel="Elapsed time">
+          <Svg width={16} height={16} viewBox="0 0 24 24">
+            <Path
+              d="M5 13.5a7 7 0 1 0 14 0a7 7 0 1 0 -14 0zM12 13.5V10M10 3h4M12 3v3.5"
+              stroke={colors.textSecondary}
+              strokeWidth={1.75}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </Svg>
+          <Text style={styles.timerText}>{elapsed}</Text>
+        </View>
+      </View>
 
       <FlatList
         ref={flatListRef}
@@ -458,7 +435,7 @@ export default function ActiveWorkoutScreen() {
               exercise={item}
               status={status}
               progressionStatus={progressionStatus}
-              icon={getExerciseIcon(item.exerciseName, index)}
+              index={index}
               spec={spec}
               onPress={() => handleViewDetail(item.exerciseLogId)}
               onLongPress={() => setQuickLogExercise(item.exerciseLogId)}
@@ -466,85 +443,101 @@ export default function ActiveWorkoutScreen() {
           );
         }}
         ListHeaderComponent={
-          <View>
-            <View style={[styles.header, { paddingTop: insets.top + spacing.xxl }]}>
-              <View>
-                <Text style={styles.eyebrow}>
-                  {getWeekdayLabel(session.startedAt, session.weekNumber)}
+          <View style={styles.listHeader}>
+            <View style={styles.progressWrap}>
+              <View style={styles.progressLabels}>
+                <Text style={styles.progressLabel}>
+                  {exercisesDone} OF {session.exercises.length} EXERCISES
                 </Text>
-                <Text style={styles.headerTitle}>{getDayName(session.dayType)}</Text>
+                <Text style={styles.progressSets}>
+                  {progress.completedSets} / {progress.totalSets} sets
+                </Text>
               </View>
-              <StreakBadge count={streak} />
+              <View
+                style={styles.track}
+                accessibilityRole="progressbar"
+                accessibilityValue={{
+                  min: 0,
+                  max: progress.totalSets,
+                  now: progress.completedSets,
+                }}
+              >
+                <View
+                  style={[
+                    styles.fill,
+                    {
+                      width: `${Math.round(pct * 100)}%` as unknown as number,
+                      backgroundColor: allComplete ? colors.success : colors.gold,
+                    },
+                  ]}
+                />
+              </View>
             </View>
 
-            <View style={styles.ringSection}>
-              <ProgressRing percent={pct} label="Complete" />
-            </View>
-
-            <StatRow
-              stats={[
-                { value: setsDisplay, label: 'Sets' },
-                { value: elapsed, label: 'Elapsed' },
-                { value: formattedVolume, label: 'Volume (kg)', accent: true },
-              ]}
-            />
-
-            <Divider style={{ marginHorizontal: spacing.xxl, marginBottom: spacing.xl }} />
-
-            <SectionLabel label="Last 7 days" />
-            <WeekStrip days={weekDays} />
-
-            <Divider style={{ marginHorizontal: spacing.xxl, marginBottom: spacing.xl }} />
-            <SectionLabel label="Exercises" />
-            <Text style={styles.logHint}>
-              Tap any exercise to log weight, reps, and RPE for each set
-            </Text>
-          </View>
-        }
-        ListHeaderComponentStyle={styles.listHeader}
-        ItemSeparatorComponent={() => <View style={{ height: 7 }} />}
-        contentContainerStyle={styles.listContent}
-        ListFooterComponent={
-          <View style={styles.footer}>
-            {session.exercises.every((e) => e.status === 'completed') && (
-              <>
-                <Divider style={{ marginHorizontal: spacing.xxl, marginBottom: spacing.xl }} />
-                <View style={styles.allDoneBanner}>
-                  <Text style={styles.completeIcon}>✓</Text>
-                  <Text style={styles.allDoneText}>All exercises completed</Text>
+            {allComplete && (
+              <View style={styles.completeCard}>
+                <Svg width={26} height={26} viewBox="0 0 24 24">
+                  <Path
+                    d="M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0zM8 12.25l2.75 2.75L16 9.75"
+                    stroke={colors.successText}
+                    strokeWidth={1.75}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                </Svg>
+                <View>
+                  <Text style={styles.completeLabel}>SESSION COMPLETE</Text>
+                  <Text style={styles.completeMeta}>
+                    {session.exercises.length} of {session.exercises.length} ·{' '}
+                    {progress.completedSets} sets · {elapsed}
+                  </Text>
                 </View>
-              </>
+              </View>
             )}
-            <View style={styles.finishRow}>
-              <TouchableOpacity
-                style={styles.completeBtn}
-                onPress={handleComplete}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.completeBtnText}>Complete Workout</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.abandonBtn}
-                onPress={handleAbandon}
-                activeOpacity={0.7}
-                accessibilityLabel="End current session"
-              >
-                <Text style={styles.abandonBtnText}>End Session</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         }
+        ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+        contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
 
+      <View style={[styles.dock, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+        <TouchableOpacity
+          style={allComplete ? styles.finishPrimary : styles.finishSecondary}
+          onPress={handleComplete}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+        >
+          <Text style={allComplete ? styles.finishPrimaryText : styles.finishSecondaryText}>
+            Finish workout
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.endBtn}
+          onPress={handleAbandon}
+          activeOpacity={0.7}
+          accessibilityLabel="End current session"
+          accessibilityRole="button"
+        >
+          <Text style={styles.endBtnText}>End Session</Text>
+        </TouchableOpacity>
+      </View>
+
       <DevClearDbButton onCleared={() => router.dismissAll()} />
 
-      {quickLogExercise && (
+      {quickEx && (
         <QuickLogOverlay
-          exerciseName={
-            session.exercises.find((e) => e.exerciseLogId === quickLogExercise)?.exerciseName ?? ''
+          exerciseName={quickEx.exerciseName}
+          setLabel={quickSet ? `Set ${quickSetNo} of ${quickEx.sets.length}` : undefined}
+          detail={
+            quickEx.prescription
+              ? `Prescribed ${quickEx.prescription.workingSets}×${quickEx.prescription.repRange}`
+              : undefined
           }
-          visible={quickLogExercise !== null}
+          initialWeight={quickSet?.weight}
+          initialReps={quickSet?.reps}
+          visible
           onClose={() => setQuickLogExercise(null)}
           onLog={handleQuickLog}
         />
@@ -588,94 +581,138 @@ const makeStyles = (c: ColorSet) =>
       ...typography.body,
       color: c.gold,
     },
-    listHeader: {
-      paddingBottom: spacing.sm,
-    },
-    header: {
+    topBar: {
+      height: 44,
+      paddingHorizontal: spacing.md,
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      paddingHorizontal: spacing.xxl,
-      paddingTop: spacing.xxl,
-    },
-    eyebrow: {
-      ...typography.monoLabel,
-      color: c.textTertiary,
-      letterSpacing: 0.12,
-      textTransform: 'uppercase',
-      marginBottom: spacing.xs,
-    },
-    headerTitle: {
-      ...typography.heading,
-      color: c.textPrimary,
-      letterSpacing: -0.02,
-    },
-    ringSection: {
       alignItems: 'center',
-      paddingVertical: 18,
+      justifyContent: 'space-between',
     },
-    logHint: {
-      ...typography.monoSmall,
-      color: c.textMuted,
-      paddingHorizontal: spacing.xxl,
-      marginBottom: spacing.md,
-      lineHeight: 16,
-    },
-    listContent: {
-      paddingHorizontal: spacing.xxl,
-      paddingBottom: 40,
-    },
-    footer: {
-      paddingTop: spacing.lg,
-      paddingBottom: 60,
-    },
-    allDoneBanner: {
-      flexDirection: 'row',
+    backBtn: {
+      width: 44,
+      height: 44,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: spacing.md,
-      paddingVertical: spacing.xl,
     },
-    completeIcon: {
-      fontSize: 24,
-      color: c.success,
+    topTitle: {
+      ...typography.monoLabel,
+      fontFamily: 'SpaceMono_700Bold',
+      letterSpacing: 0.08,
+      color: c.goldText,
+      textTransform: 'uppercase',
     },
-    allDoneText: {
-      ...typography.subheading,
+    timer: {
+      minWidth: 44,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingRight: spacing.md,
+    },
+    timerText: {
+      fontFamily: 'SpaceMono_700Bold',
+      fontSize: 15,
+      color: c.textPrimary,
+    },
+    listHeader: {
+      gap: spacing.lg,
+      paddingBottom: spacing.lg,
+    },
+    progressWrap: {
+      gap: spacing.sm,
+    },
+    progressLabels: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    progressLabel: {
+      fontFamily: 'BarlowCondensed_700Bold',
+      fontSize: 13,
+      letterSpacing: 1.5,
+      color: c.textSecondary,
+    },
+    progressSets: {
+      ...typography.monoSmall,
+      color: c.textSecondary,
+    },
+    track: {
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: c.surfaceCard,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: 4,
+      borderRadius: 2,
+    },
+    completeCard: {
+      paddingVertical: spacing.lg,
+      paddingHorizontal: 14,
+      borderRadius: radii.card,
+      backgroundColor: c.successSurface,
+      borderWidth: 0.5,
+      borderColor: c.successBorder,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.lg,
+    },
+    completeLabel: {
+      fontFamily: 'BarlowCondensed_700Bold',
+      fontSize: 13,
+      letterSpacing: 1.5,
       color: c.successText,
     },
-    finishRow: {
-      flexDirection: 'row',
-      gap: spacing.md,
-      paddingHorizontal: spacing.xxl,
+    completeMeta: {
+      ...typography.monoBody,
+      color: c.textPrimary,
+    },
+    listContent: {
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.xl,
+    },
+    dock: {
+      paddingHorizontal: spacing.xl,
       paddingTop: spacing.lg,
+      backgroundColor: c.background,
+      borderTopWidth: 0.5,
+      borderTopColor: c.border,
+      gap: spacing.xs,
     },
-    completeBtn: {
-      flex: 1,
+    finishPrimary: {
+      height: 56,
+      borderRadius: radii.button,
       backgroundColor: c.gold,
-      borderRadius: radii.row,
-      paddingVertical: 15,
       alignItems: 'center',
+      justifyContent: 'center',
     },
-    completeBtnText: {
+    finishPrimaryText: {
       ...typography.cta,
       color: c.blackText,
       textTransform: 'uppercase',
-      fontSize: 14,
     },
-    abandonBtn: {
-      flex: 1,
-      borderRadius: radii.row,
-      paddingVertical: 15,
+    finishSecondary: {
+      height: 48,
+      borderRadius: radii.button,
+      borderWidth: 1,
+      borderColor: c.borderControl,
       alignItems: 'center',
-      borderWidth: 0.5,
-      borderColor: c.danger,
+      justifyContent: 'center',
     },
-    abandonBtnText: {
+    finishSecondaryText: {
+      ...typography.cta,
+      fontSize: 16,
+      color: c.textPrimary,
+      textTransform: 'uppercase',
+    },
+    endBtn: {
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    endBtnText: {
       ...typography.body,
-      color: c.danger,
+      color: c.dangerText,
       textTransform: 'uppercase',
       letterSpacing: 0.05,
-      fontSize: 14,
     },
   });

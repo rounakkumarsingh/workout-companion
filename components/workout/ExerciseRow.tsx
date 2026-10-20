@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { typography, radii, spacing } from '@/src/theme';
+import { WEIGHT_INCREMENT_KG } from '@/src/features/workout-session/progression';
 import { useColors } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -21,21 +22,45 @@ interface ExerciseRowProps {
   exercise: ActiveExercise;
   status: 'pending' | 'active' | 'done';
   progressionStatus?: 'ready' | 'almost' | null;
-  icon: string;
+  /** Zero-based position in the list; shown as the lead number. */
+  index: number;
   spec: string;
   onPress: () => void;
   onLongPress?: () => void;
 }
 
-const CHECK_PATH = 'M6 12l4 4 8-8';
-const CHECK_LENGTH = 28;
+const CHECK_PATH = 'M5 12.5l4.5 4.5L19 7.5';
+const CHECK_LENGTH = 22;
 const SHIMMER_WIDTH = 4;
+
+function fmt(n: number): string {
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
+function buildMeta(exercise: ActiveExercise, status: ExerciseRowProps['status'], spec: string) {
+  const total = exercise.sets.length;
+  const done = exercise.sets.filter((s) => s.isComplete);
+  if (status === 'done' && done.length > 0) {
+    const last = done[done.length - 1];
+    return `${done.length}/${total} · ${fmt(last.weight)} kg × ${last.reps}`;
+  }
+  if (status === 'active') {
+    const next = exercise.sets.find((s) => !s.isComplete);
+    if (next) {
+      const k = done.length + 1;
+      return next.weight > 0
+        ? `Set ${k} of ${total} · ${fmt(next.weight)} × ${next.reps}`
+        : `Set ${k} of ${total}`;
+    }
+  }
+  return spec;
+}
 
 export function ExerciseRow({
   exercise,
   status,
   progressionStatus,
-  icon,
+  index,
   spec,
   onPress,
   onLongPress,
@@ -44,7 +69,7 @@ export function ExerciseRow({
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const reducedMotion = useReducedMotion();
   const prevStatus = useRef(status);
-  const checkProgress = useSharedValue(0);
+  const checkProgress = useSharedValue(status === 'done' ? 1 : 0);
   const shimmerOffset = useSharedValue(-SHIMMER_WIDTH);
   const flashOpacity = useSharedValue(0);
 
@@ -99,67 +124,32 @@ export function ExerciseRow({
 
   const isDone = status === 'done';
   const isActive = status === 'active';
+  const meta = buildMeta(exercise, status, spec);
+  const ready = !isDone && progressionStatus === 'ready';
 
   return (
     <TouchableOpacity
       style={[styles.row, isDone && styles.rowDone, isActive && styles.rowActive]}
-      onPress={() => {
-        console.log('[ExerciseRow] onPress fired for:', exercise.exerciseName);
-        onPress?.();
-      }}
+      onPress={onPress}
       onLongPress={onLongPress}
       activeOpacity={0.7}
-      hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-      accessibilityLabel={`${exercise.exerciseName}, ${spec}, ${status}`}
+      accessibilityLabel={`${exercise.exerciseName}, ${meta}, ${status}${ready ? `, increase weight ${WEIGHT_INCREMENT_KG} kg` : ''}`}
       accessibilityRole="button"
     >
-      {/* Shimmer overlay for active */}
       {isActive && !reducedMotion && (
         <Animated.View style={[styles.shimmer, animatedShimmerStyle]} pointerEvents="none" />
       )}
-
-      {/* Completion flash overlay — only during the brief flash when exercise completes */}
       {isDone && !reducedMotion && (
-        <Animated.View style={[styles.flashOverlay, animatedFlashStyle]} />
+        <Animated.View style={[styles.flashOverlay, animatedFlashStyle]} pointerEvents="none" />
       )}
 
-      <View
-        style={[styles.iconWrap, isDone && styles.iconDone, isActive && styles.iconActive]}
-        accessibilityLabel={`Exercise: ${exercise.exerciseName}`}
-      >
-        <Text style={styles.icon}>{icon}</Text>
-      </View>
-      <View style={styles.info}>
-        <Text
-          style={[styles.name, isDone && styles.nameDone, isActive && styles.nameActive]}
-          numberOfLines={1}
-        >
-          {exercise.exerciseName}
-        </Text>
-        <View style={styles.specRow}>
-          <Text style={[styles.spec, isDone && styles.specDone, isActive && styles.specActive]}>
-            {spec}
-          </Text>
-          {/* Progression indicator */}
-          {progressionStatus === 'ready' && (
-            <View style={styles.progressionBadge}>
-              <Text style={styles.progressionIcon}>↑</Text>
-            </View>
-          )}
-          {progressionStatus === 'almost' && (
-            <View style={[styles.progressionBadge, styles.progressionAlmost]}>
-              <Text style={[styles.progressionIcon, styles.progressionAlmostIcon]}>~</Text>
-            </View>
-          )}
-        </View>
-      </View>
-      <View style={[styles.check, isDone && styles.checkDone, isActive && styles.checkActive]}>
+      <View style={[styles.lead, isDone && styles.leadDone, isActive && styles.leadActive]}>
         {isDone ? (
-          <Svg width={22} height={22} viewBox="0 0 22 22">
+          <Svg width={18} height={18} viewBox="0 0 24 24">
             <AnimatedPath
               d={CHECK_PATH}
-              stroke="#fff"
-              strokeWidth={2.5}
+              stroke={colors.successText}
+              strokeWidth={2.25}
               strokeLinecap="round"
               strokeLinejoin="round"
               fill="none"
@@ -168,9 +158,46 @@ export function ExerciseRow({
             />
           </Svg>
         ) : (
-          <Text style={[styles.chevron, isActive && styles.chevronActive]}>›</Text>
+          <Text style={[styles.leadText, isActive && styles.leadTextActive]}>{index + 1}</Text>
         )}
       </View>
+
+      <View style={styles.info}>
+        <Text style={[styles.name, isDone && styles.nameDone]} numberOfLines={2}>
+          {exercise.exerciseName}
+        </Text>
+        <View style={styles.metaRow}>
+          <Text style={[styles.meta, isDone && styles.metaDone, isActive && styles.metaActive]}>
+            {meta}
+          </Text>
+          {ready && (
+            <View style={styles.badge}>
+              <Svg width={12} height={12} viewBox="0 0 24 24">
+                <Path
+                  d="M12 19V5M6 11l6-6 6 6"
+                  stroke={colors.goldText}
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </Svg>
+              <Text style={styles.badgeText}>+{fmt(WEIGHT_INCREMENT_KG)} kg</Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      <Svg width={18} height={18} viewBox="0 0 24 24">
+        <Path
+          d="M9 6l6 6-6 6"
+          stroke={colors.textTertiary}
+          strokeWidth={1.75}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      </Svg>
     </TouchableOpacity>
   );
 }
@@ -178,25 +205,25 @@ export function ExerciseRow({
 const makeStyles = (c: ColorSet) =>
   StyleSheet.create({
     row: {
-      backgroundColor: c.surfaceElevated,
+      minHeight: 64,
+      backgroundColor: c.surface,
       borderWidth: 0.5,
       borderColor: c.border,
       borderRadius: radii.row,
-      paddingVertical: spacing.lg,
-      paddingHorizontal: 14,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.lg,
+      gap: spacing.md,
       overflow: 'hidden',
       position: 'relative',
     },
     rowDone: {
-      borderColor: c.successBorder,
-      backgroundColor: c.successSurface,
+      backgroundColor: 'transparent',
     },
     rowActive: {
-      borderColor: c.gold,
-      backgroundColor: c.goldSurface,
+      borderColor: c.goldStroke,
+      backgroundColor: c.surfaceElevated,
     },
     shimmer: {
       position: 'absolute',
@@ -212,101 +239,78 @@ const makeStyles = (c: ColorSet) =>
       backgroundColor: c.success,
       borderRadius: radii.row,
     },
-    iconWrap: {
-      width: 34,
-      height: 34,
-      borderRadius: radii.icon,
-      backgroundColor: c.border,
+    lead: {
+      width: 36,
+      height: 36,
+      borderRadius: 9,
+      borderWidth: 0.5,
+      borderColor: c.borderActive,
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,
-      position: 'relative',
     },
-    iconDone: {
-      backgroundColor: c.successDim,
+    leadDone: {
+      backgroundColor: c.successSurface,
+      borderColor: c.successBorder,
     },
-    iconActive: {
-      backgroundColor: c.goldDim,
+    leadActive: {
+      backgroundColor: c.goldSurface,
+      borderColor: c.goldStroke,
+      borderWidth: 1,
     },
-    icon: {
-      fontSize: 13,
-      position: 'relative',
+    leadText: {
+      ...typography.monoBody,
+      fontFamily: 'SpaceMono_700Bold',
+      color: c.textSecondary,
+    },
+    leadTextActive: {
+      color: c.goldText,
     },
     info: {
       flex: 1,
-      position: 'relative',
+      minWidth: 0,
+      gap: 3,
     },
     name: {
-      ...typography.exerciseName,
+      fontFamily: 'BarlowCondensed_700Bold',
+      fontSize: 17,
+      lineHeight: 19,
       color: c.textPrimary,
     },
     nameDone: {
-      color: c.successText,
+      color: c.textSecondary,
     },
-    nameActive: {
-      color: c.gold,
-    },
-    specRow: {
+    metaRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: 2,
+      flexWrap: 'wrap',
+      gap: spacing.sm,
     },
-    spec: {
-      ...typography.monoBody,
-      color: c.textTertiary,
+    meta: {
+      ...typography.monoLabel,
+      color: c.textSecondary,
     },
-    specDone: {
-      color: c.successDim,
-    },
-    specActive: {
-      color: c.goldDim,
-    },
-    check: {
-      width: 22,
-      height: 22,
-      borderRadius: 11,
-      borderWidth: 1.5,
-      borderColor: c.textMuted,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-      position: 'relative',
-    },
-    checkDone: {
-      backgroundColor: c.success,
-      borderColor: c.success,
-    },
-    checkActive: {
-      borderColor: c.gold,
-    },
-    chevron: {
-      fontSize: 16,
-      color: c.textMuted,
-      fontWeight: '700',
-      lineHeight: 18,
-    },
-    chevronActive: {
-      color: c.gold,
-    },
-    progressionBadge: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      backgroundColor: c.successDim,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginLeft: spacing.sm,
-      flexShrink: 0,
-    },
-    progressionAlmost: {
-      backgroundColor: c.goldDim,
-    },
-    progressionIcon: {
-      fontSize: 12,
+    metaDone: {
       color: c.successText,
-      fontWeight: '700',
     },
-    progressionAlmostIcon: {
-      color: c.gold,
+    metaActive: {
+      color: c.goldText,
+    },
+    badge: {
+      height: 20,
+      paddingLeft: 3,
+      paddingRight: 6,
+      borderRadius: radii.pill,
+      backgroundColor: c.goldSurface,
+      borderWidth: 0.5,
+      borderColor: c.goldBorder,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+    },
+    badgeText: {
+      ...typography.monoTiny,
+      fontFamily: 'SpaceMono_700Bold',
+      color: c.goldText,
     },
   });

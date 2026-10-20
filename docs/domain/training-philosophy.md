@@ -333,6 +333,8 @@ Training 5x per week strikes the ideal balance between volume and recovery:
 
 ### 10.2 Weekly Schedule
 
+This is the program's recommended order. The app does not enforce it: the user picks each day's workout, and a week advances once all five are done (see `docs/PROJECT_CONTEXT.md`).
+
 | Day | Activity |
 |-----|----------|
 | Monday | Upper (Strength Focus) |
@@ -343,7 +345,7 @@ Training 5x per week strikes the ideal balance between volume and recovery:
 | Saturday | Legs (Hypertrophy Focus) |
 | Sunday | Rest |
 
-Wednesday and Sunday are designated rest days, providing 2 full rest days per 7-day cycle.
+Wednesday and Sunday are the recommended rest days, providing 2 full rest days per 7-day cycle.
 
 ### 10.3 Deload / Recovery Weeks
 

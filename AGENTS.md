@@ -20,7 +20,7 @@ The PDFs in docs/ are the source of truth for the training system.
 ## General Rules
 
 - Do not invent features outside the defined MVP.
-- Do not redesign the training methodology.
+- Do not redesign the training methodology (exercises, prescriptions, progression and RPE rules). The weekly order is user-chosen; see docs/PROJECT_CONTEXT.md.
 - Do not generate placeholder architecture.
 - Prefer iterative changes over large rewrites.
 - Preserve type safety.
@@ -39,7 +39,7 @@ This app is:
 - progression-focused
 - offline-first
 - mobile-first
-- structured around a fixed training system
+- structured around a fixed program (12 weeks, five workouts per week) that the user works through in an order they choose
 
 This app is NOT:
 
