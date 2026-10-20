@@ -44,8 +44,50 @@ export interface ActiveSession {
 
 export type ScheduleResolution =
   | { status: 'onboarding' }
-  | { status: 'active'; weekNumber: number; dayPrescription: DayPrescription }
+  | { status: 'active'; weekNumber: number }
   | { status: 'programCompleted' };
+
+export type TrainingDayType = 'Upper' | 'Lower' | 'Pull' | 'Push' | 'Legs';
+
+/** One local calendar day of the rolling 7-day history. */
+export interface RecentDay {
+  dateKey: string;
+  date: Date;
+  /** Training days completed that day, in program order. */
+  workouts: TrainingDayType[];
+  /** A cardio / mobility session was logged that day. */
+  mobility: boolean;
+}
+
+/**
+ * 'doneThisWeek': completed in the current program week.
+ * 'recent': completed in the last 7 days (for an earlier program week).
+ */
+export type WorkoutChoiceStatus = 'available' | 'doneThisWeek' | 'recent';
+
+export interface WorkoutChoice {
+  dayType: TrainingDayType;
+  dayPrescription: DayPrescription;
+  status: WorkoutChoiceStatus;
+  /** Date key on which a 'recent' choice unlocks, else null. */
+  availableOn: string | null;
+  /** Date key of the latest completed session of this day type, if any. */
+  lastDoneOn: string | null;
+}
+
+export interface MobilityChoice {
+  available: boolean;
+  /** Date key on which mobility unlocks again, else null. */
+  availableOn: string | null;
+}
+
+export interface TodayPlan {
+  weekNumber: number;
+  choices: WorkoutChoice[];
+  mobility: MobilityChoice;
+  /** The last 7 local days, oldest first, ending today. */
+  recentDays: RecentDay[];
+}
 
 export interface SessionProgress {
   totalSets: number;

@@ -1,8 +1,20 @@
-import type { ScheduleResolution } from './types';
+import type {
+  MobilityChoice,
+  RecentDay,
+  ScheduleResolution,
+  TodayPlan,
+  TrainingDayType,
+  WorkoutChoice,
+  WorkoutChoiceStatus,
+} from './types';
 import type { DayPrescription } from '../../data/program';
 import { PROGRAM, TOTAL_WEEKS } from '../../data/program';
 import { getSetting, setSetting, deleteSetting } from '../../db/repositories/settings';
-import { getCompletedSessionsSince } from '../../db/repositories/sessions';
+import {
+  getCompletedSessionsSince,
+  getSessionsStartedBetween,
+} from '../../db/repositories/sessions';
+import { getCardioSessionsSince } from '../../db/repositories/cardio';
 import {
   addLocalDays,
   isoToLocalDateKey,
@@ -13,13 +25,31 @@ import {
 } from '../../lib/dates';
 
 const PROGRAM_START_KEY = 'program_start_date';
+/** When the start date was set; a restart must not count the last cycle. */
+const CYCLE_STARTED_AT_KEY = 'program_cycle_started_at';
 
-export type ProgramDayStatus = 'done' | 'today' | 'rest' | 'upcoming' | 'missed';
+/** A completed workout (or cardio / mobility log) locks for this many days. */
+export const RECOVERY_WINDOW_DAYS = 7;
 
-export interface ProgramDay {
-  date: Date;
+/** Calendar days in a row without a lifting session that a streak survives. */
+const STREAK_MAX_REST_DAYS = 2;
+
+export const TRAINING_DAY_TYPES: readonly TrainingDayType[] = [
+  'Upper',
+  'Lower',
+  'Pull',
+  'Push',
+  'Legs',
+];
+
+interface CompletedSession {
   weekNumber: number;
-  dayPrescription: DayPrescription;
+  dayType: string;
+  startedAt: string;
+}
+
+export function isTrainingDayType(dayType: string): dayType is TrainingDayType {
+  return (TRAINING_DAY_TYPES as readonly string[]).includes(dayType);
 }
 
 export async function getProgramStartDate(): Promise<string | null> {
@@ -28,10 +58,12 @@ export async function getProgramStartDate(): Promise<string | null> {
 
 export async function setProgramStartDate(date: string): Promise<void> {
   await setSetting(PROGRAM_START_KEY, date);
+  await setSetting(CYCLE_STARTED_AT_KEY, new Date().toISOString());
 }
 
 export async function clearProgramStartDate(): Promise<void> {
   await deleteSetting(PROGRAM_START_KEY);
+  await deleteSetting(CYCLE_STARTED_AT_KEY);
 }
 
 /** Program start as local midnight, or null before onboarding. */
@@ -40,42 +72,140 @@ export async function getProgramStart(): Promise<Date | null> {
   return startDateStr ? parseLocalDateKey(startDateStr) : null;
 }
 
-export function isTrainingDay(day: DayPrescription): boolean {
-  return day.activityType === 'Training';
+/** The prescription for one training day of a program week. */
+export function getDayPrescription(weekNumber: number, dayType: TrainingDayType): DayPrescription {
+  const day = PROGRAM.weeks[weekNumber - 1]?.days.find((d) => d.dayType === dayType);
+  if (!day) throw new Error(`No ${dayType} day in week ${weekNumber}`);
+  return day;
 }
 
-/** The scheduled program day for a calendar date, or null outside the program. */
-export function getProgramDay(start: Date, date: Date): ProgramDay | null {
-  const diffDays = localDaysBetween(start, date);
-  if (diffDays < 0) return null;
-  const weekNumber = Math.floor(diffDays / 7) + 1;
-  if (weekNumber > TOTAL_WEEKS) return null;
-  const dayPrescription = PROGRAM.weeks[weekNumber - 1].days[diffDays % 7];
-  if (!dayPrescription) return null;
-  return { date: startOfLocalDay(date), weekNumber, dayPrescription };
+/**
+ * The program week in progress. A week's five training days can be done in
+ * any order on any dates; the next week opens once all five are completed
+ * (the guidebook's "carry over the remaining workouts into the following
+ * week"). Sessions only ever start in the current week, so it is the latest
+ * week with a completed session — an earlier week left incomplete is not
+ * reopened. Returns TOTAL_WEEKS + 1 once the last week is done.
+ */
+export function computeCurrentWeek(completed: readonly CompletedSession[]): number {
+  const latest = completed.reduce((max, s) => Math.max(max, s.weekNumber), 0);
+  if (latest === 0) return 1;
+  const doneTypes = new Set(completed.filter((s) => s.weekNumber === latest).map((s) => s.dayType));
+  return TRAINING_DAY_TYPES.every((t) => doneTypes.has(t)) ? latest + 1 : latest;
 }
 
-/** The 7 calendar days of a program week, in order. */
-export function getProgramWeekDays(start: Date, weekNumber: number): ProgramDay[] {
-  const week = PROGRAM.weeks[weekNumber - 1];
-  return week.days.map((dayPrescription, i) => ({
-    date: addLocalDays(start, (weekNumber - 1) * 7 + i),
-    weekNumber,
-    dayPrescription,
-  }));
+/** The rolling window ending `today`, oldest day first. */
+export function buildRecentDays(
+  today: Date,
+  completedSessions: readonly { dayType: string; startedAt: string }[],
+  cardioLogs: readonly { loggedAt: string }[],
+): RecentDay[] {
+  const days: RecentDay[] = [];
+  for (let i = RECOVERY_WINDOW_DAYS - 1; i >= 0; i--) {
+    const date = addLocalDays(today, -i);
+    const dateKey = toLocalDateKey(date);
+    const typesThatDay = new Set(
+      completedSessions
+        .filter((s) => isoToLocalDateKey(s.startedAt) === dateKey)
+        .map((s) => s.dayType),
+    );
+    days.push({
+      dateKey,
+      date,
+      workouts: TRAINING_DAY_TYPES.filter((t) => typesThatDay.has(t)),
+      mobility: cardioLogs.some((c) => isoToLocalDateKey(c.loggedAt) === dateKey),
+    });
+  }
+  return days;
 }
 
-function sessionKey(weekNumber: number, dayType: string): string {
-  return `${weekNumber}:${dayType}`;
+function latestDay(
+  recentDays: readonly RecentDay[],
+  predicate: (day: RecentDay) => boolean,
+): RecentDay | null {
+  for (let i = recentDays.length - 1; i >= 0; i--) {
+    if (predicate(recentDays[i])) return recentDays[i];
+  }
+  return null;
 }
 
-/** Completed (week, dayType) pairs in the current program cycle. */
-async function getCompletedDays(start: Date) {
-  const completed = await getCompletedSessionsSince(start.toISOString());
+function unlockDateKey(day: RecentDay): string {
+  return toLocalDateKey(addLocalDays(day.date, RECOVERY_WINDOW_DAYS));
+}
+
+/**
+ * What can be trained today. A training day is locked once it is completed
+ * in the current program week, or when it was completed in the last 7 days
+ * (so at most five lifting sessions fit in any 7 days). Cardio / mobility is
+ * limited to once in the last 7 days.
+ */
+export function buildChoices(
+  weekNumber: number,
+  completed: readonly CompletedSession[],
+  recentDays: readonly RecentDay[],
+): { choices: WorkoutChoice[]; mobility: MobilityChoice } {
+  const choices = TRAINING_DAY_TYPES.map((dayType): WorkoutChoice => {
+    const doneThisWeek = completed.some(
+      (s) => s.weekNumber === weekNumber && s.dayType === dayType,
+    );
+    const lastRecent = latestDay(recentDays, (d) => d.workouts.includes(dayType));
+    const lastStartedAt = completed
+      .filter((s) => s.dayType === dayType)
+      .reduce<string | null>((max, s) => (!max || s.startedAt > max ? s.startedAt : max), null);
+    const status: WorkoutChoiceStatus = doneThisWeek
+      ? 'doneThisWeek'
+      : lastRecent
+        ? 'recent'
+        : 'available';
+    return {
+      dayType,
+      dayPrescription: getDayPrescription(weekNumber, dayType),
+      status,
+      availableOn: status === 'recent' && lastRecent ? unlockDateKey(lastRecent) : null,
+      lastDoneOn: lastRecent?.dateKey ?? (lastStartedAt ? isoToLocalDateKey(lastStartedAt) : null),
+    };
+  });
+
+  const lastMobility = latestDay(recentDays, (d) => d.mobility);
   return {
-    keys: new Set(completed.map((s) => sessionKey(s.weekNumber, s.dayType))),
-    lastWorkoutDateKey: completed[0] ? isoToLocalDateKey(completed[0].startedAt) : null,
+    choices,
+    mobility: {
+      available: !lastMobility,
+      availableOn: lastMobility ? unlockDateKey(lastMobility) : null,
+    },
   };
+}
+
+/**
+ * Completed lifting sessions in a row, counting back from `today`. The
+ * streak breaks once more than STREAK_MAX_REST_DAYS calendar days pass
+ * without one; today itself never counts as a missed day.
+ */
+export function computeStreak(today: Date, completedStartedAts: readonly string[]): number {
+  const dateKeys = completedStartedAts.map(isoToLocalDateKey).sort().reverse();
+  let streak = 0;
+  let previous = startOfLocalDay(today);
+  for (const dateKey of dateKeys) {
+    const date = parseLocalDateKey(dateKey);
+    if (localDaysBetween(date, previous) - 1 > STREAK_MAX_REST_DAYS) break;
+    streak++;
+    previous = date;
+  }
+  return streak;
+}
+
+/**
+ * Completed sessions of the current program cycle: on or after the start
+ * date, and after the start date was set, so restarting on the day the
+ * last cycle ended (or with a past date) does not pick up its sessions.
+ */
+async function getCompletedThisCycle(start: Date | null): Promise<CompletedSession[]> {
+  if (!start) return [];
+  const startIso = start.toISOString();
+  const cycleStartedAt = await getSetting(CYCLE_STARTED_AT_KEY);
+  return getCompletedSessionsSince(
+    cycleStartedAt && cycleStartedAt > startIso ? cycleStartedAt : startIso,
+  );
 }
 
 export async function resolveCurrentSchedule(): Promise<ScheduleResolution> {
@@ -84,123 +214,49 @@ export async function resolveCurrentSchedule(): Promise<ScheduleResolution> {
     return { status: 'onboarding' };
   }
 
-  const today = startOfLocalDay(new Date());
-  if (localDaysBetween(start, today) < 0) {
-    return { status: 'active', weekNumber: 1, dayPrescription: PROGRAM.weeks[0].days[0] };
-  }
-
-  const programDay = getProgramDay(start, today);
-  if (!programDay) {
+  const weekNumber = computeCurrentWeek(await getCompletedThisCycle(start));
+  if (weekNumber > TOTAL_WEEKS) {
     return { status: 'programCompleted' };
   }
 
-  return {
-    status: 'active',
-    weekNumber: programDay.weekNumber,
-    dayPrescription: programDay.dayPrescription,
-  };
+  return { status: 'active', weekNumber };
 }
 
 /**
- * The most recent scheduled training day, since the user's last completed
- * workout, that has no completed session for its (week, day). A make-up
- * session done on another date counts, and once the user works out again
- * older misses are no longer reported.
+ * The last 7 local days, ending today. Covers sessions from any program
+ * cycle, so restarting the program does not skip recovery.
  */
-export async function wasTrainingDayMissed(): Promise<{
-  missedDate: string;
-  missedDayType: string;
-  daysAgo: number;
-  weekNumber: number;
-  dayPrescription: DayPrescription;
-} | null> {
-  const start = await getProgramStart();
-  if (!start) return null;
-
-  const { keys, lastWorkoutDateKey } = await getCompletedDays(start);
+export async function getRecentDays(): Promise<RecentDay[]> {
   const today = startOfLocalDay(new Date());
-
-  for (let daysAgo = 1; daysAgo <= 7; daysAgo++) {
-    const pastDate = addLocalDays(today, -daysAgo);
-    const dateKey = toLocalDateKey(pastDate);
-    if (lastWorkoutDateKey && dateKey <= lastWorkoutDateKey) break;
-
-    const programDay = getProgramDay(start, pastDate);
-    if (!programDay || !isTrainingDay(programDay.dayPrescription)) continue;
-
-    const { weekNumber, dayPrescription } = programDay;
-    if (keys.has(sessionKey(weekNumber, dayPrescription.dayType))) continue;
-
-    return {
-      missedDate: dateKey,
-      missedDayType: dayPrescription.dayType,
-      daysAgo,
-      weekNumber,
-      dayPrescription,
-    };
-  }
-
-  return null;
+  const windowStartIso = addLocalDays(today, -(RECOVERY_WINDOW_DAYS - 1)).toISOString();
+  const [sessions, cardioLogs] = await Promise.all([
+    getSessionsStartedBetween(windowStartIso, addLocalDays(today, 1).toISOString()),
+    getCardioSessionsSince(windowStartIso),
+  ]);
+  return buildRecentDays(
+    today,
+    sessions.filter((s) => s.status === 'completed'),
+    cardioLogs,
+  );
 }
 
-/** Per-day status for a program week, for the week strip. */
-export async function getWeekDayStatuses(
-  weekNumber: number,
-): Promise<(ProgramDay & { status: ProgramDayStatus })[]> {
+/** Today's choices for `weekNumber`, the week from resolveCurrentSchedule(). */
+export async function getTodayPlan(weekNumber: number): Promise<TodayPlan> {
   const start = await getProgramStart();
-  if (!start) return [];
-
-  const { keys } = await getCompletedDays(start);
-  const todayKey = toLocalDateKey(new Date());
-
-  return getProgramWeekDays(start, weekNumber).map((day) => {
-    const dateKey = toLocalDateKey(day.date);
-    let status: ProgramDayStatus;
-    if (
-      isTrainingDay(day.dayPrescription) &&
-      keys.has(sessionKey(weekNumber, day.dayPrescription.dayType))
-    ) {
-      status = 'done';
-    } else if (dateKey === todayKey) {
-      status = 'today';
-    } else if (!isTrainingDay(day.dayPrescription)) {
-      status = 'rest';
-    } else if (dateKey < todayKey) {
-      status = 'missed';
-    } else {
-      status = 'upcoming';
-    }
-    return { ...day, status };
-  });
+  const [completed, recentDays] = await Promise.all([
+    getCompletedThisCycle(start),
+    getRecentDays(),
+  ]);
+  return { weekNumber, recentDays, ...buildChoices(weekNumber, completed, recentDays) };
 }
 
-/**
- * Consecutive scheduled training days (rest days skipped) with a completed
- * session, counting back from `asOf`. When `graceForAsOf` is set, an
- * unfinished training day on `asOf` itself (i.e. today) does not break it.
- */
-export async function getCurrentStreak(
-  asOf: Date = new Date(),
-  graceForAsOf = true,
-): Promise<number> {
+export async function getCurrentStreak(): Promise<number> {
   const start = await getProgramStart();
   if (!start) return 0;
 
-  const { keys } = await getCompletedDays(start);
-  const asOfDay = startOfLocalDay(asOf);
-  let streak = 0;
-
-  for (let date = asOfDay; localDaysBetween(start, date) >= 0; date = addLocalDays(date, -1)) {
-    const programDay = getProgramDay(start, date);
-    if (!programDay || !isTrainingDay(programDay.dayPrescription)) continue;
-    if (keys.has(sessionKey(programDay.weekNumber, programDay.dayPrescription.dayType))) {
-      streak++;
-    } else if (graceForAsOf && date.getTime() === asOfDay.getTime()) {
-      continue;
-    } else {
-      break;
-    }
-  }
-
-  return streak;
+  const completed = await getCompletedThisCycle(start);
+  return computeStreak(
+    new Date(),
+    completed.map((s) => s.startedAt),
+  );
 }

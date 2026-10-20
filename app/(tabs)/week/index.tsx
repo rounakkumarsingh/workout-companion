@@ -6,20 +6,17 @@ import type { ColorSet } from '@/src/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import {
   resolveCurrentSchedule,
-  getProgramStart,
-  getProgramWeekDays,
+  getTodayPlan,
+  finalizeStaleSessions,
 } from '@/src/features/workout-session';
-import { PROGRAM } from '@/src/data/program';
-import type { Week } from '@/src/data/program';
-
-const WEEKDAY_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+import type { TodayPlan } from '@/src/features/workout-session';
+import { TOTAL_WEEKS } from '@/src/data/program';
 
 export default function WeekScreen() {
   const colors = useColors();
-  const [weekNumber, setWeekNumber] = useState<number | null>(null);
-  const [week, setWeek] = useState<Week | null>(null);
-  // Weekday label for each program day (the program can start on any day).
-  const [dayLabels, setDayLabels] = useState<string[]>([]);
+  const [plan, setPlan] = useState<TodayPlan | null>(null);
+  const [programCompleted, setProgramCompleted] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -28,24 +25,23 @@ export default function WeekScreen() {
       let cancelled = false;
       (async () => {
         try {
-          const [schedule, start] = await Promise.all([
-            resolveCurrentSchedule(),
-            getProgramStart(),
-          ]);
-          if (cancelled) return;
-          const currentWeek = schedule.status === 'active' ? schedule.weekNumber : 1;
-          setWeekNumber(currentWeek);
-          setWeek(PROGRAM.weeks[currentWeek - 1]);
-          setDayLabels(
-            start
-              ? getProgramWeekDays(start, currentWeek).map((d) => WEEKDAY_LABELS[d.date.getDay()])
-              : [],
-          );
-        } catch {
-          if (!cancelled) {
-            setWeekNumber(1);
-            setWeek(PROGRAM.weeks[0]);
+          // Closing yesterday's open session can finish the week.
+          await finalizeStaleSessions();
+          const schedule = await resolveCurrentSchedule();
+          if (schedule.status === 'programCompleted') {
+            if (!cancelled) setProgramCompleted(true);
+            return;
           }
+          // Before onboarding, preview Week 1.
+          const currentWeek = schedule.status === 'active' ? schedule.weekNumber : 1;
+          const weekPlan = await getTodayPlan(currentWeek);
+          if (cancelled) return;
+          setProgramCompleted(false);
+          setFailed(false);
+          setPlan(weekPlan);
+        } catch (e) {
+          console.warn('[week] Failed to load the week:', e);
+          if (!cancelled) setFailed(true);
         } finally {
           if (!cancelled) setLoading(false);
         }
@@ -56,7 +52,19 @@ export default function WeekScreen() {
     }, []),
   );
 
-  if (loading || !week) {
+  if (programCompleted || (failed && !plan)) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.message}>
+          {programCompleted
+            ? `Program complete — all ${TOTAL_WEEKS} weeks done.`
+            : "Couldn't load this week. Please try again."}
+        </Text>
+      </View>
+    );
+  }
+
+  if (loading || !plan) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={colors.gold} />
@@ -64,40 +72,44 @@ export default function WeekScreen() {
     );
   }
 
-  const blockName = week.blockName;
+  const doneCount = plan.choices.filter((c) => c.status === 'doneThisWeek').length;
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <ScreenHeader subtitle={`This week's schedule`} title={`Week ${weekNumber}`} />
+      <ScreenHeader
+        subtitle={`Any order · ${doneCount} of ${plan.choices.length} done`}
+        title={`Week ${plan.weekNumber}`}
+      />
       <View style={styles.planDays}>
-        {week.days.map((day, i) => {
-          const isTraining = day.activityType === 'Training';
-          const exCount = day.exercises.length;
+        {plan.choices.map((choice) => {
+          const done = choice.status === 'doneThisWeek';
+          const { exercises } = choice.dayPrescription;
           return (
-            <View key={day.dayIndex} style={[styles.dayCard, !isTraining && styles.restCard]}>
+            <View key={choice.dayType} style={[styles.dayCard, done && styles.doneCard]}>
               <View style={styles.dayHeader}>
-                <Text style={styles.dayLabel}>{dayLabels[i] ?? `DAY ${i + 1}`}</Text>
-                <Text style={[styles.dayName, !isTraining && styles.restName]}>
-                  {isTraining
-                    ? `${day.dayType} Day`
-                    : day.activityType === 'OptionalCardioHIIT'
-                      ? 'Cardio / HIIT'
-                      : 'Rest Day'}
+                <Text style={[styles.dayLabel, done && styles.doneLabel]}>
+                  {done ? 'DONE' : 'TO DO'}
                 </Text>
-                {isTraining && <Text style={styles.dayBadge}>{exCount} ex.</Text>}
+                <Text style={styles.dayName}>{choice.dayType} Day</Text>
+                <Text style={styles.dayBadge}>{exercises.length} ex.</Text>
               </View>
-              {isTraining && (
-                <View style={styles.chips}>
-                  {day.exercises.map((ex) => (
-                    <View key={`${ex.exerciseName}-${ex.sortOrder}`} style={styles.chip}>
-                      <Text style={styles.chipText}>{ex.exerciseName}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
+              <View style={styles.chips}>
+                {exercises.map((ex) => (
+                  <View key={`${ex.exerciseName}-${ex.sortOrder}`} style={styles.chip}>
+                    <Text style={styles.chipText}>{ex.exerciseName}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
           );
         })}
+        <View style={[styles.dayCard, styles.restCard]}>
+          <View style={styles.dayHeader}>
+            <Text style={styles.dayLabel}>OPT.</Text>
+            <Text style={[styles.dayName, styles.restName]}>Cardio / Mobility</Text>
+          </View>
+          <Text style={styles.restNote}>Optional · at most once every 7 days</Text>
+        </View>
       </View>
       <View style={{ height: 40 }} />
     </ScrollView>
@@ -119,6 +131,12 @@ const makeStyles = (c: ColorSet) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
+    message: {
+      ...typography.body,
+      color: c.textSecondary,
+      textAlign: 'center',
+      paddingHorizontal: spacing.xxl,
+    },
     planDays: {
       paddingHorizontal: spacing.xxl,
       gap: 7,
@@ -135,6 +153,10 @@ const makeStyles = (c: ColorSet) =>
       backgroundColor: c.restSurface,
       borderColor: c.restBorder,
     },
+    doneCard: {
+      backgroundColor: c.successSurface,
+      borderColor: c.successBorder,
+    },
     dayHeader: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -144,7 +166,10 @@ const makeStyles = (c: ColorSet) =>
     dayLabel: {
       ...typography.monoSmall,
       color: c.textTertiary,
-      width: 32,
+      width: 44,
+    },
+    doneLabel: {
+      color: c.successText,
     },
     dayName: {
       ...typography.bodyLarge,
@@ -152,6 +177,10 @@ const makeStyles = (c: ColorSet) =>
       flex: 1,
     },
     restName: {
+      color: c.textMuted,
+    },
+    restNote: {
+      ...typography.monoSmall,
       color: c.textMuted,
     },
     dayBadge: {
