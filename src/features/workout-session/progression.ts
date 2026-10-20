@@ -12,6 +12,14 @@ function parseRepRangeTop(range: string): number {
   return match ? parseInt(match[1], 10) : 0;
 }
 
+function parseRepRangeFloor(range: string): number {
+  const match = range.match(/^(\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
+/** Smallest practical load jump. The program does not prescribe one. */
+export const WEIGHT_INCREMENT_KG = 2.5;
+
 /**
  * Most recent ended session in which this exercise was actually performed,
  * with only the working sets the user logged.
@@ -42,16 +50,26 @@ export async function getLastCompletedSessionForExercise(
  * Suggested weight/reps for each of `setCount` working sets, taken from the
  * matching set of the last session (or its last set when this session has
  * more sets). These are suggestions only — they are not logged.
+ *
+ * Double progression: when `repRange` is given and every working set last
+ * time reached the top of it, suggest more weight and drop back to the floor.
  */
 export async function getSuggestedSetValues(
   exerciseName: string,
   setCount: number,
-  options: { excludeSessionId?: string } = {},
+  options: { excludeSessionId?: string; repRange?: string } = {},
 ): Promise<{ weight: number; reps: number }[]> {
-  const last = await getLastCompletedSessionForExercise(exerciseName, options);
+  const { repRange, ...historyOptions } = options;
+  const last = await getLastCompletedSessionForExercise(exerciseName, historyOptions);
+  const top = repRange ? parseRepRangeTop(repRange) : 0;
+  const floor = repRange ? parseRepRangeFloor(repRange) : 0;
+  const progress = !!last && top > 0 && last.sets.length > 0 && last.sets.every((s) => s.reps >= top);
   return Array.from({ length: setCount }, (_, i) => {
     if (!last || last.sets.length === 0) return { weight: 0, reps: 0 };
     const match = last.sets.find((s) => s.setIndex === i + 1) ?? last.sets[last.sets.length - 1];
+    if (progress && match.weight > 0) {
+      return { weight: match.weight + WEIGHT_INCREMENT_KG, reps: floor };
+    }
     return { weight: match.weight, reps: match.reps };
   });
 }

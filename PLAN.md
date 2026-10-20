@@ -2,7 +2,7 @@
 
 **Status:** Plan
 **Date:** 2026-09-28
-**Scope:** All 4 phases. Excludes `docs/hackathon/` (pitch collateral, not product docs).
+**Scope:** All 4 phases.
 
 ---
 
@@ -188,7 +188,6 @@ a user's numbers is attributable.
   the focus refresh on the workout list. Kept from this branch: boot error screen + Retry,
   `initOnce` retry, dev-clear transaction, `updateSet` partial validation, double-tap guards
   for quick log and log set, the finished-session redirect, and the program data fixes.
-- `docs/hackathon/` — excluded at user request; never staged, never committed.
 
 ---
 
@@ -231,7 +230,7 @@ a user's numbers is attributable.
 
 ## Phase 4 — Accessibility, contrast, hygiene
 
-21. **Fix the failing tokens first** — one edit fixes many sites: `textTertiary #555` 2.66:1
+21. **Fix the failing tokens first** (partly addressed by the UI-polish token update: `textSecondary`, `textTertiary`, `successText`, `borderControl`; `textMuted`, `goldDim`/`goldSurface` and the other border tokens are unchanged) — one edit fixes many sites: `textTertiary #555` 2.66:1
     (38 style blocks), `textMuted #444` 2.03:1, `goldDim`/`goldSurface` 2.23:1, and all six
     border tokens under 3:1 (which breaks the documented border-based elevation strategy).
 22. **Enforce `MIN_TAP_SIZE`** (currently 0 importers) across the ~14 undersized targets;

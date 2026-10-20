@@ -37,6 +37,7 @@ export async function initializeSession(
     const suggestions = await getSuggestedSetValues(
       prescription.exerciseName,
       prescription.workingSets,
+      { repRange: prescription.repRange },
     );
     exercises.push({
       id: generateId(),

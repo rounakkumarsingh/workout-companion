@@ -9,6 +9,9 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "oxlint",
+    "typecheck": "tsc --noEmit",
+    "verify:program": "python3 scripts/verify_program.py",
+    "verify:links": "python3 scripts/verify_links.py",
     "lint:fix": "oxlint --fix",
     "format": "oxfmt",
     "format:check": "oxfmt --check"

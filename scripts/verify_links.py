@@ -2,9 +2,10 @@
 Compare PDF hyperlinks vs program.ts demoVideoUrl values
 """
 import re
+from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
-PROGRAM_TS = open("/home/rounakkumarsingh/Work/Projects/workout-companion-opencode/src/data/program.ts").read()
+PROGRAM_TS = (Path(__file__).resolve().parent.parent / "src" / "data" / "program.ts").read_text()
 
 # Extract video ID from various YouTube URL formats
 def extract_video_id(url):
