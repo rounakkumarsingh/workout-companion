@@ -243,7 +243,11 @@ const makeStyles = (c: ColorSet) =>
       opacity: 0.12,
     },
     flashOverlay: {
-      ...StyleSheet.absoluteFillObject,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       backgroundColor: c.success,
       borderRadius: radii.row,
     },
