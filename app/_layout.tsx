@@ -105,7 +105,6 @@ export default function RootLayout() {
           <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
           <Stack.Screen name="workout" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="completed" options={{ presentation: 'modal', headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         </Stack>
       </ThemeManager>
     </SafeAreaProvider>
