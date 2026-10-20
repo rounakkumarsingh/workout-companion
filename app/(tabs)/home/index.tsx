@@ -94,7 +94,11 @@ function shortDate(date: Date): string {
   return `${(WEEKDAY_NAMES[date.getDay()] ?? '').slice(0, 3)} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
 }
 
+/** Week 6 prescribes 1 working set per exercise at lower RPE: the program's deload. */
+const DELOAD_WEEK = 6;
+
 function getBlockName(weekNumber: number): string {
+  if (weekNumber === DELOAD_WEEK) return 'Deload week';
   const block = PROGRAM.blocks.find(
     (b: { weekStart: number; weekEnd: number }) =>
       weekNumber >= b.weekStart && weekNumber <= b.weekEnd,
@@ -216,6 +220,8 @@ export default function TodayScheduleScreen() {
   const [weighInOpen, setWeighInOpen] = useState(false);
   // The workout waiting on the weigh-in sheet, started once it is logged or skipped.
   const [pendingChoice, setPendingChoice] = useState<WorkoutChoice | null>(null);
+  // Resuming the open workout is also waiting on the weigh-in sheet.
+  const [resumePending, setResumePending] = useState(false);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -382,6 +388,19 @@ export default function TodayScheduleScreen() {
     [router],
   );
 
+  const doResume = useCallback(async () => {
+    if (screenState.status !== 'inProgress') return;
+    const activeSesh = hydratedSession ?? (await hydrateActiveSession(screenState.sessionId));
+    if (activeSesh) {
+      const activeEx = activeSesh.exercises.find((e) => e.status === 'active');
+      if (activeEx) {
+        router.push(`/workout/${activeEx.exerciseLogId}` as Href);
+        return;
+      }
+    }
+    router.push(`/workout?sessionId=${screenState.sessionId}` as Href);
+  }, [screenState, router, hydratedSession]);
+
   const handleBegin = useCallback(
     async (choice: WorkoutChoice) => {
       if (screenState.status !== 'choose' || choice.status !== 'available') return;
@@ -399,11 +418,26 @@ export default function TodayScheduleScreen() {
   const finishWeighIn = useCallback(async () => {
     setWeighInOpen(false);
     const choice = pendingChoice;
+    const resuming = resumePending;
     setPendingChoice(null);
+    setResumePending(false);
     if (choice && screenState.status === 'choose') {
       await startSession(screenState.plan.weekNumber, choice.dayPrescription);
+    } else if (resuming) {
+      await doResume();
     }
-  }, [pendingChoice, screenState, startSession]);
+  }, [pendingChoice, resumePending, screenState, startSession, doResume]);
+
+  const handleResume = useCallback(async () => {
+    // Ask for today's weight first, but never block the workout on it.
+    if (weighedToday === false) {
+      setPendingChoice(null);
+      setResumePending(true);
+      setWeighInOpen(true);
+      return;
+    }
+    await doResume();
+  }, [weighedToday, doResume]);
 
   const handleWeighInLog = useCallback(
     async (weight: number, unit: WeightUnit) => {
@@ -419,19 +453,6 @@ export default function TodayScheduleScreen() {
     },
     [finishWeighIn],
   );
-
-  const handleResume = useCallback(async () => {
-    if (screenState.status !== 'inProgress') return;
-    const activeSesh = hydratedSession ?? (await hydrateActiveSession(screenState.sessionId));
-    if (activeSesh) {
-      const activeEx = activeSesh.exercises.find((e) => e.status === 'active');
-      if (activeEx) {
-        router.push(`/workout/${activeEx.exerciseLogId}` as Href);
-        return;
-      }
-    }
-    router.push(`/workout?sessionId=${screenState.sessionId}` as Href);
-  }, [screenState, router, hydratedSession]);
 
   const handleAbandon = useCallback(() => {
     if (screenState.status !== 'inProgress' || !hydratedSession) return;
@@ -538,6 +559,7 @@ export default function TodayScheduleScreen() {
           <WeighInCard
             onPress={() => {
               setPendingChoice(null);
+              setResumePending(false);
               setWeighInOpen(true);
             }}
           />
