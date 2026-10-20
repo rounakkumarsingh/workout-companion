@@ -263,7 +263,7 @@ The data model is separated into three layers:
 **Relationships**:
 - Belongs to exactly 1 user (implicit)
 
-**Usage**: Weekly averages should be computed from all entries in a given calendar week for trend comparison.
+**Usage**: Progress is judged by the rolling 7-day average, not single weigh-ins (guidebook). Averages and "already weighed today" use the user's local calendar day, not UTC. Entries are stored as entered (kg or lbs) and converted only for display; the preferred unit is the `weight_unit` app setting. The app prompts for a weigh-in before a workout if today has none; the prompt can be skipped.
 
 ---
 
@@ -282,6 +282,8 @@ The data model is separated into three layers:
 
 **Relationships**:
 - Standalone entity (no direct relation to a specific workout or week, though can be associated contextually by timestamp)
+
+**Usage**: A set is the photos taken on the same local day. A new set is due 30 days after the previous one (the guidebook suggests every 2-3 months, no more than weekly). Photos are copied into the app's document directory (`progress-photos/<id>.jpg`) because picker URIs are temporary; `file_uri` points there. Deleting a photo removes both the row and the file.
 
 **Frequency guidance**: Roughly once every 2–3 months, no more than once per week.
 
