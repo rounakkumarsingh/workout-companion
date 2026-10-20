@@ -40,12 +40,26 @@ import {
   getCurrentStreak,
   getCompletedSessionCount,
   getProgramDayNumber,
+  getProgramStart,
   TRAINING_DAY_TYPES,
 } from '@/src/features/workout-session';
 import { getActiveSession, getSessionsStartedBetween } from '@/src/db/repositories/sessions';
-import { localDayBoundsIso, localDaysBetween, parseLocalDateKey } from '@/src/lib/dates';
+import {
+  isoToLocalDateKey,
+  localDayBoundsIso,
+  localDaysBetween,
+  parseLocalDateKey,
+} from '@/src/lib/dates';
 import { initializeSession } from '@/src/features/workout-session/session-initializer';
 import { createCardioSession } from '@/src/db/repositories/cardio';
+import { getBodyweightEntries } from '@/src/db/repositories/bodyweight';
+import { getProgressPhotos } from '@/src/db/repositories/photos';
+import { WeighInSheet } from '@/features/bodyweight/WeighInSheet';
+import { logWeightEntry } from '@/features/bodyweight/weight-settings';
+import { WeighInCard } from '@/components/home/WeighInCard';
+import { PhotoDueBanner } from '@/components/home/PhotoDueBanner';
+import { hasEntryToday, type WeightUnit } from '@/src/features/progress-tracking/weight';
+import { isPhotoSetDue } from '@/src/features/progress-tracking/photos';
 import { PROGRAM, TOTAL_WEEKS } from '@/src/data/program';
 import type { DayPrescription } from '@/src/data/program';
 import type { HomeScreenState } from '@/components/home/types';
@@ -193,6 +207,15 @@ export default function TodayScheduleScreen() {
   const [streak, setStreak] = useState(0);
   const [sessionsDone, setSessionsDone] = useState(0);
   const [recentDays, setRecentDays] = useState<RecentDay[]>([]);
+  // null until loaded, so the weigh-in sheet is never shown on a stale guess.
+  const [weighedToday, setWeighedToday] = useState<boolean | null>(null);
+  const [photoNudge, setPhotoNudge] = useState<{ due: boolean; daysSince: number | null }>({
+    due: false,
+    daysSince: null,
+  });
+  const [weighInOpen, setWeighInOpen] = useState(false);
+  // The workout waiting on the weigh-in sheet, started once it is logged or skipped.
+  const [pendingChoice, setPendingChoice] = useState<WorkoutChoice | null>(null);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -280,15 +303,27 @@ export default function TodayScheduleScreen() {
     let cancelled = false;
     (async () => {
       try {
-        const [streakNow, done, days] = await Promise.all([
+        const [streakNow, done, days, weights, latestPhotos, programStart] = await Promise.all([
           getCurrentStreak(),
           getCompletedSessionCount(),
           getRecentDays(),
+          getBodyweightEntries(30),
+          getProgressPhotos(1),
+          getProgramStart(),
         ]);
         if (cancelled) return;
         setStreak(streakNow);
         setSessionsDone(done);
         setRecentDays(days);
+        const now = new Date();
+        setWeighedToday(hasEntryToday(weights, now));
+        const lastTakenAt = latestPhotos[0]?.takenAt ?? null;
+        setPhotoNudge({
+          due: isPhotoSetDue(lastTakenAt, programStart, now),
+          daysSince: lastTakenAt
+            ? localDaysBetween(parseLocalDateKey(isoToLocalDateKey(lastTakenAt)), now)
+            : null,
+        });
       } catch (e) {
         console.warn('[home] Failed to load header data:', e);
       }
@@ -350,9 +385,39 @@ export default function TodayScheduleScreen() {
   const handleBegin = useCallback(
     async (choice: WorkoutChoice) => {
       if (screenState.status !== 'choose' || choice.status !== 'available') return;
+      // Ask for today's weight first, but never block the workout on it.
+      if (weighedToday === false) {
+        setPendingChoice(choice);
+        setWeighInOpen(true);
+        return;
+      }
       await startSession(screenState.plan.weekNumber, choice.dayPrescription);
     },
-    [screenState, startSession],
+    [screenState, startSession, weighedToday],
+  );
+
+  const finishWeighIn = useCallback(async () => {
+    setWeighInOpen(false);
+    const choice = pendingChoice;
+    setPendingChoice(null);
+    if (choice && screenState.status === 'choose') {
+      await startSession(screenState.plan.weekNumber, choice.dayPrescription);
+    }
+  }, [pendingChoice, screenState, startSession]);
+
+  const handleWeighInLog = useCallback(
+    async (weight: number, unit: WeightUnit) => {
+      try {
+        await logWeightEntry(weight, unit);
+      } catch (e) {
+        console.error('[home] Failed to log weight:', e);
+        Alert.alert('Error', 'Failed to save your weight. Please try again, or skip.');
+        return;
+      }
+      setWeighedToday(true);
+      await finishWeighIn();
+    },
+    [finishWeighIn],
   );
 
   const handleResume = useCallback(async () => {
@@ -464,9 +529,23 @@ export default function TodayScheduleScreen() {
             <WeekStrip days={recentDayStatuses(recentDays)} />
           </View>
         )}
+        {photoNudge.due ? (
+          <PhotoDueBanner
+            daysSinceLast={photoNudge.daysSince}
+            onPress={() => router.push('/(tabs)/progress/photos' as Href)}
+          />
+        ) : weighedToday === false ? (
+          <WeighInCard
+            onPress={() => {
+              setPendingChoice(null);
+              setWeighInOpen(true);
+            }}
+          />
+        ) : null}
         <View style={styles.block}>{block}</View>
       </ScrollView>
       {footer ? <View style={styles.dock}>{footer}</View> : null}
+      <WeighInSheet visible={weighInOpen} onLog={handleWeighInLog} onSkip={finishWeighIn} />
       {devClear}
     </View>
   );

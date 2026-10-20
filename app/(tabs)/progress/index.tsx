@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, ScrollView, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useColors, typography, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
@@ -11,12 +11,12 @@ import {
 } from '@/src/db/repositories/sessions';
 import { getExerciseHistory, getVolumeByExercise } from '@/src/db/repositories/exercises';
 import { getProgramStart } from '@/src/features/workout-session';
-import { getLatestBodyweightEntry, createBodyweightEntry } from '@/src/db/repositories/bodyweight';
 import { WorkoutCalendar } from '@/features/progress/WorkoutCalendar';
 import { AdherenceGrid } from '@/features/progress/AdherenceGrid';
 import { VolumeTrendChart } from '@/features/progress/VolumeTrendChart';
 import { ExerciseProgressionCard } from '@/features/progress/ExerciseProgressionCard';
-import { BodyweightInput } from '@/features/bodyweight/BodyweightInput';
+import { BodyweightSection } from '@/features/bodyweight/BodyweightSection';
+import { PhotoSummaryCard } from '@/features/progress-photos/PhotoSummaryCard';
 
 interface VolumeBar {
   weekNumber: number;
@@ -40,11 +40,6 @@ export default function HistoryScreen() {
   const [exerciseHistoryMap, setExerciseHistoryMap] = useState<
     Record<string, { date: string; weekNumber: number; sets: { weight: number; reps: number }[] }[]>
   >({});
-  const [latestBodyweight, setLatestBodyweight] = useState<{
-    weight: number;
-    unit: string;
-    measuredAt: string;
-  } | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -52,19 +47,17 @@ export default function HistoryScreen() {
       (async () => {
         try {
           const programStart = await getProgramStart();
-          const [dates, sessions, weeklyCounts, bwLatest, exerciseVolumes] = await Promise.all([
+          const [dates, sessions, weeklyCounts, exerciseVolumes] = await Promise.all([
             getAllWorkoutDates(),
             getSessionsWithVolume(200),
             // Adherence covers the current program cycle only.
             getSessionCountByWeek(programStart?.toISOString()),
-            getLatestBodyweightEntry(),
             getVolumeByExercise(),
           ]);
 
           if (cancelled) return;
 
           setWorkoutDates(dates);
-          setLatestBodyweight(bwLatest);
 
           const weeks: AdherenceWeek[] = [];
           for (let w = 1; w <= 12; w++) {
@@ -163,34 +156,13 @@ export default function HistoryScreen() {
 
       {/* Bodyweight */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Bodyweight</Text>
-        <BodyweightInput
-          lastValue={
-            latestBodyweight
-              ? {
-                  weight: latestBodyweight.weight,
-                  unit: latestBodyweight.unit,
-                  date: latestBodyweight.measuredAt,
-                }
-              : null
-          }
-          onLog={async (weight, unit) => {
-            try {
-              await createBodyweightEntry({
-                id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-                weight,
-                unit,
-                measuredAt: new Date().toISOString(),
-                note: null,
-              });
-              const entry = await getLatestBodyweightEntry();
-              setLatestBodyweight(entry);
-            } catch (e) {
-              console.error('[history] Failed to log bodyweight:', e);
-              Alert.alert('Error', 'Failed to log bodyweight. Please try again.');
-            }
-          }}
-        />
+        <BodyweightSection />
+      </View>
+
+      {/* Progress photos */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Progress photos</Text>
+        <PhotoSummaryCard />
       </View>
 
       <View style={{ height: 80 }} />
