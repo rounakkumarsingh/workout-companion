@@ -3,6 +3,7 @@ import type { ActiveSession } from './types';
 import { hydrateActiveSession, reopenSession } from './session-executor';
 import { createSessionWithLogs, getSessionsStartedBetween } from '../../db/repositories/sessions';
 import { getSuggestedSetValues } from './progression';
+import { getPreferredExercise } from './substitution-preferences-store';
 import { generateId } from '../../lib/ids';
 import { localDayBoundsIso } from '../../lib/dates';
 
@@ -34,15 +35,19 @@ export async function initializeSession(
   // Read history first, then write the whole session in one transaction.
   const exercises = [];
   for (const prescription of dayPrescription.exercises) {
-    const suggestions = await getSuggestedSetValues(
-      prescription.exerciseName,
-      prescription.workingSets,
-      { repRange: prescription.repRange },
-    );
+    // A substitute the user chose to use every time replaces the prescribed exercise.
+    const preferred = await getPreferredExercise(prescription.exerciseName);
+    const performedName = preferred ?? prescription.exerciseName;
+    const suggestions = await getSuggestedSetValues(performedName, prescription.workingSets, {
+      repRange: prescription.repRange,
+    });
     exercises.push({
       id: generateId(),
-      exerciseName: prescription.exerciseName,
+      exerciseName: performedName,
       prescribedExerciseName: prescription.exerciseName,
+      substitutionNote: preferred
+        ? `Always substitute ${prescription.exerciseName} → ${preferred}`
+        : null,
       sortOrder: prescription.sortOrder,
       sets: suggestions.map((s, i) => ({
         id: generateId(),

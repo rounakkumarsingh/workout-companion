@@ -593,3 +593,9 @@ Computed on demand for the Progress screen.
 ---
 
 *Conceptual source of truth for TypeScript types, SQLite schema design, and application state architecture.*
+
+---
+
+## Permanent substitutions (app setting)
+
+The `app_settings` key `preferred_substitutions` holds a JSON object mapping a prescribed exercise name to the substitute the user chose to use every time (for example `{"Smith Machine Squat": "DB Bulgarian Split Squat"}`). New workouts use the substitute in place of the prescribed exercise (the exercise log keeps the prescribed name and a substitution note). A saved substitute that is no longer one of the exercise's listed options is ignored. A one-time substitution only changes that workout's exercise log and never writes this setting.

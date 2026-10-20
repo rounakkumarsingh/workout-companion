@@ -35,6 +35,7 @@ export interface CreateSessionWithLogsInput {
     id: string;
     exerciseName: string;
     prescribedExerciseName: string;
+    substitutionNote?: string | null;
     sortOrder: number;
     sets: { id: string; setIndex: number; weight: number; reps: number }[];
   }[];
@@ -87,7 +88,7 @@ export async function createSessionWithLogs(input: CreateSessionWithLogsInput) {
           workoutSessionId: input.session.id,
           exerciseName: exercise.exerciseName,
           prescribedExerciseName: exercise.prescribedExerciseName,
-          substitutionNote: null,
+          substitutionNote: exercise.substitutionNote ?? null,
           sortOrder: exercise.sortOrder,
         })
         .run();

@@ -28,7 +28,13 @@ import { SetLogList } from '@/components/workout/SetLogList';
 import { RpeSelector } from '@/components/workout/RpeSelector';
 import { WarmupSection } from '@/components/workout/WarmupSection';
 import { SubstitutionCard } from '@/components/workout/SubstitutionCard';
-import { BeatTheLogbookCard } from '@/components/workout/BeatTheLogbookCard';
+import { LastTimeChip } from '@/components/workout/LastTimeChip';
+import { LastTimeSheet } from '@/components/workout/LastTimeSheet';
+import { summarizeLastTime } from '@/src/features/workout-session/last-time';
+import {
+  getPreferredExercise,
+  setSubstitutionPreference,
+} from '@/src/features/workout-session/substitution-preferences-store';
 import { DemoVideoLink } from '@/components/workout/DemoVideoLink';
 import { TechniqueNotes } from '@/components/workout/TechniqueNotes';
 import { CtaButton } from '@/components/ui/CtaButton';
@@ -117,6 +123,9 @@ export default function ExerciseDetailScreen() {
   const [state, setState] = useState<ScreenState>({ phase: 'loading' });
   const [comparison, setComparison] = useState<ExerciseHistoryComparison | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(true);
+  const [lastTimeOpen, setLastTimeOpen] = useState(false);
+  // The substitute saved as "always" for this exercise, if any.
+  const [alwaysName, setAlwaysName] = useState<string | null>(null);
   const hasLoggedSetsRef = useRef(false);
   const loggingSetRef = useRef(false);
 
@@ -468,8 +477,22 @@ export default function ExerciseDetailScreen() {
     );
   }, [state, router, restTimer]);
 
-  const handleSubstitution = useCallback(
-    async (targetName: string) => {
+  const prescribedName = state.phase === 'active' ? state.exercise.prescribedExerciseName : null;
+  useEffect(() => {
+    if (!prescribedName) return;
+    let cancelled = false;
+    getPreferredExercise(prescribedName)
+      .then((name) => {
+        if (!cancelled) setAlwaysName(name);
+      })
+      .catch((e) => console.warn('[exercise] Failed to load saved substitution:', e));
+    return () => {
+      cancelled = true;
+    };
+  }, [prescribedName]);
+
+  const applySubstitution = useCallback(
+    async (targetName: string, permanent: boolean) => {
       if (state.phase !== 'active') return;
       try {
         const updated = await swapExercise(state.session, exerciseLogId, targetName);
@@ -478,6 +501,12 @@ export default function ExerciseDetailScreen() {
           if (prev.phase !== 'active') return prev;
           return { ...prev, session: updated, exercise: updatedExercise };
         });
+        if (permanent) {
+          const prescribed = updatedExercise.prescribedExerciseName;
+          const substitute = targetName === prescribed ? null : targetName;
+          await setSubstitutionPreference(prescribed, substitute);
+          setAlwaysName(substitute);
+        }
         if (updatedExercise.prescription?.repRange) {
           setComparisonLoading(true);
           const comp = await getExerciseHistoryComparison(
@@ -494,6 +523,29 @@ export default function ExerciseDetailScreen() {
       }
     },
     [state, exerciseLogId],
+  );
+
+  // Ask whether the switch is for this workout only or for every time.
+  const handleSubstitution = useCallback(
+    (targetName: string) => {
+      if (state.phase !== 'active') return;
+      const backToPrescribed = targetName === state.exercise.prescribedExerciseName;
+      Alert.alert(
+        backToPrescribed ? `Go back to ${targetName}?` : `Switch to ${targetName}?`,
+        backToPrescribed
+          ? 'Just for this workout, or from now on?'
+          : 'Just for this workout, or every time this exercise comes up?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Just this time', onPress: () => void applySubstitution(targetName, false) },
+          {
+            text: backToPrescribed ? 'From now on' : 'Always',
+            onPress: () => void applySubstitution(targetName, true),
+          },
+        ],
+      );
+    },
+    [state, applySubstitution],
   );
 
   const handleLogWarmup = useCallback(
@@ -579,6 +631,7 @@ export default function ExerciseDetailScreen() {
       ]
     : rawOptions.map((o) => ({ name: o.substituteName }));
   const substitutionDisabled = exercise.sets.some((s) => s.isComplete);
+  const lastTime = summarizeLastTime(comparison?.lastSession ?? null);
   const nextExercise = getNextIncompleteExercise(session, exerciseLogId);
 
   // --- Phase Renders ---
@@ -603,7 +656,18 @@ export default function ExerciseDetailScreen() {
         )}
       </View>
 
-      <BeatTheLogbookCard comparison={comparison} isLoading={comparisonLoading} />
+      {!comparisonLoading && lastTime ? (
+        <View style={styles.lastTimeWrap}>
+          <LastTimeChip summary={lastTime} onPress={() => setLastTimeOpen(true)} />
+        </View>
+      ) : null}
+      <LastTimeSheet
+        visible={lastTimeOpen}
+        exerciseName={exercise.exerciseName}
+        summary={lastTime}
+        readyForWeightIncrease={comparison?.progressionSuggestion.readyForWeightIncrease}
+        onClose={() => setLastTimeOpen(false)}
+      />
 
       <WarmupSection
         prescribedMin={pres?.warmupSetsMin ?? 0}
@@ -619,6 +683,11 @@ export default function ExerciseDetailScreen() {
           onSelect={handleSubstitution}
           disabled={substitutionDisabled}
           prescription={pres}
+          permanentNote={
+            alwaysName && alwaysName === exercise.exerciseName
+              ? `Always used instead of ${exercise.prescribedExerciseName}. Choose it below to change that.`
+              : undefined
+          }
         />
       )}
 
@@ -1137,6 +1206,11 @@ const makeStyles = (c: ColorSet) =>
     validationErrorText: {
       ...typography.monoSmall,
       color: c.danger,
+    },
+    lastTimeWrap: {
+      marginHorizontal: spacing.xxl,
+      marginBottom: spacing.xl,
+      alignItems: 'flex-start',
     },
     spacerLg: {
       height: spacing.lg,
