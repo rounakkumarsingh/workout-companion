@@ -1,11 +1,8 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { Tabs } from 'expo-router';
 import { View, Text, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { typography } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import { typography, useColors, type ColorSet } from '@/src/theme';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {

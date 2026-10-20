@@ -1,9 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { useMemo } from 'react';
 import Svg, { Path } from 'react-native-svg';
-import { typography, radii } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import { typography, radii, useColors, type ColorSet } from '@/src/theme';
 import { DayFigure, dayTypeToFigureKey } from './DayFigure';
 import type { FigureTone } from './DayFigure';
 import type { RecentDay } from '@/src/features/workout-session';
@@ -52,7 +50,7 @@ export function recentDayStatuses(days: readonly RecentDay[]): DayStatus[] {
     const dayType = day.workouts[0] ?? null;
     const extra = day.workouts.length > 1 ? '+' : '';
     return {
-      label: WEEKDAY_INITIALS[day.date.getDay()],
+      label: WEEKDAY_INITIALS[day.date.getDay()] ?? '',
       date: day.date.getDate(),
       dayType,
       status: dayType ? 'done' : day.dateKey === todayKey ? 'today' : 'rest',

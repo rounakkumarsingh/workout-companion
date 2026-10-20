@@ -1,9 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { useMemo } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { typography, spacing } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import { typography, spacing, useColors, type ColorSet } from '@/src/theme';
 
 interface ScreenHeaderProps {
   subtitle?: string;

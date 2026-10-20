@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { TOTAL_WEEKS, MAX_SESSIONS_PER_WEEK } from '@/src/data/program';
-import { useColors, spacing, radii, typography } from '@/src/theme';
+import { useColors } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { clearProgramStartDate } from '@/src/features/workout-session';
 import { getSessionsWithVolume, getSessionCountByWeek } from '@/src/db/repositories/sessions';

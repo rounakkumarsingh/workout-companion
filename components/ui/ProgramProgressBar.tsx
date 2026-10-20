@@ -1,8 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { useMemo } from 'react';
-import { typography, spacing } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import { typography, spacing, useColors, type ColorSet } from '@/src/theme';
 
 interface ProgramProgressBarProps {
   currentWeek: number;

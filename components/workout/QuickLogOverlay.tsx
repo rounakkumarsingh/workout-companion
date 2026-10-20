@@ -1,8 +1,6 @@
 import { useState, useMemo } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
-import { typography, radii, spacing } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import { typography, radii, spacing, useColors, type ColorSet, hitSlopFor } from '@/src/theme';
 import { RpeSelector } from '@/components/workout/RpeSelector';
 import { CtaButton } from '@/components/ui/CtaButton';
 
@@ -82,6 +80,7 @@ export function QuickLogOverlay({
             <View style={styles.stepperControls}>
               <TouchableOpacity
                 style={styles.stepBtn}
+                hitSlop={hitSlopFor(36)}
                 onPress={() => {
                   setEditingWeight(null);
                   setWeight(Math.max(0, weight - 2.5));
@@ -94,6 +93,7 @@ export function QuickLogOverlay({
                 <TextInput
                   style={[styles.stepVal, styles.stepValInput]}
                   keyboardType="decimal-pad"
+                  accessibilityLabel="Weight in kilograms"
                   value={editingWeight ?? String(weight)}
                   onChangeText={(text) => {
                     setEditingWeight(text);
@@ -108,6 +108,7 @@ export function QuickLogOverlay({
               </View>
               <TouchableOpacity
                 style={styles.stepBtn}
+                hitSlop={hitSlopFor(36)}
                 onPress={() => {
                   setEditingWeight(null);
                   setWeight(weight + 2.5);
@@ -124,6 +125,7 @@ export function QuickLogOverlay({
             <View style={styles.stepperControls}>
               <TouchableOpacity
                 style={styles.stepBtn}
+                hitSlop={hitSlopFor(36)}
                 onPress={() => {
                   setEditingReps(null);
                   setReps(Math.max(0, reps - 1));
@@ -136,6 +138,7 @@ export function QuickLogOverlay({
                 <TextInput
                   style={[styles.stepVal, styles.stepValInput]}
                   keyboardType="number-pad"
+                  accessibilityLabel="Reps"
                   value={editingReps ?? String(reps)}
                   onChangeText={(text) => {
                     setEditingReps(text);
@@ -150,6 +153,7 @@ export function QuickLogOverlay({
               </View>
               <TouchableOpacity
                 style={styles.stepBtn}
+                hitSlop={hitSlopFor(36)}
                 onPress={() => {
                   setEditingReps(null);
                   setReps(reps + 1);

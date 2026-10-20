@@ -53,7 +53,7 @@ export default function WelcomeScreen() {
   const reducedMotion = useReducedMotion();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const programDays = useMemo(() => {
-    return PROGRAM.weeks[0].days
+    return (PROGRAM.weeks[0]?.days ?? [])
       .filter((d) => d.activityType !== 'FullRest' && d.activityType !== 'OptionalCardioHIIT')
       .map((d) => {
         const shortDay = DAY_NAMES[d.dayIndex % 7];

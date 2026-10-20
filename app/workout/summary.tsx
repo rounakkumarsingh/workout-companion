@@ -119,7 +119,6 @@ export default function WorkoutSummaryScreen() {
     );
   }
 
-  const totalSets = session ? session.exercises.reduce((sum, ex) => sum + ex.sets.length, 0) : 0;
   const completedSets = session
     ? session.exercises.reduce((sum, ex) => sum + ex.sets.filter((s) => s.isComplete).length, 0)
     : 0;

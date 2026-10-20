@@ -8,13 +8,13 @@ type LastSession = {
 };
 
 function parseRepRangeTop(range: string): number {
-  const match = range.match(/(\d+)$/);
-  return match ? parseInt(match[1], 10) : 0;
+  const digits = range.match(/(\d+)$/)?.[1];
+  return digits ? parseInt(digits, 10) : 0;
 }
 
 function parseRepRangeFloor(range: string): number {
-  const match = range.match(/^(\d+)/);
-  return match ? parseInt(match[1], 10) : 0;
+  const digits = range.match(/^(\d+)/)?.[1];
+  return digits ? parseInt(digits, 10) : 0;
 }
 
 /** Smallest practical load jump. The program does not prescribe one. */
@@ -29,9 +29,8 @@ export async function getLastCompletedSessionForExercise(
   options: { excludeSessionId?: string } = {},
 ): Promise<LastSession | null> {
   const history = await getExerciseHistory(exerciseName, 50, options);
-  if (history.length === 0) return null;
-
   const last = history[history.length - 1];
+  if (!last) return null;
   const sessionSets = history.filter((h) => h.sessionId === last.sessionId);
 
   return {
@@ -68,6 +67,7 @@ export async function getSuggestedSetValues(
   return Array.from({ length: setCount }, (_, i) => {
     if (!last || last.sets.length === 0) return { weight: 0, reps: 0 };
     const match = last.sets.find((s) => s.setIndex === i + 1) ?? last.sets[last.sets.length - 1];
+    if (!match) return { weight: 0, reps: 0 };
     if (progress && match.weight > 0) {
       return { weight: match.weight + WEIGHT_INCREMENT_KG, reps: floor };
     }

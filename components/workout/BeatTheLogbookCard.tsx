@@ -7,9 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import type { ExerciseHistoryComparison } from '@/src/features/workout-session/types';
-import { typography, radii, spacing } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import { typography, radii, spacing, useColors, type ColorSet } from '@/src/theme';
 
 interface BeatTheLogbookCardProps {
   comparison: ExerciseHistoryComparison | null;
@@ -43,7 +41,7 @@ export function BeatTheLogbookCard({ comparison, isLoading }: BeatTheLogbookCard
               </Text>
             </View>
           ))}
-          {comparison.prs.length > 0 && (
+          {comparison.prs[0] && (
             <View style={styles.prBadge}>
               <Text style={styles.prText}>
                 🏆 PR: {comparison.prs[0].weight}kg × {comparison.prs[0].reps}

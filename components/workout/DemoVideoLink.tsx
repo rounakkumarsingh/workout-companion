@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
 import { Linking, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { typography, radii, spacing } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import { typography, radii, spacing, useColors, type ColorSet } from '@/src/theme';
 
 interface DemoVideoLinkProps {
   url: string | null | undefined;

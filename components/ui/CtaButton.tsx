@@ -3,9 +3,7 @@ import React, { useMemo } from 'react';
 import Animated from 'react-native-reanimated';
 import { useAnimatedPress } from '@/hooks/useAnimatedPress';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { typography, radii } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import { typography, radii, MIN_TAP_SIZE, useColors, type ColorSet } from '@/src/theme';
 
 interface CtaButtonProps {
   label: string;
@@ -30,6 +28,9 @@ export function CtaButton({ label, onPress, disabled, style }: CtaButtonProps) {
       onPressOut={!disabled && !reducedMotion ? onPressOut : undefined}
       disabled={disabled}
       activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !!disabled }}
     >
       <Text style={[styles.label, disabled && styles.labelDisabled]}>{label}</Text>
     </AnimatedTouchable>
@@ -44,6 +45,7 @@ const makeStyles = (c: ColorSet) =>
       backgroundColor: c.gold,
       borderRadius: radii.row,
       paddingVertical: 15,
+      minHeight: MIN_TAP_SIZE,
       alignItems: 'center',
     },
     disabled: {

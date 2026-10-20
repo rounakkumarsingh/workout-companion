@@ -289,7 +289,7 @@ const makeStyles = (c: ColorSet) =>
       alignItems: 'center',
     },
     newVal: {
-      fontFamily: 'SpaceMono_800ExtraBold',
+      fontFamily: 'SpaceMono_700Bold',
       fontSize: 30,
       color: c.gold,
     },

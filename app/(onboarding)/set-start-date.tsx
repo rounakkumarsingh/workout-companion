@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useColors, spacing, radii, typography } from '@/src/theme';
+import { useColors } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { setProgramStartDate } from '@/src/features/workout-session';
 

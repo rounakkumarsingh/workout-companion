@@ -155,6 +155,16 @@ export const lightColors: ColorSet = {
 // ── Legacy Export (keeps existing components working in dark mode) ──────
 export const colors: ColorSet = darkColors;
 
+/** Minimum touch target (points), per platform accessibility guidance. */
+export const MIN_TAP_SIZE = 44;
+
+/** hitSlop that grows a control of `size` points (per axis) to MIN_TAP_SIZE without changing its look. */
+export function hitSlopFor(width: number, height: number = width) {
+  const horizontal = Math.max(0, Math.ceil((MIN_TAP_SIZE - width) / 2));
+  const vertical = Math.max(0, Math.ceil((MIN_TAP_SIZE - height) / 2));
+  return { top: vertical, bottom: vertical, left: horizontal, right: horizontal };
+}
+
 // ── Spacing ──────────────────────────────────────────────────────────────
 export const spacing = {
   xs: 4,

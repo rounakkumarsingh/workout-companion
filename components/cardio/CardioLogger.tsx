@@ -1,8 +1,14 @@
 import { useState, useMemo } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { typography, radii, spacing } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import {
+  typography,
+  radii,
+  spacing,
+  useColors,
+  type ColorSet,
+  hitSlopFor,
+  MIN_TAP_SIZE,
+} from '@/src/theme';
 import { CtaButton } from '@/components/ui/CtaButton';
 
 interface CardioLoggerProps {
@@ -66,6 +72,7 @@ export function CardioLogger({ onLog }: CardioLoggerProps) {
       <TextInput
         style={styles.input}
         placeholder="Activity (e.g. stretching, cycling)"
+        accessibilityLabel="Activity"
         placeholderTextColor={colors.textMuted}
         value={activity}
         onChangeText={setActivity}
@@ -76,6 +83,7 @@ export function CardioLogger({ onLog }: CardioLoggerProps) {
         <View style={styles.stepperControls}>
           <TouchableOpacity
             style={styles.stepBtn}
+            hitSlop={hitSlopFor(36)}
             onPress={() => setDuration(Math.max(1, duration - 5))}
           >
             <Text style={styles.stepBtnText}>−</Text>
@@ -84,7 +92,11 @@ export function CardioLogger({ onLog }: CardioLoggerProps) {
             {duration}
             <Text style={styles.stepUnit}> min</Text>
           </Text>
-          <TouchableOpacity style={styles.stepBtn} onPress={() => setDuration(duration + 5)}>
+          <TouchableOpacity
+            style={styles.stepBtn}
+            hitSlop={hitSlopFor(36)}
+            onPress={() => setDuration(duration + 5)}
+          >
             <Text style={styles.stepBtnText}>+</Text>
           </TouchableOpacity>
         </View>
@@ -93,6 +105,7 @@ export function CardioLogger({ onLog }: CardioLoggerProps) {
       <TextInput
         style={styles.input}
         placeholder="Optional note"
+        accessibilityLabel="Note"
         placeholderTextColor={colors.textMuted}
         value={note}
         onChangeText={setNote}
@@ -126,6 +139,7 @@ const makeStyles = (c: ColorSet) =>
       gap: spacing.sm,
     },
     toggle: {
+      minHeight: MIN_TAP_SIZE,
       flex: 1,
       backgroundColor: c.surfaceInteractive,
       borderWidth: 0.5,

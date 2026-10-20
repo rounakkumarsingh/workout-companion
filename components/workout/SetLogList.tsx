@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { spacing } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import { spacing, useColors, type ColorSet } from '@/src/theme';
 import { SetLogRow } from './SetLogRow';
 import type { ActiveSet } from '@/src/features/workout-session/types';
 

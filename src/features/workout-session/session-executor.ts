@@ -40,7 +40,7 @@ function getPrescription(
   prescribedExerciseName: string,
 ): ExercisePrescription | undefined {
   const week = PROGRAM.weeks[weekNumber - 1];
-  const day = week.days.find((d) => d.dayType === dayType);
+  const day = week?.days.find((d) => d.dayType === dayType);
   return day?.exercises.find((e) => e.exerciseName === prescribedExerciseName);
 }
 
@@ -160,7 +160,9 @@ export async function swapExercise(
   });
   for (const [i, set] of exercise.sets.entries()) {
     if (set.isComplete) continue;
-    await updateSetLog(set.setLogId, suggestions[i]);
+    const suggestion = suggestions[i];
+    if (!suggestion) continue;
+    await updateSetLog(set.setLogId, suggestion);
   }
 
   return (await hydrateActiveSession(session.id))!;
@@ -271,7 +273,7 @@ export function getNextExercise(
   const sorted = [...session.exercises].sort((a, b) => a.sortOrder - b.sortOrder);
   const currentIdx = sorted.findIndex((e) => e.exerciseLogId === currentExerciseLogId);
   if (currentIdx === -1 || currentIdx >= sorted.length - 1) return null;
-  return sorted[currentIdx + 1];
+  return sorted[currentIdx + 1] ?? null;
 }
 
 /**
@@ -286,7 +288,11 @@ export function getNextIncompleteExercise(
   const currentIdx = sorted.findIndex((e) => e.exerciseLogId === currentExerciseLogId);
   for (let step = 1; step < sorted.length; step++) {
     const candidate = sorted[(currentIdx + step + sorted.length) % sorted.length];
-    if (candidate.exerciseLogId !== currentExerciseLogId && candidate.status !== 'completed') {
+    if (
+      candidate &&
+      candidate.exerciseLogId !== currentExerciseLogId &&
+      candidate.status !== 'completed'
+    ) {
       return candidate;
     }
   }

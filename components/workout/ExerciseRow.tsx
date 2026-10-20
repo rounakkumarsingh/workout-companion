@@ -9,10 +9,8 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
-import { typography, radii, spacing } from '@/src/theme';
+import { typography, radii, spacing, useColors, type ColorSet } from '@/src/theme';
 import { WEIGHT_INCREMENT_KG } from '@/src/features/workout-session/progression';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { ActiveExercise } from '@/src/features/workout-session/types';
 
@@ -40,8 +38,8 @@ function fmt(n: number): string {
 function buildMeta(exercise: ActiveExercise, status: ExerciseRowProps['status'], spec: string) {
   const total = exercise.sets.length;
   const done = exercise.sets.filter((s) => s.isComplete);
-  if (status === 'done' && done.length > 0) {
-    const last = done[done.length - 1];
+  const last = done[done.length - 1];
+  if (status === 'done' && last) {
     return `${done.length}/${total} · ${fmt(last.weight)} kg × ${last.reps}`;
   }
   if (status === 'active') {

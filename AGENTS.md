@@ -1,6 +1,6 @@
 # Expo HAS CHANGED
 
-Read the exact versioned docs at https://docs.expo.dev/versions/v54.0.0/ before writing any code.
+Expo SDK 54 (package pins `~54.0.x`): read the versioned docs at https://docs.expo.dev/versions/v54.0.0/ before writing any code.
 
 # AI Agent Operating Rules
 
