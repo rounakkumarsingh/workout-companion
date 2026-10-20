@@ -136,6 +136,7 @@ export default function ActiveWorkoutScreen() {
   const insets = useSafeAreaInsets();
   const [state, setState] = useState<ScreenState>({ phase: 'loading' });
   const activeRef = useRef<ActiveState | null>(null);
+  const quickLogBusyRef = useRef(false);
   const flatListRef = useRef<FlatList>(null);
   const reducedMotion = useReducedMotion();
   const colors = useColors();
@@ -156,25 +157,35 @@ export default function ActiveWorkoutScreen() {
   const exerciseStatusKey =
     state.phase === 'active' ? state.session.exercises.map((e) => e.status).join(',') : null;
 
-  const hydrate = useCallback(async (sessionId: string) => {
-    try {
-      const session = await hydrateActiveSession(sessionId);
-      if (!session) {
-        setState({ phase: 'error', message: 'Session not found.' });
-        return;
+  const hydrate = useCallback(
+    async (sessionId: string) => {
+      try {
+        const session = await hydrateActiveSession(sessionId);
+        if (!session) {
+          setState({ phase: 'error', message: 'Session not found.' });
+          return;
+        }
+        // getSessionById does not filter on status: a session finished while this
+        // list sat in the stack (e.g. back out of the celebration screen) would
+        // otherwise re-render as an active workout.
+        if (session.status !== 'in_progress') {
+          router.dismissAll();
+          return;
+        }
+        const s: ActiveState = {
+          phase: 'active',
+          session,
+          progress: getSessionProgress(session),
+        };
+        activeRef.current = s;
+        setState(s);
+      } catch (e) {
+        console.error('[workout] Failed to hydrate session:', e);
+        setState({ phase: 'error', message: e instanceof Error ? e.message : String(e) });
       }
-      const s: ActiveState = {
-        phase: 'active',
-        session,
-        progress: getSessionProgress(session),
-      };
-      activeRef.current = s;
-      setState(s);
-    } catch (e) {
-      console.error('[workout] Failed to hydrate session:', e);
-      setState({ phase: 'error', message: e instanceof Error ? e.message : String(e) });
-    }
-  }, []);
+    },
+    [router],
+  );
 
   // Reload on every focus so sets logged on the exercise screen show up
   // when returning to this list.
@@ -284,6 +295,9 @@ export default function ActiveWorkoutScreen() {
 
   const handleQuickLog = useCallback(
     async (weight: number, reps: number, rpe: number | null) => {
+      // A ref, not state: two taps in one frame both read the same pending set
+      // and would write it twice.
+      if (quickLogBusyRef.current) return;
       const current = activeRef.current;
       if (!current || !quickLogExercise) return;
       const exercise = current.session.exercises.find((e) => e.exerciseLogId === quickLogExercise);
@@ -296,6 +310,7 @@ export default function ActiveWorkoutScreen() {
         );
         return;
       }
+      quickLogBusyRef.current = true;
       try {
         const result = await updateSet(current.session, pendingSet.setLogId, {
           weight,
@@ -314,6 +329,8 @@ export default function ActiveWorkoutScreen() {
       } catch (e) {
         console.error('[workout] Failed to quick log set:', e);
         Alert.alert('Error', 'Failed to log set. Please try again.');
+      } finally {
+        quickLogBusyRef.current = false;
       }
     },
     [quickLogExercise],
