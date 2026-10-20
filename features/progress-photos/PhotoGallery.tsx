@@ -1,115 +1,90 @@
+import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors, typography, spacing } from '@/src/theme';
-
-interface ProgressPhoto {
-  id: string;
-  fileUri: string;
-  angle: string;
-  takenAt: string;
-  note: string | null;
-}
+import { typography, radii, spacing, useColors, type ColorSet } from '@/src/theme';
+import { groupIntoSets } from '@/src/features/progress-tracking/photos';
+import { parseLocalDateKey } from '@/src/lib/dates';
+import { PhotoThumb } from './PhotoThumb';
+import { angleLabel, type ProgressPhotoRow } from './types';
 
 interface PhotoGalleryProps {
-  photos: ProgressPhoto[];
-  onAddPress: () => void;
+  photos: readonly ProgressPhotoRow[];
+  onPhotoPress: (photo: ProgressPhotoRow) => void;
 }
 
-export function PhotoGallery({ photos, onAddPress }: PhotoGalleryProps) {
-  const latestByAngle: Record<string, ProgressPhoto | undefined> = {};
-  for (const p of photos) {
-    if (!latestByAngle[p.angle]) latestByAngle[p.angle] = p;
+const ANGLE_ORDER = ['front', 'side', 'rear'];
+
+export function PhotoGallery({ photos, onPhotoPress }: PhotoGalleryProps) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const sets = useMemo(() => groupIntoSets(photos), [photos]);
+
+  if (sets.length === 0) {
+    return (
+      <View style={styles.empty}>
+        <Text style={styles.emptyTitle}>No photos yet</Text>
+        <Text style={styles.emptyText}>
+          Your first set of front, side and rear photos becomes the starting point to compare
+          against.
+        </Text>
+      </View>
+    );
   }
-  const latestThree = [latestByAngle.front, latestByAngle.side, latestByAngle.rear].filter(
-    Boolean,
-  ) as ProgressPhoto[];
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>Progress Photos</Text>
-
-      {latestThree.length > 0 && (
-        <View style={styles.thumbRow}>
-          {latestThree.map((p) => (
-            <TouchableOpacity key={p.id} style={styles.thumb} activeOpacity={0.7}>
-              <View style={styles.thumbPlaceholder}>
-                <Text style={styles.thumbIcon}>📷</Text>
-              </View>
-              <Text style={styles.thumbLabel}>{p.angle}</Text>
-              <Text style={styles.thumbDate}>
-                {new Date(p.takenAt).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </Text>
-            </TouchableOpacity>
-          ))}
+      {sets.map((set) => (
+        <View key={set.dateKey} style={styles.set}>
+          <Text style={styles.setDate}>
+            {parseLocalDateKey(set.dateKey).toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+            })}
+          </Text>
+          <View style={styles.row}>
+            {[...set.photos]
+              .sort((a, b) => ANGLE_ORDER.indexOf(a.angle) - ANGLE_ORDER.indexOf(b.angle))
+              .map((p) => (
+                <TouchableOpacity
+                  key={p.id}
+                  style={styles.cell}
+                  onPress={() => onPhotoPress(p)}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${angleLabel(p.angle)} photo, open full size`}
+                >
+                  <PhotoThumb
+                    uri={p.fileUri}
+                    label={`${angleLabel(p.angle)} photo`}
+                    style={styles.thumb}
+                  />
+                  <Text style={styles.angle}>{angleLabel(p.angle)}</Text>
+                </TouchableOpacity>
+              ))}
+          </View>
         </View>
-      )}
-
-      <TouchableOpacity style={styles.addBtn} onPress={onAddPress} activeOpacity={0.7}>
-        <Text style={styles.addBtnText}>+ Add Photos</Text>
-      </TouchableOpacity>
+      ))}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: {
-    marginBottom: spacing.xl,
-  },
-  title: {
-    ...typography.monoLabel,
-    color: colors.textTertiary,
-    letterSpacing: 0.1,
-    textTransform: 'uppercase',
-    paddingHorizontal: spacing.xxl,
-    marginBottom: spacing.md,
-  },
-  thumbRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.xxl,
-    marginBottom: spacing.md,
-  },
-  thumb: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-  },
-  thumbPlaceholder: {
-    width: '100%',
-    aspectRatio: 0.75,
-    backgroundColor: colors.surfaceElevated,
-    borderWidth: 0.5,
-    borderColor: colors.border,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  thumbIcon: {
-    fontSize: 24,
-  },
-  thumbLabel: {
-    ...typography.monoTiny,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-  },
-  thumbDate: {
-    ...typography.monoTiny,
-    color: colors.textMuted,
-    fontSize: 8,
-  },
-  addBtn: {
-    marginHorizontal: spacing.xxl,
-    backgroundColor: colors.surfaceInteractive,
-    borderWidth: 0.5,
-    borderColor: colors.borderActive,
-    borderRadius: 8,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  addBtnText: {
-    ...typography.monoSmall,
-    color: colors.gold,
-  },
-});
+const makeStyles = (c: ColorSet) =>
+  StyleSheet.create({
+    wrap: { gap: spacing.xl },
+    set: { gap: spacing.md },
+    setDate: { ...typography.bodyLarge, color: c.textPrimary },
+    row: { flexDirection: 'row', gap: spacing.md },
+    cell: { flex: 1, gap: spacing.xs },
+    thumb: { width: '100%', aspectRatio: 3 / 4 },
+    angle: { ...typography.monoLabel, color: c.textSecondary, textAlign: 'center' },
+    empty: {
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      borderRadius: radii.card,
+      padding: spacing.xl,
+      gap: spacing.sm,
+    },
+    emptyTitle: { ...typography.bodyLarge, color: c.textPrimary },
+    emptyText: { ...typography.body, color: c.textSecondary },
+  });
