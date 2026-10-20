@@ -342,6 +342,28 @@ def main() -> int:
                         f"{name!r}: pdf {vid} code {code_videos[name]}"
                     )
 
+    # The link on the exercise's own name. One exercise has one demo video, so
+    # every week must agree, and the app must carry the same link.
+    primary: dict[str, set] = collections.defaultdict(set)
+    for day in pdf["days"]:
+        for e in day["exercises"]:
+            primary[e["name"]].add(e.get("video"))
+    pdf_primary_count = 0
+    for name, vids in sorted(primary.items()):
+        links = {v for v in vids if v}
+        pdf_primary_count += len(links)
+        if len(links) > 1:
+            issues["primary_video_conflict"].append(f"{name!r} has {len(links)} different PDF links: {sorted(links)}")
+            continue
+        if not links:
+            issues["primary_video_no_pdf_link"].append(f"{name!r} has no link anywhere in the PDF")
+            continue
+        vid = next(iter(links))
+        if name not in code_videos:
+            issues["primary_video_mismatch"].append(f"{name!r}: pdf {vid} but no EXERCISES entry")
+        elif code_videos[name] != vid:
+            issues["primary_video_mismatch"].append(f"{name!r}: pdf {vid} code {code_videos[name]}")
+
     for p in problems:
         issues["program_ts_parse"].append(p)
 
@@ -350,13 +372,14 @@ def main() -> int:
     print(f"  pdf rows       : {sum(d['exercise_count'] for d in pdf['days'])}")
     print(f"  code rows      : {sum(len(v) for d in code.values() for v in d.values())}")
     print(f"  EXERCISES      : {len(code_videos)}")
-    print(f"  pdf videos     : {pdf_video_count}")
+    print(f"  pdf videos     : {pdf_video_count} substitution slots, {pdf_primary_count} exercise links")
 
     order = [
         "program_ts_parse", "extractor_warning", "missing_day", "exercise_set",
         "exercise_order", "exercise_count", "working_sets", "warmup_sets",
         "reps", "early_rpe", "last_rpe", "rest", "video_mismatch",
-        "video_missing_entry",
+        "video_missing_entry", "primary_video_mismatch", "primary_video_conflict",
+        "primary_video_no_pdf_link",
     ]
     total = 0
     for key in order:
