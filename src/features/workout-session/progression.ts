@@ -107,6 +107,7 @@ export async function checkProgression(
     lastSessionWeights: lastWeights,
     topOfRange: allAtTop,
     readyForWeightIncrease: allAtTop,
+    lastSession: sessionData && 'sets' in sessionData ? sessionData : null,
   };
 }
 

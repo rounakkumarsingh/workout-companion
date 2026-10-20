@@ -22,6 +22,8 @@ import { useColors, typography, radii, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { ExerciseRow } from '@/components/workout/ExerciseRow';
 import { QuickLogOverlay } from '@/components/workout/QuickLogOverlay';
+import { LastTimeSheet } from '@/components/workout/LastTimeSheet';
+import { summarizeLastTime } from '@/src/features/workout-session/last-time';
 import type {
   ActiveSession,
   ActiveSet,
@@ -91,11 +93,14 @@ export default function ActiveWorkoutScreen() {
     Map<string, ProgressionSuggestion>
   >(new Map());
   const [quickLogExercise, setQuickLogExercise] = useState<string | null>(null);
+  const [lastTimeFor, setLastTimeFor] = useState<string | null>(null);
 
   const shakeOffset = useSharedValue(0);
 
   // Stable selectors for useEffect dependencies
   const phase = state.phase;
+  const exerciseNamesKey =
+    state.phase === 'active' ? state.session.exercises.map((e) => e.exerciseName).join('|') : '';
   const sessionId = state.phase === 'active' ? state.session.id : null;
   const exerciseStatusKey =
     state.phase === 'active' ? state.session.exercises.map((e) => e.status).join(',') : null;
@@ -178,7 +183,7 @@ export default function ActiveWorkoutScreen() {
         setProgressionSuggestions(map);
       });
     }
-  }, [sessionId]);
+  }, [sessionId, exerciseNamesKey]);
 
   useEffect(() => {
     if (state.phase === 'active') {
@@ -437,6 +442,8 @@ export default function ActiveWorkoutScreen() {
               progressionStatus={progressionStatus}
               index={index}
               spec={spec}
+              lastTime={summarizeLastTime(prog?.lastSession ?? null)}
+              onLastTimePress={() => setLastTimeFor(item.exerciseName)}
               onPress={() => handleViewDetail(item.exerciseLogId)}
               onLongPress={() => setQuickLogExercise(item.exerciseLogId)}
             />
@@ -525,6 +532,16 @@ export default function ActiveWorkoutScreen() {
       </View>
 
       <DevClearDbButton onCleared={() => router.dismissAll()} />
+
+      {lastTimeFor && (
+        <LastTimeSheet
+          visible
+          exerciseName={lastTimeFor}
+          summary={summarizeLastTime(progressionSuggestions.get(lastTimeFor)?.lastSession ?? null)}
+          readyForWeightIncrease={progressionSuggestions.get(lastTimeFor)?.readyForWeightIncrease}
+          onClose={() => setLastTimeFor(null)}
+        />
+      )}
 
       {quickEx && (
         <QuickLogOverlay

@@ -1,3 +1,4 @@
+import type { LastTimeSession } from './last-time';
 import type {
   DayType,
   WorkoutSessionStatus,
@@ -103,6 +104,8 @@ export interface ProgressionSuggestion {
   lastSessionWeights: number[];
   topOfRange: boolean;
   readyForWeightIncrease: boolean;
+  /** The most recent session with logged working sets; null on the first time. */
+  lastSession: LastTimeSession | null;
 }
 
 export interface ExerciseHistoryComparison {

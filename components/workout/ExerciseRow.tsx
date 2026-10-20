@@ -13,6 +13,8 @@ import { typography, radii, spacing, useColors, type ColorSet } from '@/src/them
 import { WEIGHT_INCREMENT_KG } from '@/src/features/workout-session/progression';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { ActiveExercise } from '@/src/features/workout-session/types';
+import type { LastTimeSummary } from '@/src/features/workout-session/last-time';
+import { LastTimeChip } from '@/components/workout/LastTimeChip';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -23,6 +25,9 @@ interface ExerciseRowProps {
   /** Zero-based position in the list; shown as the lead number. */
   index: number;
   spec: string;
+  /** What was done last time; omitted on the first time. */
+  lastTime?: LastTimeSummary | null;
+  onLastTimePress?: () => void;
   onPress: () => void;
   onLongPress?: () => void;
 }
@@ -60,6 +65,8 @@ export function ExerciseRow({
   progressionStatus,
   index,
   spec,
+  lastTime,
+  onLastTimePress,
   onPress,
   onLongPress,
 }: ExerciseRowProps) {
@@ -184,6 +191,9 @@ export function ExerciseRow({
             </View>
           )}
         </View>
+        {lastTime && onLastTimePress && !isDone ? (
+          <LastTimeChip summary={lastTime} onPress={onLastTimePress} />
+        ) : null}
       </View>
 
       <Svg width={18} height={18} viewBox="0 0 24 24">

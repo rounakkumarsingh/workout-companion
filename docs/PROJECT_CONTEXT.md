@@ -59,6 +59,8 @@ The MVP should support:
   * up to 4 sets per exercise
   * weight logging
   * reps logging
+  * a "last time" reference on each exercise that has been done before (workout list and exercise screen); tapping it shows every set from that session
+  * substitutions: choosing a substitute asks whether it is for this workout only or for every time (a permanent substitute replaces the prescribed exercise in later workouts until changed back)
 * Rest Day 1 cardio/HIIT tracking
 * SQLite persistence for all workout logs
 * Progress screen with:

@@ -15,6 +15,8 @@ interface SubstitutionCardProps {
   onSelect: (exerciseName: string) => void;
   disabled: boolean;
   prescription: ExercisePrescription | undefined;
+  /** Shown when this exercise is a permanent substitute for the prescribed one. */
+  permanentNote?: string;
 }
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
@@ -85,6 +87,7 @@ export function SubstitutionCard({
   onSelect,
   disabled,
   prescription,
+  permanentNote,
 }: SubstitutionCardProps) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -93,6 +96,7 @@ export function SubstitutionCard({
   return (
     <View style={styles.card}>
       <Text style={styles.label}>NOT YOUR EXERCISE?</Text>
+      {permanentNote ? <Text style={styles.permanent}>{permanentNote}</Text> : null}
       {disabled ? (
         <Text style={styles.locked}>
           🔒 Exercise change locked — sets have already been logged.
@@ -132,6 +136,11 @@ const makeStyles = (c: ColorSet) =>
       letterSpacing: 0.12,
       textTransform: 'uppercase',
       marginBottom: spacing.sm,
+    },
+    permanent: {
+      ...typography.monoLabel,
+      color: c.goldText,
+      marginBottom: spacing.md,
     },
     locked: {
       ...typography.monoBody,
