@@ -444,8 +444,13 @@ def _page_record(cells: list[Cell], page: int, week: int | None, label: str | No
             rec.warnings.append(
                 f"row {i + 1} ({_block_text(block)[:32]!r}) has "
                 f"{len(sets_cells)} working-set counts")
+        # A missing link is data, not an error: the PDF omits it on a few rows,
+        # and verify_program.py reports an exercise only if NO week carries one.
+        name_href = _block_href(block)
         rec.exercises.append({
             "name": _block_text(block),
+            "video": _normalise_video(name_href),
+            "video_raw": name_href,
             "technique": val("technique"),
             "warmup_sets": val("warmup_sets"),
             "working_sets": val("working_sets"),

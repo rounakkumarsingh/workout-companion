@@ -1,0 +1,1210 @@
+{
+  "summary": {
+    "unique_urls": 99,
+    "match": 89,
+    "weak": 10,
+    "mismatch": 0,
+    "unavailable": 0,
+    "error": 0,
+    "urls_shared_by_multiple_names": {
+      "BC_eDtrB-M4": [
+        "DB Walking Lunge",
+        "Walking Lunge"
+      ]
+    },
+    "names_with_multiple_urls": {},
+    "names_without_any_url": [],
+    "ts_names_with_null_url": []
+  },
+  "results": [
+    {
+      "video_id": "SEjKxJGg_C8",
+      "url": "https://youtu.be/SEjKxJGg_C8",
+      "status": 200,
+      "title": "SMITH MACHINE LUNGE",
+      "author": "Program Videos",
+      "names": [
+        "Smith Machine Static Lunge"
+      ],
+      "classification": "weak",
+      "reason": "Smith Machine Static Lunge: weak (3/4 name tokens present; missing ['static'])"
+    },
+    {
+      "video_id": "b0ypSz63UGo",
+      "url": "https://youtu.be/b0ypSz63UGo",
+      "status": 200,
+      "title": "Neutral-Grip Pullup",
+      "author": "Program Videos",
+      "names": [
+        "Neutral-Grip Pull-Up"
+      ],
+      "classification": "weak",
+      "reason": "Neutral-Grip Pull-Up: weak (2/4 name tokens present; missing ['pull', 'up'])"
+    },
+    {
+      "video_id": "b8fYnZ-usP0",
+      "url": "https://youtu.be/b8fYnZ-usP0",
+      "status": 200,
+      "title": "Incline Machine Press",
+      "author": "Program Videos",
+      "names": [
+        "45° Incline Machine Press"
+      ],
+      "classification": "weak",
+      "reason": "45° Incline Machine Press: weak (3/4 name tokens present; missing ['45'])"
+    },
+    {
+      "video_id": "htDXu61MPio",
+      "url": "https://youtu.be/htDXu61MPio",
+      "status": 200,
+      "title": "Bulgarian Split Squat",
+      "author": "Program Videos",
+      "names": [
+        "DB Bulgarian Split Squat"
+      ],
+      "classification": "weak",
+      "reason": "DB Bulgarian Split Squat: weak (3/4 name tokens present; missing ['dumbbell'])"
+    },
+    {
+      "video_id": "p2t9daxLpB8",
+      "url": "https://youtu.be/p2t9daxLpB8",
+      "status": 200,
+      "title": "Dumbbell Incline Press",
+      "author": "Program Videos",
+      "names": [
+        "45° Incline DB Press"
+      ],
+      "classification": "weak",
+      "reason": "45° Incline DB Press: weak (3/4 name tokens present; missing ['45'])"
+    },
+    {
+      "video_id": "pozooPg6PBE",
+      "url": "https://youtu.be/pozooPg6PBE",
+      "status": 200,
+      "title": "MACHINE ABDUCTION",
+      "author": "Program Videos",
+      "names": [
+        "Machine Hip Abduction"
+      ],
+      "classification": "weak",
+      "reason": "Machine Hip Abduction: weak (2/3 name tokens present; missing ['hip'])"
+    },
+    {
+      "video_id": "roKtfQZbxzg",
+      "url": "https://youtu.be/roKtfQZbxzg",
+      "status": 200,
+      "title": "DB ROW",
+      "author": "Program Videos",
+      "names": [
+        "Single-Arm DB Row"
+      ],
+      "classification": "weak",
+      "reason": "Single-Arm DB Row: weak (2/4 name tokens present; missing ['single', 'arm'])"
+    },
+    {
+      "video_id": "xY3sQXYhk7A",
+      "url": "https://youtu.be/xY3sQXYhk7A",
+      "status": 200,
+      "title": "HAMMER CURL",
+      "author": "Program Videos",
+      "names": [
+        "DB Hammer Curl"
+      ],
+      "classification": "weak",
+      "reason": "DB Hammer Curl: weak (2/3 name tokens present; missing ['dumbbell'])"
+    },
+    {
+      "video_id": "yGnp0HU8BnA",
+      "url": "https://youtu.be/yGnp0HU8BnA",
+      "status": 200,
+      "title": "WIDE GRIP PULLUP",
+      "author": "Program Videos",
+      "names": [
+        "Wide-Grip Pull-Up"
+      ],
+      "classification": "weak",
+      "reason": "Wide-Grip Pull-Up: weak (2/4 name tokens present; missing ['pull', 'up'])"
+    },
+    {
+      "video_id": "zGXvPjlgVkk",
+      "url": "https://youtu.be/zGXvPjlgVkk",
+      "status": 200,
+      "title": "Dumbbell Chest Press",
+      "author": "Program Videos",
+      "names": [
+        "DB Bench Press"
+      ],
+      "classification": "weak",
+      "reason": "DB Bench Press: weak (2/3 name tokens present; missing ['bench'])"
+    },
+    {
+      "video_id": "-XVRl8KU7x0",
+      "url": "https://youtu.be/-XVRl8KU7x0",
+      "status": 200,
+      "title": "MODIFIED CANDLESTICK",
+      "author": "Program Videos",
+      "names": [
+        "Modified Candlestick"
+      ],
+      "classification": "match",
+      "reason": "Modified Candlestick: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "0TP9kVcWGic",
+      "url": "https://youtu.be/0TP9kVcWGic",
+      "status": 200,
+      "title": "CABLE CROSSOVER LADDER",
+      "author": "Program Videos",
+      "names": [
+        "Cable Crossover Ladder"
+      ],
+      "classification": "match",
+      "reason": "Cable Crossover Ladder: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "1LhGmhVFe2Y",
+      "url": "https://youtu.be/1LhGmhVFe2Y",
+      "status": 200,
+      "title": "LOW-TO-HIGH CABLE CROSSOVER",
+      "author": "Program Videos",
+      "names": [
+        "Low-to-High Cable Crossover"
+      ],
+      "classification": "match",
+      "reason": "Low-to-High Cable Crossover: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "1yKAQLVV_XI",
+      "url": "https://youtu.be/1yKAQLVV_XI",
+      "status": 200,
+      "title": "LEG PRESS",
+      "author": "Program Videos",
+      "names": [
+        "Leg Press"
+      ],
+      "classification": "match",
+      "reason": "Leg Press: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "3CaIq8jZe18",
+      "url": "https://youtu.be/3CaIq8jZe18",
+      "status": 200,
+      "title": "BENCH DIP",
+      "author": "Program Videos",
+      "names": [
+        "Bench Dip"
+      ],
+      "classification": "match",
+      "reason": "Bench Dip: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "3FNfi_PrP9Y",
+      "url": "https://youtu.be/3FNfi_PrP9Y",
+      "status": 200,
+      "title": "DB STEP-UP",
+      "author": "Program Videos",
+      "names": [
+        "DB Step-Up"
+      ],
+      "classification": "match",
+      "reason": "DB Step-Up: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "552L1K3Rb_Q",
+      "url": "https://youtu.be/552L1K3Rb_Q",
+      "status": 200,
+      "title": "CABLE HIP ABDUCTION",
+      "author": "Program Videos",
+      "names": [
+        "Cable Hip Abduction"
+      ],
+      "classification": "match",
+      "reason": "Cable Hip Abduction: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "5h_NehuTqe4",
+      "url": "https://youtu.be/5h_NehuTqe4",
+      "status": 200,
+      "title": "Pull-Up",
+      "author": "Program Videos",
+      "names": [
+        "Pull-Up"
+      ],
+      "classification": "match",
+      "reason": "Pull-Up: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "6G5DmVaocGM",
+      "url": "https://youtu.be/6G5DmVaocGM",
+      "status": 200,
+      "title": "1-Arm 45° Cable Rear Delt Flye",
+      "author": "Program Videos",
+      "names": [
+        "1-Arm 45° Cable Rear Delt Flye"
+      ],
+      "classification": "match",
+      "reason": "1-Arm 45° Cable Rear Delt Flye: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "6lR2JdxUh7w",
+      "url": "https://youtu.be/6lR2JdxUh7w",
+      "status": 200,
+      "title": "STANDING CALF RAISE",
+      "author": "Program Videos",
+      "names": [
+        "Standing Calf Raise"
+      ],
+      "classification": "match",
+      "reason": "Standing Calf Raise: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "6pfj0G7VKdM",
+      "url": "https://youtu.be/6pfj0G7VKdM",
+      "status": 200,
+      "title": "SEATED CALF RAISE",
+      "author": "Program Videos",
+      "names": [
+        "Seated Calf Raise"
+      ],
+      "classification": "match",
+      "reason": "Seated Calf Raise: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "8m2jNHBP580",
+      "url": "https://youtu.be/8m2jNHBP580",
+      "status": 200,
+      "title": "HIGH CABLE CUFFED LATERAL RAISE",
+      "author": "Program Videos",
+      "names": [
+        "High-Cable Cuffed Lateral Raise"
+      ],
+      "classification": "match",
+      "reason": "High-Cable Cuffed Lateral Raise: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "9_I1PqZAjdA",
+      "url": "https://youtu.be/9_I1PqZAjdA",
+      "status": 200,
+      "title": "Overhead Cable Triceps Extension (Bar)",
+      "author": "Program Videos",
+      "names": [
+        "Overhead Cable Triceps Extension (Bar)"
+      ],
+      "classification": "match",
+      "reason": "Overhead Cable Triceps Extension (Bar): match (all name tokens present in title)"
+    },
+    {
+      "video_id": "9ksG-O0ZUto",
+      "url": "https://youtu.be/9ksG-O0ZUto",
+      "status": 200,
+      "title": "GLUTE-HAM RAISE",
+      "author": "Program Videos",
+      "names": [
+        "Glute-Ham Raise"
+      ],
+      "classification": "match",
+      "reason": "Glute-Ham Raise: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "9rFS1gg0vJM",
+      "url": "https://youtu.be/9rFS1gg0vJM",
+      "status": 200,
+      "title": "LONG LEVER PLANK",
+      "author": "Program Videos",
+      "names": [
+        "Long-Lever Plank"
+      ],
+      "classification": "match",
+      "reason": "Long-Lever Plank: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "B8PB5RPhTWQ",
+      "url": "https://youtu.be/B8PB5RPhTWQ",
+      "status": 200,
+      "title": "Seated DB Shoulder Press",
+      "author": "Program Videos",
+      "names": [
+        "Seated DB Shoulder Press"
+      ],
+      "classification": "match",
+      "reason": "Seated DB Shoulder Press: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "BC_eDtrB-M4",
+      "url": "https://youtu.be/BC_eDtrB-M4",
+      "status": 200,
+      "title": "DB Walking Lunge",
+      "author": "Program Videos",
+      "names": [
+        "DB Walking Lunge",
+        "Walking Lunge"
+      ],
+      "classification": "match",
+      "reason": "DB Walking Lunge: match (all name tokens present in title); Walking Lunge: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "BFZyW_7ld0c",
+      "url": "https://youtu.be/BFZyW_7ld0c",
+      "status": 200,
+      "title": "Concentration Cable Curl",
+      "author": "Program Videos",
+      "names": [
+        "Concentration Cable Curl"
+      ],
+      "classification": "match",
+      "reason": "Concentration Cable Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "BmYuAG2j2co",
+      "url": "https://youtu.be/BmYuAG2j2co",
+      "status": 200,
+      "title": "Lean-In DB Lateral Raise",
+      "author": "Program Videos",
+      "names": [
+        "Lean-In DB Lateral Raise"
+      ],
+      "classification": "match",
+      "reason": "Lean-In DB Lateral Raise: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "CI88L1VNvEs",
+      "url": "https://youtu.be/CI88L1VNvEs",
+      "status": 200,
+      "title": "PEC DECK",
+      "author": "Program Videos",
+      "names": [
+        "Pec Deck"
+      ],
+      "classification": "match",
+      "reason": "Pec Deck: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "CWH5J_7kzjM",
+      "url": "https://youtu.be/CWH5J_7kzjM",
+      "status": 200,
+      "title": "Bayesian Cable Curl",
+      "author": "Program Videos",
+      "names": [
+        "Bayesian Cable Curl"
+      ],
+      "classification": "match",
+      "reason": "Bayesian Cable Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "CrfvmSGfT2c",
+      "url": "https://youtu.be/CrfvmSGfT2c",
+      "status": 200,
+      "title": "LEAN-BACK MACHINE PULLDOWN",
+      "author": "Program Videos",
+      "names": [
+        "Lean-Back Machine Pulldown"
+      ],
+      "classification": "match",
+      "reason": "Lean-Back Machine Pulldown: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "D-kqUKEQZZ0",
+      "url": "https://youtu.be/D-kqUKEQZZ0",
+      "status": 200,
+      "title": "REVERSE NORDIC",
+      "author": "Program Videos",
+      "names": [
+        "Reverse Nordic"
+      ],
+      "classification": "match",
+      "reason": "Reverse Nordic: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "Dn7qgf9iSH8",
+      "url": "https://youtu.be/Dn7qgf9iSH8",
+      "status": 200,
+      "title": "EZ BAR PREACHER CURL",
+      "author": "Program Videos",
+      "names": [
+        "EZ-Bar Preacher Curl"
+      ],
+      "classification": "match",
+      "reason": "EZ-Bar Preacher Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "FvekMyIs-yk",
+      "url": "https://youtu.be/FvekMyIs-yk",
+      "status": 200,
+      "title": "Swiss Ball Rollout",
+      "author": "Program Videos",
+      "names": [
+        "Swiss Ball Rollout"
+      ],
+      "classification": "match",
+      "reason": "Swiss Ball Rollout: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "GOqHdmshRKY",
+      "url": "https://youtu.be/GOqHdmshRKY",
+      "status": 200,
+      "title": "Smith Machine Static Lunge with Elevated Front Foot",
+      "author": "Program Videos",
+      "names": [
+        "Smith Machine Static Lunge w/ Elevated Front Foot"
+      ],
+      "classification": "match",
+      "reason": "Smith Machine Static Lunge w/ Elevated Front Foot: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "GYoUoVNlbGc",
+      "url": "https://youtu.be/GYoUoVNlbGc",
+      "status": 200,
+      "title": "OVERHEAD CABLE TRICEPS EXTENSIONS (ROPE)",
+      "author": "Program Videos",
+      "names": [
+        "Overhead Cable Triceps Extension (Rope)"
+      ],
+      "classification": "match",
+      "reason": "Overhead Cable Triceps Extension (Rope): match (all name tokens present in title)"
+    },
+    {
+      "video_id": "GhrVM-jPIEA",
+      "url": "https://youtu.be/GhrVM-jPIEA",
+      "status": 200,
+      "title": "Rope Face Pull",
+      "author": "Program Videos",
+      "names": [
+        "Rope Face Pull"
+      ],
+      "classification": "match",
+      "reason": "Rope Face Pull: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "Hy6f1Lz_PiA",
+      "url": "https://youtu.be/Hy6f1Lz_PiA",
+      "status": 200,
+      "title": "Cable Paused Shrug-In",
+      "author": "Program Videos",
+      "names": [
+        "Cable Paused Shrug-In"
+      ],
+      "classification": "match",
+      "reason": "Cable Paused Shrug-In: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "IYXRrYXfVLc",
+      "url": "https://youtu.be/IYXRrYXfVLc",
+      "status": 200,
+      "title": "WIDE-GRIP LAT PULLDOWN",
+      "author": "Program Videos",
+      "names": [
+        "Wide-Grip Lat Pulldown"
+      ],
+      "classification": "match",
+      "reason": "Wide-Grip Lat Pulldown: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "J2D2J7RO_tA",
+      "url": "https://youtu.be/J2D2J7RO_tA",
+      "status": 200,
+      "title": "Smith Machine Squat",
+      "author": "Program Videos",
+      "names": [
+        "Smith Machine Squat"
+      ],
+      "classification": "match",
+      "reason": "Smith Machine Squat: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "K2yKEoazT3g",
+      "url": "https://youtu.be/K2yKEoazT3g",
+      "status": 200,
+      "title": "Machine Crunch",
+      "author": "Program Videos",
+      "names": [
+        "Machine Crunch"
+      ],
+      "classification": "match",
+      "reason": "Machine Crunch: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "MmuyHKYCLps",
+      "url": "https://youtu.be/MmuyHKYCLps",
+      "status": 200,
+      "title": "DEFICIT PENDLAY ROW",
+      "author": "Program Videos",
+      "names": [
+        "Pendlay Deficit Row"
+      ],
+      "classification": "match",
+      "reason": "Pendlay Deficit Row: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "MnMux3Wc0Ac",
+      "url": "https://youtu.be/MnMux3Wc0Ac",
+      "status": 200,
+      "title": "HIGH CABLE LATERAL RAISE",
+      "author": "Program Videos",
+      "names": [
+        "High-Cable Lateral Raise"
+      ],
+      "classification": "match",
+      "reason": "High-Cable Lateral Raise: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "NwQ5Ch5t5Vk",
+      "url": "https://youtu.be/NwQ5Ch5t5Vk",
+      "status": 200,
+      "title": "DUAL-HANDLE LAT PULLDOWN (MID-BACK+LATS)",
+      "author": "Program Videos",
+      "names": [
+        "Dual-Handle Lat Pulldown"
+      ],
+      "classification": "match",
+      "reason": "Dual-Handle Lat Pulldown: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "OfjncdW_Vyc",
+      "url": "https://youtu.be/OfjncdW_Vyc",
+      "status": 200,
+      "title": "CABLE SHOULDER PRESS",
+      "author": "Program Videos",
+      "names": [
+        "Cable Shoulder Press"
+      ],
+      "classification": "match",
+      "reason": "Cable Shoulder Press: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "Oq7gJuAuJh0",
+      "url": "https://youtu.be/Oq7gJuAuJh0",
+      "status": 200,
+      "title": "DB Concentration Curl",
+      "author": "Program Videos",
+      "names": [
+        "DB Concentration Curl"
+      ],
+      "classification": "match",
+      "reason": "DB Concentration Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "R2iUnBxFtis",
+      "url": "https://youtu.be/R2iUnBxFtis",
+      "status": 200,
+      "title": "Machine Preacher Curl",
+      "author": "Program Videos",
+      "names": [
+        "Machine Preacher Curl"
+      ],
+      "classification": "match",
+      "reason": "Machine Preacher Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "R7f45Mv7yyg",
+      "url": "https://youtu.be/R7f45Mv7yyg",
+      "status": 200,
+      "title": "Katana Triceps Extension",
+      "author": "Program Videos",
+      "names": [
+        "Katana Triceps Extension"
+      ],
+      "classification": "match",
+      "reason": "Katana Triceps Extension: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "S2agsLlUSII",
+      "url": "https://youtu.be/S2agsLlUSII",
+      "status": 200,
+      "title": "GOBLET SQUAT",
+      "author": "Program Videos",
+      "names": [
+        "Goblet Squat"
+      ],
+      "classification": "match",
+      "reason": "Goblet Squat: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "S6DTPNZ_-F4",
+      "url": "https://youtu.be/S6DTPNZ_-F4",
+      "status": 200,
+      "title": "LEG PRESS CALF PRESS",
+      "author": "Program Videos",
+      "names": [
+        "Leg Press Calf Press"
+      ],
+      "classification": "match",
+      "reason": "Leg Press Calf Press: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "SCQVmN1gYsk",
+      "url": "https://youtu.be/SCQVmN1gYsk",
+      "status": 200,
+      "title": "MACHINE SHOULDER PRESS",
+      "author": "Program Videos",
+      "names": [
+        "Machine Shoulder Press"
+      ],
+      "classification": "match",
+      "reason": "Machine Shoulder Press: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "TTgICSfj1hY",
+      "url": "https://youtu.be/TTgICSfj1hY",
+      "status": 200,
+      "title": "CABLE ROPE HAMMER CURL",
+      "author": "Program Videos",
+      "names": [
+        "Cable Rope Hammer Curl"
+      ],
+      "classification": "match",
+      "reason": "Cable Rope Hammer Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "TWUnnDK8rck",
+      "url": "https://youtu.be/TWUnnDK8rck",
+      "status": 200,
+      "title": "Hack Squat",
+      "author": "Program Videos",
+      "names": [
+        "Hack Squat"
+      ],
+      "classification": "match",
+      "reason": "Hack Squat: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "V-B_Y-OvOTQ",
+      "url": "https://youtu.be/V-B_Y-OvOTQ",
+      "status": 200,
+      "title": "HIGH-BAR BACK SQUAT",
+      "author": "Program Videos",
+      "names": [
+        "High-Bar Back Squat"
+      ],
+      "classification": "match",
+      "reason": "High-Bar Back Squat: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "VRwSgUoj7uI",
+      "url": "https://youtu.be/VRwSgUoj7uI",
+      "status": 200,
+      "title": "DB RDL",
+      "author": "Program Videos",
+      "names": [
+        "DB RDL"
+      ],
+      "classification": "match",
+      "reason": "DB RDL: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "WMrgn4GG7mI",
+      "url": "https://youtu.be/WMrgn4GG7mI",
+      "status": 200,
+      "title": "EZ BAR CURL",
+      "author": "Program Videos",
+      "names": [
+        "EZ-Bar Curl"
+      ],
+      "classification": "match",
+      "reason": "EZ-Bar Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "WTkQLAethtg",
+      "url": "https://youtu.be/WTkQLAethtg",
+      "status": 200,
+      "title": "DB Preacher Curl",
+      "author": "Program Videos",
+      "names": [
+        "DB Preacher Curl"
+      ],
+      "classification": "match",
+      "reason": "DB Preacher Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "Wmivm40AV3Q",
+      "url": "https://youtu.be/Wmivm40AV3Q",
+      "status": 200,
+      "title": "SMITH MACHINE ROW",
+      "author": "Program Videos",
+      "names": [
+        "Smith Machine Row"
+      ],
+      "classification": "match",
+      "reason": "Smith Machine Row: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "XxGCRSJmgwY",
+      "url": "https://youtu.be/XxGCRSJmgwY",
+      "status": 200,
+      "title": "DB CURL",
+      "author": "Program Videos",
+      "names": [
+        "DB Curl"
+      ],
+      "classification": "match",
+      "reason": "DB Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "Y8fb_rtEU_4",
+      "url": "https://youtu.be/Y8fb_rtEU_4",
+      "status": 200,
+      "title": "REVERSE PEC DECK",
+      "author": "Program Videos",
+      "names": [
+        "Reverse Pec Deck"
+      ],
+      "classification": "match",
+      "reason": "Reverse Pec Deck: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "YdUUYFgpA7g",
+      "url": "https://youtu.be/YdUUYFgpA7g",
+      "status": 200,
+      "title": "DB TRICEPS KICKBACK",
+      "author": "Program Videos",
+      "names": [
+        "DB Triceps Kickback"
+      ],
+      "classification": "match",
+      "reason": "DB Triceps Kickback: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "Z0NIYS9nyoQ",
+      "url": "https://youtu.be/Z0NIYS9nyoQ",
+      "status": 200,
+      "title": "INCLINE DB STRETCH-CURL",
+      "author": "Program Videos",
+      "names": [
+        "Incline DB Stretch Curl"
+      ],
+      "classification": "match",
+      "reason": "Incline DB Stretch Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "ZheUsKqU81M",
+      "url": "https://youtu.be/ZheUsKqU81M",
+      "status": 200,
+      "title": "WEIGHTED DECLINE CRUNCH",
+      "author": "Program Videos",
+      "names": [
+        "Decline Weighted Crunch"
+      ],
+      "classification": "match",
+      "reason": "Decline Weighted Crunch: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "Zjzt4MRbAlc",
+      "url": "https://youtu.be/Zjzt4MRbAlc",
+      "status": 200,
+      "title": "LEAN-BACK LAT PULLDOWN",
+      "author": "Program Videos",
+      "names": [
+        "Lean-Back Lat Pulldown"
+      ],
+      "classification": "match",
+      "reason": "Lean-Back Lat Pulldown: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "b8fmEaXHapU",
+      "url": "https://youtu.be/b8fmEaXHapU",
+      "status": 200,
+      "title": "Snatch-Grip RDL",
+      "author": "Program Videos",
+      "names": [
+        "Snatch-Grip RDL"
+      ],
+      "classification": "match",
+      "reason": "Snatch-Grip RDL: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "bCa036rGtVU",
+      "url": "https://youtu.be/bCa036rGtVU",
+      "status": 200,
+      "title": "TRICEPS PRESSDOWN (ROPE)",
+      "author": "Program Videos",
+      "names": [
+        "Triceps Pressdown (Rope)"
+      ],
+      "classification": "match",
+      "reason": "Triceps Pressdown (Rope): match (all name tokens present in title)"
+    },
+    {
+      "video_id": "ck1zjNTnFew",
+      "url": "https://youtu.be/ck1zjNTnFew",
+      "status": 200,
+      "title": "EZ BAR CABLE CURL",
+      "author": "Program Videos",
+      "names": [
+        "EZ-Bar Cable Curl"
+      ],
+      "classification": "match",
+      "reason": "EZ-Bar Cable Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "dEdnC3ca-Yg",
+      "url": "https://youtu.be/dEdnC3ca-Yg",
+      "status": 200,
+      "title": "Hammer Preacher Curl",
+      "author": "Program Videos",
+      "names": [
+        "Hammer Preacher Curl"
+      ],
+      "classification": "match",
+      "reason": "Hammer Preacher Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "eFsNZc69m10",
+      "url": "https://youtu.be/eFsNZc69m10",
+      "status": 200,
+      "title": "CABLE PULL THROUGH",
+      "author": "Program Videos",
+      "names": [
+        "Cable Pull-Through"
+      ],
+      "classification": "match",
+      "reason": "Cable Pull-Through: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "eWAjlO4FWPQ",
+      "url": "https://youtu.be/eWAjlO4FWPQ",
+      "status": 200,
+      "title": "SISSY SQUAT",
+      "author": "Program Videos",
+      "names": [
+        "Sissy Squat"
+      ],
+      "classification": "match",
+      "reason": "Sissy Squat: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "epBrpaGHMcg",
+      "url": "https://youtu.be/epBrpaGHMcg",
+      "status": 200,
+      "title": "Cable Crunch",
+      "author": "Program Videos",
+      "names": [
+        "Cable Crunch"
+      ],
+      "classification": "match",
+      "reason": "Cable Crunch: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "fbLTzgTKOR8",
+      "url": "https://youtu.be/fbLTzgTKOR8",
+      "status": 200,
+      "title": "DB SKULL CRUSHER",
+      "author": "Program Videos",
+      "names": [
+        "DB Skull Crusher"
+      ],
+      "classification": "match",
+      "reason": "DB Skull Crusher: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "fzpYiRtzmFA",
+      "url": "https://youtu.be/fzpYiRtzmFA",
+      "status": 200,
+      "title": "NORDIC HAM CURL",
+      "author": "Program Videos",
+      "names": [
+        "Nordic Ham Curl"
+      ],
+      "classification": "match",
+      "reason": "Nordic Ham Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "gGTgyCU9gcg",
+      "url": "https://youtu.be/gGTgyCU9gcg",
+      "status": 200,
+      "title": "AB WHEEL ROLLOUT",
+      "author": "Program Videos",
+      "names": [
+        "Ab Wheel Rollout"
+      ],
+      "classification": "match",
+      "reason": "Ab Wheel Rollout: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "ggFtGGYobE4",
+      "url": "https://youtu.be/ggFtGGYobE4",
+      "status": 200,
+      "title": "BARBELL RDL",
+      "author": "Program Videos",
+      "names": [
+        "Barbell RDL"
+      ],
+      "classification": "match",
+      "reason": "Barbell RDL: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "hci6iKFtTkg",
+      "url": "https://youtu.be/hci6iKFtTkg",
+      "status": 200,
+      "title": "DB STATIC LUNGE",
+      "author": "Program Videos",
+      "names": [
+        "DB Static Lunge"
+      ],
+      "classification": "match",
+      "reason": "DB Static Lunge: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "ijsSiWSzYw0",
+      "url": "https://youtu.be/ijsSiWSzYw0",
+      "status": 200,
+      "title": "Chest-Supported Machine Row",
+      "author": "Program Videos",
+      "names": [
+        "Chest-Supported Machine Row"
+      ],
+      "classification": "match",
+      "reason": "Chest-Supported Machine Row: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "jQ9rkfvAbIc",
+      "url": "https://youtu.be/jQ9rkfvAbIc",
+      "status": 200,
+      "title": "SEATED SUPER BAYESIAN HIGH CABLE CURL",
+      "author": "Program Videos",
+      "names": [
+        "Seated Super-Bayesian High Cable Curl"
+      ],
+      "classification": "match",
+      "reason": "Seated Super-Bayesian High Cable Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "lA4_1F9EAFU",
+      "url": "https://youtu.be/lA4_1F9EAFU",
+      "status": 200,
+      "title": "NEUTRAL GRIP LAT PULLDOWN W  INTEGRATED PARTIALS",
+      "author": "Program Videos",
+      "names": [
+        "Neutral-Grip Lat Pulldown"
+      ],
+      "classification": "match",
+      "reason": "Neutral-Grip Lat Pulldown: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "lEeCPhlFZig",
+      "url": "https://youtu.be/lEeCPhlFZig",
+      "status": 200,
+      "title": "WEIGHTED 45 DEGREE HYPEREXTENSION",
+      "author": "Program Videos",
+      "names": [
+        "45° Hyperextension"
+      ],
+      "classification": "match",
+      "reason": "45° Hyperextension: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "moFqLlptX7Q",
+      "url": "https://youtu.be/moFqLlptX7Q",
+      "status": 200,
+      "title": "DB Shrug",
+      "author": "Program Videos",
+      "names": [
+        "DB Shrug"
+      ],
+      "classification": "match",
+      "reason": "DB Shrug: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "nQL5ieH39sw",
+      "url": "https://youtu.be/nQL5ieH39sw",
+      "status": 200,
+      "title": "BARBELL BENCH PRESS",
+      "author": "Program Videos",
+      "names": [
+        "Barbell Bench Press"
+      ],
+      "classification": "match",
+      "reason": "Barbell Bench Press: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "o4eazahiXQw",
+      "url": "https://youtu.be/o4eazahiXQw",
+      "status": 200,
+      "title": "Triceps Pressdown (Bar)",
+      "author": "Program Videos",
+      "names": [
+        "Triceps Pressdown (Bar)"
+      ],
+      "classification": "match",
+      "reason": "Triceps Pressdown (Bar): match (all name tokens present in title)"
+    },
+    {
+      "video_id": "oDKGCsTjAk8",
+      "url": "https://youtu.be/oDKGCsTjAk8",
+      "status": 200,
+      "title": "EZ-BAR SKULL CRUSHER",
+      "author": "Program Videos",
+      "names": [
+        "EZ-Bar Skull Crusher"
+      ],
+      "classification": "match",
+      "reason": "EZ-Bar Skull Crusher: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "oRxTKRtP8RE",
+      "url": "https://youtu.be/oRxTKRtP8RE",
+      "status": 200,
+      "title": "Cable Triceps Kickback",
+      "author": "Program Videos",
+      "names": [
+        "Cable Triceps Kickback"
+      ],
+      "classification": "match",
+      "reason": "Cable Triceps Kickback: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "okCWuhxJEvw",
+      "url": "https://youtu.be/okCWuhxJEvw",
+      "status": 200,
+      "title": "CHEST SUPPORTED INCLINE DB ROW",
+      "author": "Program Videos",
+      "names": [
+        "Incline Chest-Supported DB Row"
+      ],
+      "classification": "match",
+      "reason": "Incline Chest-Supported DB Row: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "q8qlHwcuOtc",
+      "url": "https://youtu.be/q8qlHwcuOtc",
+      "status": 200,
+      "title": "CHEST-SUPPORTED T-BAR ROW",
+      "author": "Program Videos",
+      "names": [
+        "Chest-Supported T-Bar Row"
+      ],
+      "classification": "match",
+      "reason": "Chest-Supported T-Bar Row: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "qJzc-iHKGdg",
+      "url": "https://youtu.be/qJzc-iHKGdg",
+      "status": 200,
+      "title": "BOTTOM HALF DB FLYE",
+      "author": "Program Videos",
+      "names": [
+        "Bottom-Half DB Flye"
+      ],
+      "classification": "match",
+      "reason": "Bottom-Half DB Flye: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "rGqwkinWqYI",
+      "url": "https://youtu.be/rGqwkinWqYI",
+      "status": 200,
+      "title": "HANGING LEG RAISE",
+      "author": "Program Videos",
+      "names": [
+        "Hanging Leg Raise"
+      ],
+      "classification": "match",
+      "reason": "Hanging Leg Raise: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "sOYvvFPYdsU",
+      "url": "https://youtu.be/sOYvvFPYdsU",
+      "status": 200,
+      "title": "LATERAL BAND WALK",
+      "author": "Program Videos",
+      "names": [
+        "Lateral Band Walk"
+      ],
+      "classification": "match",
+      "reason": "Lateral Band Walk: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "sX4tGtcc62k",
+      "url": "https://youtu.be/sX4tGtcc62k",
+      "status": 200,
+      "title": "Lying Leg Curl",
+      "author": "Program Videos",
+      "names": [
+        "Lying Leg Curl"
+      ],
+      "classification": "match",
+      "reason": "Lying Leg Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "tsJMV9Gxw-o",
+      "url": "https://youtu.be/tsJMV9Gxw-o",
+      "status": 200,
+      "title": "BOTTOM HALF SEATED CABLE FLYE",
+      "author": "Program Videos",
+      "names": [
+        "Bottom-Half Seated Cable Flye"
+      ],
+      "classification": "match",
+      "reason": "Bottom-Half Seated Cable Flye: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "uFbNtqP966A",
+      "url": "https://youtu.be/uFbNtqP966A",
+      "status": 200,
+      "title": "Leg Extension",
+      "author": "Program Videos",
+      "names": [
+        "Leg Extension"
+      ],
+      "classification": "match",
+      "reason": "Leg Extension: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "ua0XuKwKQ9M",
+      "url": "https://youtu.be/ua0XuKwKQ9M",
+      "status": 200,
+      "title": "MACHINE SHRUG",
+      "author": "Program Videos",
+      "names": [
+        "Machine Shrug"
+      ],
+      "classification": "match",
+      "reason": "Machine Shrug: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "vqQ9ok0dEgk",
+      "url": "https://youtu.be/vqQ9ok0dEgk",
+      "status": 200,
+      "title": "45° Incline Barbell Press",
+      "author": "Program Videos",
+      "names": [
+        "45° Incline Barbell Press"
+      ],
+      "classification": "match",
+      "reason": "45° Incline Barbell Press: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "w86Ph4iQgBM",
+      "url": "https://youtu.be/w86Ph4iQgBM",
+      "status": 200,
+      "title": "LYING LEG RAISE",
+      "author": "Program Videos",
+      "names": [
+        "Lying Leg Raise"
+      ],
+      "classification": "match",
+      "reason": "Lying Leg Raise: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "yv0aAY7M1mk",
+      "url": "https://youtu.be/yv0aAY7M1mk",
+      "status": 200,
+      "title": "SEATED LEG CURL",
+      "author": "Program Videos",
+      "names": [
+        "Seated Leg Curl"
+      ],
+      "classification": "match",
+      "reason": "Seated Leg Curl: match (all name tokens present in title)"
+    },
+    {
+      "video_id": "zDecGJLyVm8",
+      "url": "https://youtu.be/zDecGJLyVm8",
+      "status": 200,
+      "title": "Chest Press Machine",
+      "author": "Program Videos",
+      "names": [
+        "Machine Chest Press"
+      ],
+      "classification": "match",
+      "reason": "Machine Chest Press: match (all name tokens present in title)"
+    }
+  ]
+}

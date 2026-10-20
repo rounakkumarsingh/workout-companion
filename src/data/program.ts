@@ -239,7 +239,7 @@ const EXERCISES = {
   },
   'High-Cable Lateral Raise': {
     name: 'High-Cable Lateral Raise',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/MnMux3Wc0Ac',
     notes: 'Focus on squeezing your lateral delt to move the weight.',
   },
   'Pendlay Deficit Row': {
@@ -275,18 +275,18 @@ const EXERCISES = {
   },
   'Smith Machine Squat': {
     name: 'Smith Machine Squat',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/J2D2J7RO_tA',
     notes:
       'Once you are under the bar, set up your feet as you would a normal squat and then bring them forward ~3\u20136 inches. This will cause you to lean back into the bar slightly, allowing for a more upright squat, while also placing more tension on the quads. If your heels are raising at the bottom, you may need to bring your feet more forward. If your feet feel like they are slipping or your lower back is rounding at the bottom, try bringing your feet back a bit.',
   },
   'Smith Machine Static Lunge w/ Elevated Front Foot': {
     name: 'Smith Machine Static Lunge w/ Elevated Front Foot',
-    demoVideoUrl: 'https://youtu.be/SEjKxJGg_C8',
+    demoVideoUrl: 'https://youtu.be/GOqHdmshRKY',
     notes: 'Elevate your front foot on a small box. Minimize contribution from your back leg.',
   },
   'Barbell RDL': {
     name: 'Barbell RDL',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/ggFtGGYobE4',
     notes:
       'To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).',
   },
@@ -330,13 +330,13 @@ const EXERCISES = {
   // -- Pull Day Exercises --
   'Neutral-Grip Lat Pulldown': {
     name: 'Neutral-Grip Lat Pulldown',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/lA4_1F9EAFU',
     notes:
       "Do these pulldowns with the handle more out in front of you, more like a cross between a pullover and a pulldown. Focus on feeling your lats working more than the weight you're using.",
   },
   'Lean-Back Lat Pulldown': {
     name: 'Lean-Back Lat Pulldown',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/Zjzt4MRbAlc',
     notes:
       "Initiate the pulldown with a straight up posture. As you pull the bar down, lean back by about 15\u201330\u00b0 to get the mid-back more involved. Softly touch the bar to your chest on every rep and, even though you're leaning back, still control the weight!",
   },
@@ -354,7 +354,7 @@ const EXERCISES = {
   },
   '1-Arm 45\u00b0 Cable Rear Delt Flye': {
     name: '1-Arm 45\u00b0 Cable Rear Delt Flye',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/6G5DmVaocGM',
     notes: 'Pause for 1\u20132 seconds in the squeeze of each rep. Contract the rear delts hard!',
   },
   'Machine Shrug': {
@@ -371,23 +371,23 @@ const EXERCISES = {
   },
   'EZ-Bar Cable Curl': {
     name: 'EZ-Bar Cable Curl',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/ck1zjNTnFew',
     notes:
       'Set up the cable at the lowest position. Maintain constant tension on the biceps. Slow, controlled reps!',
   },
   'Cable Rope Hammer Curl': {
     name: 'Cable Rope Hammer Curl',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/TTgICSfj1hY',
     notes: 'Squeeze the rope hard as you curl the weight up. Smooth, controlled reps.',
   },
   'Machine Preacher Curl': {
     name: 'Machine Preacher Curl',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/R2iUnBxFtis',
     notes: 'Smooth, controlled reps. Mind-muscle connection with the biceps.',
   },
   'DB Concentration Curl': {
     name: 'DB Concentration Curl',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/Oq7gJuAuJh0',
     notes: 'Smooth, controlled reps. Mind-muscle connection with the biceps.',
   },
 
@@ -428,13 +428,13 @@ const EXERCISES = {
   },
   'Cable Triceps Kickback': {
     name: 'Cable Triceps Kickback',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/oRxTKRtP8RE',
     notes:
       "There are two ways you can do this: upright or bent over. Choose the one that feels more comfortable for you. The main thing is that when you're in the full squeeze, your shoulder should be positioned back behind your torso.",
   },
   'EZ-Bar Skull Crusher': {
     name: 'EZ-Bar Skull Crusher',
-    demoVideoUrl: 'https://youtu.be/fbLTzgTKOR8',
+    demoVideoUrl: 'https://youtu.be/oDKGCsTjAk8',
     notes: 'Optionally pause for 0.5\u20131 second in the stretched aspect of each rep.',
   },
   'Triceps Pressdown (Bar)': {
@@ -444,7 +444,7 @@ const EXERCISES = {
   },
   'Lying Leg Raise': {
     name: 'Lying Leg Raise',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/w86Ph4iQgBM',
     notes:
       'Perform these slowly, focus on keeping your lower back against the ground throughout the set.',
   },
@@ -474,7 +474,7 @@ const EXERCISES = {
   },
   'Walking Lunge': {
     name: 'Walking Lunge',
-    demoVideoUrl: null,
+    demoVideoUrl: 'https://youtu.be/BC_eDtrB-M4',
     notes: 'Take medium strides. Minimize contribution from the back leg.',
   },
   'Machine Hip Abduction': {
