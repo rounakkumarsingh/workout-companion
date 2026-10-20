@@ -14,7 +14,7 @@ function photoDirectory(): Directory {
  */
 export function storePhoto(sourceUri: string, id: string): string {
   const destination = new File(photoDirectory(), `${id}.jpg`);
-  new File(sourceUri).copy(destination);
+  new File(sourceUri).copySync(destination);
   return destination.uri;
 }
 
