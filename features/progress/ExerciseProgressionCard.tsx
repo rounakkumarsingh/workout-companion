@@ -18,9 +18,8 @@ function formatVolume(vol: number): string {
 }
 
 export function ExerciseProgressionCard({ exerciseName, history }: ExerciseProgressionCardProps) {
-  if (history.length === 0) return null;
-
   const latest = history[history.length - 1];
+  if (!latest) return null;
   const previous = history.length > 1 ? history[history.length - 2] : null;
 
   const latestVolume = latest.sets.reduce((s, set) => s + set.weight * set.reps, 0);

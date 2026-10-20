@@ -1,11 +1,9 @@
 import { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useAnimatedPress } from '@/hooks/useAnimatedPress';
 import type { ExercisePrescription } from '@/src/data/program';
-import { typography, radii, spacing } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import { typography, radii, spacing, useColors, type ColorSet } from '@/src/theme';
 
 interface SubstitutionOption {
   name: string;
@@ -83,7 +81,6 @@ const makeOptionStyles = (c: ColorSet) =>
   });
 
 export function SubstitutionCard({
-  currentExerciseName,
   options,
   onSelect,
   disabled,

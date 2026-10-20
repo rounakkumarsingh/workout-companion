@@ -1,9 +1,7 @@
 import { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import { typography, radii, spacing } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import { typography, radii, spacing, useColors, type ColorSet, MIN_TAP_SIZE } from '@/src/theme';
 
 interface TechniqueNotesProps {
   notes: string | null | undefined;
@@ -50,6 +48,7 @@ const makeStyles = (c: ColorSet) =>
       marginBottom: spacing.xl,
     },
     toggle: {
+      minHeight: MIN_TAP_SIZE,
       flexDirection: 'row',
       gap: spacing.sm,
       alignItems: 'center',

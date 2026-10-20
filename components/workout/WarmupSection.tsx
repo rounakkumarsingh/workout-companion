@@ -7,9 +7,15 @@ import Animated, {
   withSequence,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { typography, radii, spacing } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import {
+  typography,
+  radii,
+  spacing,
+  useColors,
+  type ColorSet,
+  hitSlopFor,
+  MIN_TAP_SIZE,
+} from '@/src/theme';
 
 interface WarmupSectionProps {
   prescribedMin: number;
@@ -113,6 +119,7 @@ export function WarmupSection({
               <View style={styles.stepper}>
                 <TouchableOpacity
                   style={styles.stepBtn}
+                  hitSlop={hitSlopFor(36)}
                   onPress={() => adjustWeight(-2.5)}
                   activeOpacity={0.6}
                 >
@@ -121,6 +128,7 @@ export function WarmupSection({
                 <Text style={styles.stepVal}>{weight} kg</Text>
                 <TouchableOpacity
                   style={styles.stepBtn}
+                  hitSlop={hitSlopFor(36)}
                   onPress={() => adjustWeight(2.5)}
                   activeOpacity={0.6}
                 >
@@ -133,6 +141,7 @@ export function WarmupSection({
               <View style={styles.stepper}>
                 <TouchableOpacity
                   style={styles.stepBtn}
+                  hitSlop={hitSlopFor(36)}
                   onPress={() => adjustReps(-1)}
                   activeOpacity={0.6}
                 >
@@ -141,6 +150,7 @@ export function WarmupSection({
                 <Text style={styles.stepVal}>{reps}</Text>
                 <TouchableOpacity
                   style={styles.stepBtn}
+                  hitSlop={hitSlopFor(36)}
                   onPress={() => adjustReps(1)}
                   activeOpacity={0.6}
                 >
@@ -260,6 +270,8 @@ const makeStyles = (c: ColorSet) =>
       textAlign: 'center',
     },
     logBtn: {
+      minHeight: MIN_TAP_SIZE,
+      justifyContent: 'center',
       backgroundColor: c.goldSurface,
       borderWidth: 0.5,
       borderColor: c.goldDim,
@@ -273,6 +285,8 @@ const makeStyles = (c: ColorSet) =>
       color: c.gold,
     },
     addBtn: {
+      minHeight: MIN_TAP_SIZE,
+      justifyContent: 'center',
       alignItems: 'center',
       paddingVertical: spacing.sm,
     },

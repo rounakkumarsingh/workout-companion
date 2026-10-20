@@ -124,7 +124,8 @@ function latestDay(
   predicate: (day: RecentDay) => boolean,
 ): RecentDay | null {
   for (let i = recentDays.length - 1; i >= 0; i--) {
-    if (predicate(recentDays[i])) return recentDays[i];
+    const day = recentDays[i];
+    if (day && predicate(day)) return day;
   }
   return null;
 }

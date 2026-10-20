@@ -3,9 +3,7 @@ import React, { useMemo } from 'react';
 import Animated from 'react-native-reanimated';
 import { useAnimatedPress } from '@/hooks/useAnimatedPress';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { radii, typography } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import { radii, typography, MIN_TAP_SIZE, useColors, type ColorSet } from '@/src/theme';
 
 interface GhostButtonProps {
   label: string;
@@ -28,6 +26,8 @@ export function GhostButton({ label, onPress, style }: GhostButtonProps) {
       onPressIn={!reducedMotion ? onPressIn : undefined}
       onPressOut={!reducedMotion ? onPressOut : undefined}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={label}
     >
       <Text style={styles.label}>{label}</Text>
     </AnimatedTouchable>
@@ -41,6 +41,8 @@ const makeStyles = (c: ColorSet) =>
       marginBottom: 8,
       borderRadius: radii.row,
       paddingVertical: 12,
+      minHeight: MIN_TAP_SIZE,
+      justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 0.5,
       borderColor: c.borderActive,

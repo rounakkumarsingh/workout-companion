@@ -77,7 +77,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 /** e.g. "Thu 22 Oct" */
 function shortDate(date: Date): string {
-  return `${WEEKDAY_NAMES[date.getDay()].slice(0, 3)} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
+  return `${(WEEKDAY_NAMES[date.getDay()] ?? '').slice(0, 3)} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
 }
 
 function getBlockName(weekNumber: number): string {

@@ -196,8 +196,8 @@ export async function runMigrations(): Promise<void> {
         // runner may have the column without the version row).
         const alterMatch = stmt.match(ALTER_ADD_COLUMN_RE);
         if (alterMatch) {
-          const tableName = alterMatch[1].replace(/[`"[\]]/g, '');
-          const columnName = alterMatch[2].replace(/[`"[\]]/g, '');
+          const tableName = (alterMatch[1] ?? '').replace(/[`"[\]]/g, '');
+          const columnName = (alterMatch[2] ?? '').replace(/[`"[\]]/g, '');
           if (columnExists(tableName, columnName)) continue;
         }
         rawDb.execSync(stmt);

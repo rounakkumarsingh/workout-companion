@@ -60,8 +60,8 @@ import { getSubstitutionOptions } from '@/src/features/workout-session/substitut
 import { getExerciseLogById } from '@/src/db/repositories/exercises';
 
 function parseRestSeconds(rest: string): number {
-  const match = rest.match(/(\d+)/);
-  return match ? parseInt(match[1], 10) * 60 : 90;
+  const minutes = rest.match(/(\d+)/)?.[1];
+  return minutes ? parseInt(minutes, 10) * 60 : 90;
 }
 
 /**
@@ -689,6 +689,7 @@ export default function ExerciseDetailScreen() {
                   <TextInput
                     style={[styles.stepVal, styles.stepValInput]}
                     keyboardType="decimal-pad"
+                    accessibilityLabel="Weight in kilograms"
                     value={editingWeight ?? String(state.weight)}
                     onChangeText={(text) => {
                       setEditingWeight(text);
@@ -732,6 +733,7 @@ export default function ExerciseDetailScreen() {
                   <TextInput
                     style={[styles.stepVal, styles.stepValInput]}
                     keyboardType="number-pad"
+                    accessibilityLabel="Reps"
                     value={editingReps ?? String(state.reps)}
                     onChangeText={(text) => {
                       setEditingReps(text);

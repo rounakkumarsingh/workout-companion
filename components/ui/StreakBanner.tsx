@@ -8,9 +8,7 @@ import Animated, {
   interpolate,
   Easing,
 } from 'react-native-reanimated';
-import { typography, radii, spacing } from '@/src/theme';
-import { useColors } from '@/src/theme';
-import type { ColorSet } from '@/src/theme';
+import { typography, radii, spacing, useColors, type ColorSet } from '@/src/theme';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface StreakBannerProps {

@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
-import Svg, { Rect, Line, Text as SvgText } from 'react-native-svg';
+import Svg, { Rect } from 'react-native-svg';
 import { colors, typography, spacing } from '@/src/theme';
 
 interface VolumeBar {

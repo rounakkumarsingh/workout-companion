@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, ScrollView, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { useColors, typography, spacing, radii } from '@/src/theme';
+import { useColors, typography, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import {
@@ -12,7 +12,6 @@ import {
 import { getExerciseHistory, getVolumeByExercise } from '@/src/db/repositories/exercises';
 import { getProgramStart } from '@/src/features/workout-session';
 import { getLatestBodyweightEntry, createBodyweightEntry } from '@/src/db/repositories/bodyweight';
-import type { SessionWithVolume } from '@/src/db/repositories/sessions';
 import { WorkoutCalendar } from '@/features/progress/WorkoutCalendar';
 import { AdherenceGrid } from '@/features/progress/AdherenceGrid';
 import { VolumeTrendChart } from '@/features/progress/VolumeTrendChart';
