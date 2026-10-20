@@ -30,6 +30,8 @@ export {
   getRecentDays,
   getTodayPlan,
   getCurrentStreak,
+  getCompletedSessionCount,
+  getProgramDayNumber,
 } from './schedule';
 
 export { initializeSession } from './session-initializer';

@@ -8,16 +8,31 @@ import { CtaButton } from '@/components/ui/CtaButton';
 
 interface QuickLogOverlayProps {
   exerciseName: string;
+  /** e.g. "Set 2 of 3" */
+  setLabel?: string;
+  /** e.g. "Prescribed 3×10-12" */
+  detail?: string;
+  initialWeight?: number;
+  initialReps?: number;
   visible: boolean;
   onClose: () => void;
   onLog: (weight: number, reps: number, rpe: number | null) => void;
 }
 
-export function QuickLogOverlay({ exerciseName, visible, onClose, onLog }: QuickLogOverlayProps) {
+export function QuickLogOverlay({
+  exerciseName,
+  setLabel,
+  detail,
+  initialWeight = 0,
+  initialReps = 0,
+  visible,
+  onClose,
+  onLog,
+}: QuickLogOverlayProps) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const [weight, setWeight] = useState(0);
-  const [reps, setReps] = useState(0);
+  const [weight, setWeight] = useState(initialWeight);
+  const [reps, setReps] = useState(initialReps);
   const [rpe, setRpe] = useState<number | null>(null);
   const [editingWeight, setEditingWeight] = useState<string | null>(null);
   const [editingReps, setEditingReps] = useState<string | null>(null);
@@ -34,11 +49,33 @@ export function QuickLogOverlay({ exerciseName, visible, onClose, onLog }: Quick
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose}>
-        <TouchableOpacity style={styles.card} activeOpacity={1} onPress={() => {}}>
-          <Text style={styles.title}>Quick Log</Text>
-          <Text style={styles.exerciseName}>{exerciseName}</Text>
+        <TouchableOpacity
+          style={styles.card}
+          activeOpacity={1}
+          onPress={() => {}}
+          accessibilityViewIsModal
+          accessibilityLabel="Quick log"
+        >
+          <View style={styles.grabber} />
+          <View style={styles.headRow}>
+            <View style={styles.headText}>
+              <Text style={styles.title}>
+                Quick Log{setLabel ? ` · ${setLabel.toUpperCase()}` : ''}
+              </Text>
+              <Text style={styles.exerciseName}>{exerciseName}</Text>
+              {detail ? <Text style={styles.detail}>{detail}</Text> : null}
+            </View>
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={onClose}
+              accessibilityLabel="Close quick log"
+              accessibilityRole="button"
+            >
+              <Text style={styles.closeText}>✕</Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.stepperRow}>
             <Text style={styles.stepperLabel}>Weight</Text>
@@ -126,7 +163,7 @@ export function QuickLogOverlay({ exerciseName, visible, onClose, onLog }: Quick
 
           <RpeSelector selected={rpe} onSelect={setRpe} />
 
-          <CtaButton label="Log Set" onPress={handleLog} />
+          <CtaButton label="Log set → Rest" onPress={handleLog} />
         </TouchableOpacity>
       </TouchableOpacity>
     </Modal>
@@ -137,20 +174,57 @@ const makeStyles = (c: ColorSet) =>
   StyleSheet.create({
     backdrop: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.6)',
-      justifyContent: 'center',
-      padding: spacing.xxxl,
+      backgroundColor: c.scrim,
+      justifyContent: 'flex-end',
     },
     card: {
       backgroundColor: c.surfaceElevated,
-      borderWidth: 0.5,
+      borderTopWidth: 0.5,
       borderColor: c.border,
-      borderRadius: radii.card,
-      padding: spacing.xl,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.md,
+      paddingBottom: 34,
+    },
+    grabber: {
+      alignSelf: 'center',
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: c.borderControl,
+      marginBottom: spacing.lg,
+    },
+    headRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      marginBottom: spacing.lg,
+    },
+    headText: {
+      flex: 1,
+      minWidth: 0,
+    },
+    detail: {
+      ...typography.monoLabel,
+      color: c.textSecondary,
+      marginTop: 2,
+    },
+    closeBtn: {
+      width: 44,
+      height: 44,
+      marginTop: -spacing.md,
+      marginRight: -spacing.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    closeText: {
+      fontSize: 18,
+      color: c.textSecondary,
     },
     title: {
       ...typography.monoLabel,
-      color: c.textTertiary,
+      color: c.goldText,
       letterSpacing: 0.1,
       textTransform: 'uppercase',
       marginBottom: spacing.xs,
@@ -158,7 +232,6 @@ const makeStyles = (c: ColorSet) =>
     exerciseName: {
       ...typography.subheading,
       color: c.textPrimary,
-      marginBottom: spacing.lg,
     },
     stepperRow: {
       flexDirection: 'row',
@@ -168,7 +241,7 @@ const makeStyles = (c: ColorSet) =>
     },
     stepperLabel: {
       ...typography.monoSmall,
-      color: c.textMuted,
+      color: c.textSecondary,
     },
     stepperControls: {
       flexDirection: 'row',

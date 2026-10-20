@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -16,23 +16,31 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors, typography, radii, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { CtaButton } from '@/components/ui/CtaButton';
+import { GhostButton } from '@/components/ui/GhostButton';
 import { ProgramProgressBar } from '@/components/ui/ProgramProgressBar';
+import { StreakBadge } from '@/components/ui/StreakBadge';
 import { WeekStrip, recentDayStatuses } from '@/components/ui/WeekStrip';
+import { DayFigure, dayTypeToFigureKey } from '@/components/ui/DayFigure';
+import { WorkoutPreviewCard, type PreviewExercise } from '@/components/home/WorkoutPreviewCard';
 import {
   resolveCurrentSchedule,
   getTodayPlan,
+  getRecentDays,
   getDayPrescription,
   isTrainingDayType,
   hydrateActiveSession,
   abandonSession,
   getSessionProgress,
   getElapsedMinutes,
-  getLastActivityAt,
   finalizeStaleSessions,
+  getCurrentStreak,
+  getCompletedSessionCount,
+  getProgramDayNumber,
+  TRAINING_DAY_TYPES,
 } from '@/src/features/workout-session';
 import { getActiveSession, getSessionsStartedBetween } from '@/src/db/repositories/sessions';
 import { localDayBoundsIso, localDaysBetween, parseLocalDateKey } from '@/src/lib/dates';
@@ -43,6 +51,7 @@ import type { DayPrescription } from '@/src/data/program';
 import type { HomeScreenState } from '@/components/home/types';
 import type {
   ActiveSession,
+  RecentDay,
   TodayPlan,
   TrainingDayType,
   WorkoutChoice,
@@ -53,12 +62,36 @@ import { DevClearDbButton } from '@/components/ui/DevClearDbButton';
 
 type Selection = TrainingDayType | 'Mobility';
 
+const TOTAL_SESSIONS = TOTAL_WEEKS * TRAINING_DAY_TYPES.length;
+
+const WEEKDAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** e.g. "Thu 22 Oct" */
+function shortDate(date: Date): string {
+  return `${WEEKDAY_NAMES[date.getDay()].slice(0, 3)} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
+}
+
 function getBlockName(weekNumber: number): string {
   const block = PROGRAM.blocks.find(
     (b: { weekStart: number; weekEnd: number }) =>
       weekNumber >= b.weekStart && weekNumber <= b.weekEnd,
   );
   return block?.name ?? '';
+}
+
+function previewOf(day: DayPrescription): PreviewExercise[] {
+  return [...day.exercises]
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((e) => ({ name: e.exerciseName, rx: `${e.workingSets}×${e.repRange}` }));
 }
 
 /** The suggestion: the first open training day in program order. */
@@ -96,20 +129,6 @@ function choiceSubtitle(choice: WorkoutChoice): string {
   if (!choice.lastDoneOn) return `${exercises} · Not done yet`;
   const daysAgo = localDaysBetween(parseLocalDateKey(choice.lastDoneOn), new Date());
   return `${exercises} · Last done ${daysAgo} days ago`;
-}
-
-const WEEKDAY_NAMES = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-];
-
-function weekdayName(date: Date = new Date()): string {
-  return WEEKDAY_NAMES[date.getDay()];
 }
 
 async function computeScreenState(): Promise<HomeScreenState> {
@@ -164,12 +183,16 @@ async function computeScreenState(): Promise<HomeScreenState> {
 
 export default function TodayScheduleScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [screenState, setScreenState] = useState<HomeScreenState>({ status: 'loading' });
   const [didAutoRedirect, setDidAutoRedirect] = useState(false);
   const reducedMotion = useReducedMotion();
   const [hydratedSession, setHydratedSession] = useState<ActiveSession | null>(null);
   const [hydrating, setHydrating] = useState(false);
   const [picked, setPicked] = useState<Selection | null>(null);
+  const [streak, setStreak] = useState(0);
+  const [sessionsDone, setSessionsDone] = useState(0);
+  const [recentDays, setRecentDays] = useState<RecentDay[]>([]);
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -244,6 +267,36 @@ export default function TodayScheduleScreen() {
       };
     }, []),
   );
+
+  // Streak, session count and the last-7-days strip for the shared header.
+  useEffect(() => {
+    if (
+      screenState.status === 'loading' ||
+      screenState.status === 'error' ||
+      screenState.status === 'onboarding'
+    ) {
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const [streakNow, done, days] = await Promise.all([
+          getCurrentStreak(),
+          getCompletedSessionCount(),
+          getRecentDays(),
+        ]);
+        if (cancelled) return;
+        setStreak(streakNow);
+        setSessionsDone(done);
+        setRecentDays(days);
+      } catch (e) {
+        console.warn('[home] Failed to load header data:', e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [screenState]);
 
   const handleCardioLog = useCallback(
     async (data: {
@@ -383,6 +436,41 @@ export default function TodayScheduleScreen() {
     );
   }
 
+  const devClear = <DevClearDbButton onCleared={() => setScreenState({ status: 'onboarding' })} />;
+
+  // Shared frame: header, progress, last-7-days strip, state block, CTA dock.
+  const frame = (weekNumber: number, block: React.ReactNode, footer: React.ReactNode) => (
+    <View style={styles.screen}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.xl }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <View style={styles.headerText}>
+            <Text style={styles.eyebrow}>TODAY</Text>
+            <Text style={styles.headerTitle}>{shortDate(new Date())}</Text>
+          </View>
+          <StreakBadge count={streak} />
+        </View>
+        <ProgramProgressBar
+          currentWeek={weekNumber}
+          totalWeeks={TOTAL_WEEKS}
+          sessionsDone={sessionsDone}
+          totalSessions={TOTAL_SESSIONS}
+        />
+        {recentDays.length > 0 && (
+          <View style={styles.stripWrap}>
+            <Text style={styles.sectionLabel}>LAST 7 DAYS</Text>
+            <WeekStrip days={recentDayStatuses(recentDays)} />
+          </View>
+        )}
+        <View style={styles.block}>{block}</View>
+      </ScrollView>
+      {footer ? <View style={styles.dock}>{footer}</View> : null}
+      {devClear}
+    </View>
+  );
+
   // --- CHOOSE TODAY'S WORKOUT ---
   if (screenState.status === 'choose') {
     const { plan, blockName } = screenState;
@@ -398,21 +486,9 @@ export default function TodayScheduleScreen() {
     const firstWorkout =
       plan.weekNumber === 1 && plan.choices.every((c) => c.status !== 'doneThisWeek');
 
-    return (
-      <View style={styles.screen}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.eyebrow}>
-                {weekdayName()} · Week {plan.weekNumber} · {blockName}
-              </Text>
-              <Text style={styles.headerTitle}>Pick today&apos;s workout</Text>
-            </View>
-          </View>
-
-          <Text style={styles.sectionTitle}>Last 7 days</Text>
-          <WeekStrip days={recentDayStatuses(plan.recentDays)} />
-
+    const block = (
+      <>
+        <View style={styles.choiceList} accessibilityRole="radiogroup">
           {plan.choices.map((choice) => {
             const locked = choice.status !== 'available';
             const isSelected = choice.dayType === selection;
@@ -420,110 +496,109 @@ export default function TodayScheduleScreen() {
               <TouchableOpacity
                 key={choice.dayType}
                 style={[
-                  isSelected ? styles.optionBest : styles.optionRegular,
-                  locked && styles.optionLocked,
+                  styles.choiceCard,
+                  isSelected && styles.choiceCardSelected,
+                  locked && styles.choiceLocked,
                 ]}
                 onPress={() => setPicked(choice.dayType)}
                 disabled={locked}
                 accessibilityRole="radio"
+                accessibilityLabel={`${choice.dayType} day, ${choiceSubtitle(choice)}`}
                 accessibilityState={{ selected: isSelected, disabled: locked }}
               >
-                <Text style={styles.optionIcon}>
-                  {choice.status === 'doneThisWeek' ? '✅' : locked ? '🔒' : '🏋️'}
-                </Text>
-                <View style={styles.optionInfo}>
-                  <Text style={styles.optionTitle}>{choice.dayType} Day</Text>
-                  <Text style={styles.optionSub}>{choiceSubtitle(choice)}</Text>
+                <DayFigure
+                  day={dayTypeToFigureKey(choice.dayType)}
+                  size={40}
+                  tone={locked ? 'dim' : 'lit'}
+                />
+                <View style={styles.choiceInfo}>
+                  <Text style={styles.choiceTitle}>{choice.dayType} Day</Text>
+                  <Text style={styles.choiceSub}>{choiceSubtitle(choice)}</Text>
                 </View>
                 {choice === upNext && (
-                  <View style={styles.bestBadge}>
-                    <Text style={styles.bestBadgeText}>Up next</Text>
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>UP NEXT</Text>
                   </View>
                 )}
+                {choice.status === 'doneThisWeek' && <Text style={styles.doneMark}>✓</Text>}
               </TouchableOpacity>
             );
           })}
 
           <TouchableOpacity
             style={[
-              selection === 'Mobility' ? styles.optionBest : styles.optionRegular,
-              !plan.mobility.available && styles.optionLocked,
+              styles.choiceCard,
+              selection === 'Mobility' && styles.choiceCardSelected,
+              !plan.mobility.available && styles.choiceLocked,
             ]}
             onPress={() => setPicked('Mobility')}
             disabled={!plan.mobility.available}
             accessibilityRole="radio"
+            accessibilityLabel="Cardio and mobility"
             accessibilityState={{
               selected: selection === 'Mobility',
               disabled: !plan.mobility.available,
             }}
           >
-            <Text style={styles.optionIcon}>{plan.mobility.available ? '🧘' : '🔒'}</Text>
-            <View style={styles.optionInfo}>
-              <Text style={styles.optionTitle}>Cardio / Mobility</Text>
-              <Text style={styles.optionSub}>
+            <DayFigure day="rest" size={40} tone="neutral" />
+            <View style={styles.choiceInfo}>
+              <Text style={styles.choiceTitle}>Cardio / Mobility</Text>
+              <Text style={styles.choiceSub}>
                 {plan.mobility.availableOn
                   ? `Logged in the last 7 days · unlocks ${formatUnlockDay(plan.mobility.availableOn)}`
                   : 'Optional · once every 7 days'}
               </Text>
             </View>
           </TouchableOpacity>
+        </View>
 
-          {nextUnlock && (
-            <View style={styles.tipBox}>
-              <Text style={styles.tipIcon}>⏳</Text>
-              <Text style={styles.tipText}>
-                All five workouts were done in the last 7 days. The next one unlocks{' '}
-                {formatUnlockDay(nextUnlock)}.
-              </Text>
-            </View>
-          )}
+        {nextUnlock && (
+          <View style={styles.notice}>
+            <Text style={styles.noticeText}>
+              All five workouts were done in the last 7 days. The next one unlocks{' '}
+              {formatUnlockDay(nextUnlock)}.
+            </Text>
+          </View>
+        )}
 
-          {selectedChoice && (
-            <View style={styles.exPreview}>
-              <Text style={styles.sectionLabel}>{selectedChoice.dayType} Day exercises</Text>
-              {selectedChoice.dayPrescription.exercises.map((ex) => (
-                <View key={`${ex.exerciseName}-${ex.sortOrder}`} style={styles.exRow}>
-                  <Text style={styles.exName} numberOfLines={1}>
-                    {ex.exerciseName}
-                  </Text>
-                  <Text style={styles.exSpec}>
-                    {ex.workingSets}×{ex.repRange}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
+        {selectedChoice && (
+          <WorkoutPreviewCard
+            dayType={selectedChoice.dayType}
+            dayNumber={getProgramDayNumber(plan.weekNumber, selectedChoice.dayType)}
+            meta={`${selectedChoice.dayPrescription.exercises.length} exercises${blockName ? ` · ${blockName}` : ''}`}
+            exercises={previewOf(selectedChoice.dayPrescription)}
+          />
+        )}
 
-          {selection === 'Mobility' && (
-            <CardioLogger weekNumber={plan.weekNumber} onLog={handleCardioLog} />
-          )}
+        {selection === 'Mobility' && (
+          <CardioLogger weekNumber={plan.weekNumber} onLog={handleCardioLog} />
+        )}
 
-          {firstWorkout && selectedChoice && (
-            <View style={styles.tipBox}>
-              <Text style={styles.tipIcon}>💡</Text>
-              <Text style={styles.tipText}>
-                First time? Start lighter than you think. Increase weight next session.
-              </Text>
-            </View>
-          )}
-
-          <ProgramProgressBar currentWeek={plan.weekNumber} totalWeeks={TOTAL_WEEKS} />
-
-          {selectedChoice && (
-            <CtaButton
-              label={`Begin ${selectedChoice.dayType} Day →`}
-              onPress={() => handleBegin(selectedChoice)}
-            />
-          )}
-        </ScrollView>
-        <DevClearDbButton onCleared={() => setScreenState({ status: 'onboarding' })} />
-      </View>
+        {firstWorkout && selectedChoice && (
+          <View style={styles.notice}>
+            <Text style={styles.noticeText}>
+              First time? Start lighter than you think. Increase weight next session.
+            </Text>
+          </View>
+        )}
+      </>
     );
+
+    const footer = selectedChoice ? (
+      <CtaButton
+        label={`Start ${selectedChoice.dayType} workout`}
+        onPress={() => handleBegin(selectedChoice)}
+      />
+    ) : selection === 'Mobility' ? null : (
+      <CtaButton label="Nothing available today" onPress={() => {}} disabled />
+    );
+
+    return frame(plan.weekNumber, block, footer);
   }
 
   // --- IN PROGRESS / RESUME ---
   if (screenState.status === 'inProgress') {
-    const { dayPrescription, weekNumber, blockName, sessionId } = screenState;
+    const { dayPrescription, weekNumber, blockName } = screenState;
     const session = hydratedSession;
 
     // While hydrating, show a loading state
@@ -535,223 +610,67 @@ export default function TodayScheduleScreen() {
       );
     }
 
-    // Compute all real values from the hydrated session
     const progress = getSessionProgress(session);
     const elapsedMin = getElapsedMinutes(session);
-    const lastActivityAt = getLastActivityAt(session) ?? session.startedAt;
-    const idleMin = Math.max(
-      0,
-      Math.floor((Date.now() - new Date(lastActivityAt).getTime()) / 60000),
-    );
-    const pct = progress.totalSets > 0 ? progress.completedSets / progress.totalSets : 0;
-    const pctDisplay = `${Math.round(pct * 100)}%` as const;
-    const setsDisplay = `${progress.completedSets} of ${progress.totalSets} sets`;
-    const exercisesLeft = progress.totalExercises - progress.exercisesWithLoggedSets;
+    const ordered = [...session.exercises].sort((a, b) => a.sortOrder - b.sortOrder);
+    const exercises: PreviewExercise[] = ordered.map((ex) => ({
+      name: ex.exerciseName,
+      rx: `${ex.prescription?.workingSets ?? ex.sets.length}×${ex.prescription?.repRange ?? ''}`,
+      done: ex.status === 'completed',
+    }));
+    // Show unfinished exercises first so the card says what is left.
+    exercises.sort((a, b) => Number(!!a.done) - Number(!!b.done));
+    const doneCount = ordered.filter((e) => e.status === 'completed').length;
 
-    // Format startedAt time (e.g., "10:24 AM")
-    const startTime = new Date(session.startedAt);
-    const formattedStartTime = startTime.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-
-    // Find the active exercise and next set for the CTA label
-    const activeExercise = session.exercises.find((e) => e.status === 'active');
-    const nextExercise = session.exercises.find((e) => e.status === 'pending');
-    const ctaExercise = activeExercise ?? nextExercise;
-    const ctaSetIndex = ctaExercise
-      ? ctaExercise.sets.filter((s) => s.isComplete).length + 1
-      : null;
-    const ctaExerciseName = ctaExercise?.exerciseName ?? dayPrescription.dayType;
-    const ctaLabel =
-      ctaSetIndex != null
-        ? `Resume → Set ${ctaSetIndex} of ${ctaExerciseName}`
-        : 'Resume Session →';
-
-    // Estimate remaining time: ~2 min per remaining set
-    const remainingSets = progress.totalSets - progress.completedSets;
-    const estimatedLeftMin = Math.max(1, Math.round(remainingSets * 2));
-
-    return (
-      <View style={styles.screen}>
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.eyebrow}>
-                {weekdayName(startTime)} · Week {weekNumber}
-              </Text>
-              <Text style={styles.headerTitle}>Welcome back.</Text>
-            </View>
-          </View>
-
-          <View style={styles.resumeIndicator}>
-            <View style={styles.resumeDot} />
-            <View>
-              <Text style={styles.resumeLabel}>Session in progress</Text>
-              <Text style={styles.resumeSub}>
-                Last activity {idleMin} min ago · {dayPrescription.dayType} Day
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.resumeCard}>
-            <Text style={styles.resumeCardTitle}>{dayPrescription.dayType} Day</Text>
-            <Text style={styles.resumeCardMeta}>
-              Started {formattedStartTime} · {elapsedMin} min elapsed
-            </Text>
-
-            <View style={styles.resumeExList}>
-              {session.exercises
-                .sort((a, b) => a.sortOrder - b.sortOrder)
-                .map((ex, i) => {
-                  const completedSets = ex.sets.filter((s) => s.isComplete).length;
-                  const totalExSets = ex.prescription?.workingSets ?? ex.sets.length;
-                  const isCompleted = ex.status === 'completed';
-                  const isActive = ex.status === 'active';
-                  return (
-                    <View key={ex.exerciseLogId} style={styles.resumeExRow}>
-                      <View
-                        style={[
-                          styles.resumeDot,
-                          isCompleted && styles.resumeDotDone,
-                          isActive && styles.resumeDotActive,
-                        ]}
-                      />
-                      <Text
-                        style={[
-                          styles.resumeExName,
-                          isCompleted && styles.resumeExDone,
-                          isActive && styles.resumeExActive,
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {ex.exerciseName}
-                      </Text>
-                      <Text style={styles.resumeExSets}>
-                        {completedSets}/{totalExSets}
-                      </Text>
-                    </View>
-                  );
-                })}
-            </View>
-
-            <View style={styles.progressBar}>
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: pctDisplay }]} />
-              </View>
-              <Text style={styles.progressLabel}>
-                {setsDisplay} · {pctDisplay}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.resumeStats}>
-            <View style={styles.resumeStat}>
-              <Text style={styles.resumeStatVal}>
-                {elapsedMin}
-                <Text style={styles.resumeStatUnit}>m</Text>
-              </Text>
-              <Text style={styles.resumeStatLbl}>Elapsed</Text>
-            </View>
-            <View style={styles.resumeStat}>
-              <Text style={styles.resumeStatVal}>
-                ~{estimatedLeftMin}
-                <Text style={styles.resumeStatUnit}>m</Text>
-              </Text>
-              <Text style={styles.resumeStatLbl}>Left</Text>
-            </View>
-            <View style={styles.resumeStat}>
-              <Text style={[styles.resumeStatVal, { color: colors.gold }]}>{exercisesLeft}</Text>
-              <Text style={styles.resumeStatLbl}>Ex. left</Text>
-            </View>
-          </View>
-
-          <ProgramProgressBar currentWeek={weekNumber} totalWeeks={TOTAL_WEEKS} />
-
-          <Animated.View style={!reducedMotion ? resumePulseStyle : undefined}>
-            <CtaButton label={ctaLabel} onPress={handleResume} />
-          </Animated.View>
-
-          <TouchableOpacity
-            style={styles.dangerBtn}
-            onPress={handleAbandon}
-            activeOpacity={0.7}
-            accessibilityLabel="Abandon current session"
-          >
-            <Text style={styles.dangerBtnText}>Abandon Session</Text>
-          </TouchableOpacity>
-        </ScrollView>
-        <DevClearDbButton onCleared={() => setScreenState({ status: 'onboarding' })} />
-      </View>
+    return frame(
+      weekNumber,
+      <WorkoutPreviewCard
+        dayType={dayPrescription.dayType}
+        dayNumber={getProgramDayNumber(weekNumber, dayPrescription.dayType)}
+        meta={`${doneCount} of ${progress.totalExercises} done · ${elapsedMin} min${blockName ? ` · ${blockName}` : ''}`}
+        exercises={exercises}
+        limit={6}
+      />,
+      <>
+        <Animated.View style={!reducedMotion ? resumePulseStyle : undefined}>
+          <CtaButton label="Resume workout" onPress={handleResume} />
+        </Animated.View>
+        <TouchableOpacity
+          style={styles.textBtn}
+          onPress={handleAbandon}
+          activeOpacity={0.7}
+          accessibilityLabel="Abandon current session"
+        >
+          <Text style={styles.textBtnLabel}>Abandon Session</Text>
+        </TouchableOpacity>
+      </>,
     );
   }
 
-  // --- COMPLETED ---
+  // --- COMPLETED TODAY ---
   const { dayPrescription, weekNumber, blockName } = screenState;
-  const totalExercises = dayPrescription.exercises.length;
-  const totalSets = dayPrescription.exercises.reduce((sum, ex) => sum + ex.workingSets, 0);
-
-  return (
-    <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.dayHeader}>
-          <Text style={styles.daySub}>
-            WEEK {weekNumber} · {blockName.toUpperCase()}
-          </Text>
-          <Text style={styles.dayTitle}>{dayPrescription.dayType} Day</Text>
-        </View>
-
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statVal}>{totalExercises}</Text>
-            <Text style={styles.statLabel}>Exercises</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statVal}>{totalSets}</Text>
-            <Text style={styles.statLabel}>Working Sets</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statVal}>{dayPrescription.exercises[0]?.repRange ?? '—'}</Text>
-            <Text style={styles.statLabel}>Rep Range</Text>
-          </View>
-        </View>
-
-        <View style={styles.exPreview}>
-          <Text style={styles.sectionLabel}>TODAY&apos;S EXERCISES</Text>
-          {dayPrescription.exercises.map((ex) => (
-            <View key={`${ex.exerciseName}-${ex.sortOrder}`} style={styles.exRow}>
-              <Text style={styles.exName} numberOfLines={1}>
-                {ex.exerciseName}
-              </Text>
-              <Text style={styles.exSpec}>
-                {ex.workingSets}×{ex.repRange}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.completedBanner}>
-          <Text style={styles.completedBannerIcon}>✓</Text>
-          <Text style={styles.completedBannerTitle}>Today&apos;s Session Complete</Text>
-          <Text style={styles.completedBannerSub}>Great work. See you next time.</Text>
-        </View>
-      </ScrollView>
-      <DevClearDbButton onCleared={() => setScreenState({ status: 'onboarding' })} />
-    </View>
+  return frame(
+    weekNumber,
+    <>
+      <View style={styles.notice}>
+        <Text style={styles.noticeTitle}>Today&apos;s session complete</Text>
+        <Text style={styles.noticeText}>Great work. See you next time.</Text>
+      </View>
+      <WorkoutPreviewCard
+        dayType={dayPrescription.dayType}
+        dayNumber={getProgramDayNumber(weekNumber, dayPrescription.dayType)}
+        meta={`Session complete${blockName ? ` · ${blockName}` : ''}`}
+        exercises={previewOf(dayPrescription).map((e) => ({ ...e, done: true }))}
+      />
+    </>,
+    <GhostButton label="View progress" onPress={() => router.push('/(tabs)/progress' as Href)} />,
   );
 }
 
 const makeStyles = (c: ColorSet) =>
   StyleSheet.create({
-    screen: {
-      flex: 1,
-      backgroundColor: c.background,
-    },
-    content: {
-      flexGrow: 1,
-      paddingBottom: 40,
-    },
+    screen: { flex: 1, backgroundColor: c.background },
+    content: { flexGrow: 1, paddingBottom: spacing.xxl },
     centered: {
       flex: 1,
       backgroundColor: c.background,
@@ -759,11 +678,7 @@ const makeStyles = (c: ColorSet) =>
       justifyContent: 'center',
       paddingHorizontal: spacing.xxxl,
     },
-    errorText: {
-      ...typography.body,
-      color: c.danger,
-      textAlign: 'center',
-    },
+    errorText: { ...typography.body, color: c.danger, textAlign: 'center' },
     messageTitle: {
       ...typography.heading,
       color: c.textPrimary,
@@ -783,393 +698,113 @@ const makeStyles = (c: ColorSet) =>
       paddingVertical: 14,
       paddingHorizontal: spacing.xxxl,
     },
-    goldBtnText: {
-      ...typography.cta,
-      color: c.blackText,
-      textTransform: 'uppercase',
-    },
-    // ---------------------------------
-    // Header
-    // ---------------------------------
+    goldBtnText: { ...typography.cta, color: c.blackText, textTransform: 'uppercase' },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'flex-start',
+      alignItems: 'flex-end',
       paddingHorizontal: spacing.xxl,
-      paddingTop: spacing.xxl,
+      paddingBottom: spacing.xl,
     },
+    headerText: { gap: 2 },
     eyebrow: {
-      ...typography.monoLabel,
+      fontFamily: 'BarlowCondensed_700Bold',
+      fontSize: 13,
+      letterSpacing: 1.5,
       color: c.textTertiary,
-      letterSpacing: 0.12,
-      textTransform: 'uppercase',
-      marginBottom: spacing.xs,
     },
     headerTitle: {
-      ...typography.heading,
+      fontFamily: 'BarlowCondensed_800ExtraBold',
+      fontSize: 32,
+      lineHeight: 32,
       color: c.textPrimary,
-      letterSpacing: -0.02,
+    },
+    stripWrap: {
+      paddingHorizontal: spacing.xxl,
+      marginBottom: spacing.xl,
+      gap: spacing.sm,
+    },
+    sectionLabel: {
+      fontFamily: 'BarlowCondensed_700Bold',
+      fontSize: 13,
+      letterSpacing: 1.5,
+      color: c.textSecondary,
+    },
+    block: { paddingHorizontal: spacing.xxl, gap: spacing.xl },
+    dock: {
+      paddingHorizontal: spacing.xxl,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.lg,
+      gap: spacing.md,
+      backgroundColor: c.background,
+      borderTopWidth: 0.5,
+      borderTopColor: c.border,
     },
     // ---------------------------------
     // Choose today's workout
     // ---------------------------------
-    sectionTitle: {
-      ...typography.monoLabel,
-      color: c.textTertiary,
-      letterSpacing: 0.12,
-      textTransform: 'uppercase',
-      paddingHorizontal: spacing.xxl,
-      marginTop: spacing.xl,
-      marginBottom: spacing.md,
-    },
-    optionBest: {
-      marginHorizontal: spacing.xxl,
-      marginBottom: spacing.sm,
-      backgroundColor: c.goldSurface,
-      borderWidth: 0.5,
-      borderColor: c.gold,
+    choiceList: { gap: spacing.md },
+    choiceCard: {
+      minHeight: 64,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
       borderRadius: radii.row,
-      padding: 13,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 13,
-    },
-    optionRegular: {
-      marginHorizontal: spacing.xxl,
-      marginBottom: spacing.sm,
-      backgroundColor: c.surfaceElevated,
+      backgroundColor: c.surface,
       borderWidth: 0.5,
       borderColor: c.border,
-      borderRadius: radii.row,
-      padding: 13,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 13,
+      gap: spacing.lg,
     },
-    optionLocked: {
-      opacity: 0.45,
+    choiceCardSelected: {
+      backgroundColor: c.goldSurface,
+      borderWidth: 1.5,
+      borderColor: c.goldStroke,
     },
-    optionIcon: {
-      fontSize: 22,
-    },
-    optionInfo: {
-      flex: 1,
-    },
-    optionTitle: {
-      ...typography.body,
-      fontWeight: '700',
+    choiceLocked: { opacity: 0.55 },
+    choiceInfo: { flex: 1, minWidth: 0, gap: 2 },
+    choiceTitle: {
+      fontFamily: 'BarlowCondensed_700Bold',
+      fontSize: 18,
+      lineHeight: 20,
       color: c.textPrimary,
     },
-    optionSub: {
+    choiceSub: {
       fontFamily: 'SpaceMono_400Regular',
       fontSize: 11,
-      color: c.textTertiary,
-      marginTop: 2,
+      color: c.textSecondary,
     },
-    bestBadge: {
+    badge: {
       backgroundColor: c.gold,
       borderRadius: 5,
       paddingVertical: 2,
       paddingHorizontal: 8,
     },
-    bestBadgeText: {
-      fontFamily: 'SpaceMono_700Bold',
-      fontSize: 9,
-      color: c.blackText,
-    },
-    tipBox: {
-      marginHorizontal: spacing.xxl,
-      marginTop: spacing.lg,
-      marginBottom: spacing.lg,
+    badgeText: { fontFamily: 'SpaceMono_700Bold', fontSize: 9, color: c.blackText },
+    doneMark: { fontFamily: 'SpaceMono_700Bold', fontSize: 16, color: c.successText },
+    notice: {
+      padding: 14,
+      borderRadius: radii.card,
       backgroundColor: c.goldSurface,
       borderWidth: 0.5,
       borderColor: c.goldBorder,
-      borderRadius: radii.row,
-      padding: 12,
-      flexDirection: 'row',
-      gap: 10,
-      alignItems: 'flex-start',
+      gap: 2,
     },
-    tipIcon: {
+    noticeTitle: {
+      fontFamily: 'BarlowCondensed_700Bold',
+      fontSize: 20,
+      color: c.textPrimary,
+    },
+    noticeText: {
+      fontFamily: 'BarlowCondensed_600SemiBold',
       fontSize: 16,
+      color: c.textSecondary,
     },
-    tipText: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 12,
-      color: c.goldDim,
-      lineHeight: 17,
-      flex: 1,
-    },
-    // ---------------------------------
-    // Resume (inProgress)
-    // ---------------------------------
-    resumeIndicator: {
-      marginHorizontal: spacing.xxl,
-      marginTop: 14,
-      backgroundColor: c.successSurface,
-      borderWidth: 0.5,
-      borderColor: c.successBorder,
-      borderRadius: radii.card,
-      padding: 14,
-      flexDirection: 'row',
+    textBtn: {
       alignItems: 'center',
-      gap: spacing.lg,
+      paddingVertical: spacing.md,
+      minHeight: 44,
+      justifyContent: 'center',
     },
-    resumeDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: c.successText,
-      flexShrink: 0,
-    },
-    resumeDotDone: {
-      backgroundColor: c.success,
-    },
-    resumeDotActive: {
-      backgroundColor: c.gold,
-    },
-    resumeLabel: {
-      ...typography.body,
-      fontWeight: '700',
-      color: c.successText,
-    },
-    resumeSub: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 11,
-      color: c.successDim,
-      marginTop: 2,
-    },
-    resumeCard: {
-      marginHorizontal: spacing.xxl,
-      marginTop: 10,
-      backgroundColor: c.surfaceElevated,
-      borderWidth: 0.5,
-      borderColor: c.border,
-      borderRadius: radii.card,
-      padding: 15,
-    },
-    resumeCardTitle: {
-      fontFamily: 'BarlowCondensed_800ExtraBold',
-      fontSize: 20,
-      color: c.textPrimary,
-    },
-    resumeCardMeta: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 11,
-      color: c.textTertiary,
-      marginTop: 3,
-    },
-    resumeExList: {
-      marginTop: spacing.lg,
-      gap: 7,
-    },
-    resumeExRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-    },
-    resumeExName: {
-      flex: 1,
-      ...typography.body,
-      color: c.textPrimary,
-      fontSize: 14,
-    },
-    resumeExDone: {
-      color: c.successText,
-    },
-    resumeExActive: {
-      color: c.gold,
-    },
-    resumeExSets: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 11,
-      color: c.textTertiary,
-    },
-    progressBar: {
-      marginTop: 10,
-    },
-    progressTrack: {
-      height: 4,
-      backgroundColor: c.textDim,
-      borderRadius: 2,
-    },
-    progressFill: {
-      height: 4,
-      backgroundColor: c.gold,
-      borderRadius: 2,
-    },
-    progressLabel: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 10,
-      color: c.textTertiary,
-      marginTop: spacing.xs,
-    },
-    resumeStats: {
-      flexDirection: 'row',
-      gap: 7,
-      marginHorizontal: spacing.xxl,
-      marginTop: 10,
-    },
-    resumeStat: {
-      flex: 1,
-      backgroundColor: c.surfaceInteractive,
-      borderWidth: 0.5,
-      borderColor: c.border,
-      borderRadius: radii.dot,
-      padding: 11,
-      alignItems: 'center',
-    },
-    resumeStatVal: {
-      fontFamily: 'SpaceMono_700Bold',
-      fontSize: 20,
-      color: c.textPrimary,
-      lineHeight: 20,
-    },
-    resumeStatUnit: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 10,
-      color: c.textTertiary,
-    },
-    resumeStatLbl: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 9,
-      color: c.textTertiary,
-      textTransform: 'uppercase',
-      letterSpacing: 0.08,
-      marginTop: 3,
-    },
-    dangerBtn: {
-      marginHorizontal: spacing.xxl,
-      marginBottom: spacing.md,
-      backgroundColor: c.dangerSurface,
-      borderWidth: 0.5,
-      borderColor: c.dangerBorder,
-      borderRadius: radii.row,
-      paddingVertical: 12,
-      alignItems: 'center',
-    },
-    dangerBtnText: {
-      ...typography.body,
-      color: c.dangerText,
-      textTransform: 'uppercase',
-      letterSpacing: 0.05,
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    // ---------------------------------
-    // Completed / Default
-    // ---------------------------------
-    dayHeader: {
-      paddingHorizontal: spacing.xxl,
-      paddingTop: spacing.xxl,
-      paddingBottom: spacing.lg,
-    },
-    daySub: {
-      ...typography.monoLabel,
-      color: c.textTertiary,
-      letterSpacing: 0.12,
-      textTransform: 'uppercase',
-      marginBottom: spacing.xs,
-    },
-    dayTitle: {
-      ...typography.heading,
-      color: c.textPrimary,
-      letterSpacing: -0.02,
-    },
-    statsRow: {
-      flexDirection: 'row',
-      gap: spacing.md,
-      paddingHorizontal: spacing.xxl,
-      paddingBottom: spacing.xl,
-    },
-    statCard: {
-      flex: 1,
-      backgroundColor: c.surfaceInteractive,
-      borderWidth: 0.5,
-      borderColor: c.borderActive,
-      borderRadius: radii.dot,
-      padding: spacing.lg,
-      alignItems: 'center',
-    },
-    statVal: {
-      ...typography.monoMedium,
-      color: c.gold,
-    },
-    statLabel: {
-      ...typography.monoTiny,
-      color: c.textTertiary,
-      letterSpacing: 0.08,
-      textTransform: 'uppercase',
-      marginTop: spacing.xs,
-    },
-    exPreview: {
-      paddingHorizontal: spacing.xxl,
-      paddingTop: spacing.lg,
-    },
-    sectionLabel: {
-      ...typography.monoLabel,
-      color: c.textTertiary,
-      letterSpacing: 0.12,
-      textTransform: 'uppercase',
-      marginBottom: spacing.xs,
-    },
-    exRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: 13,
-      borderBottomWidth: 0.5,
-      borderBottomColor: c.border,
-    },
-    exName: {
-      ...typography.body,
-      color: c.textPrimary,
-      flex: 1,
-      marginRight: spacing.lg,
-    },
-    exSpec: {
-      ...typography.body,
-      color: c.gold,
-      fontWeight: '700',
-      flexShrink: 0,
-    },
-    primaryBtn: {
-      marginHorizontal: spacing.xxl,
-      marginTop: spacing.xxxl,
-      backgroundColor: c.gold,
-      borderRadius: radii.row,
-      paddingVertical: 15,
-      alignItems: 'center',
-    },
-    primaryBtnText: {
-      ...typography.cta,
-      color: c.blackText,
-      textTransform: 'uppercase',
-    },
-    completedBanner: {
-      marginHorizontal: spacing.xxl,
-      marginTop: spacing.xxxl,
-      backgroundColor: c.successSurface,
-      borderWidth: 0.5,
-      borderColor: c.successBorder,
-      borderRadius: radii.card,
-      padding: spacing.xxl,
-      alignItems: 'center',
-    },
-    completedBannerIcon: {
-      fontSize: 36,
-      color: c.success,
-      marginBottom: spacing.md,
-    },
-    completedBannerTitle: {
-      ...typography.subheading,
-      color: c.successText,
-      textAlign: 'center',
-    },
-    completedBannerSub: {
-      ...typography.monoSmall,
-      color: c.successDim,
-      textAlign: 'center',
-      marginTop: spacing.xs,
-    },
+    textBtnLabel: { ...typography.body, color: c.dangerText },
   });

@@ -63,7 +63,8 @@ export async function getSuggestedSetValues(
   const last = await getLastCompletedSessionForExercise(exerciseName, historyOptions);
   const top = repRange ? parseRepRangeTop(repRange) : 0;
   const floor = repRange ? parseRepRangeFloor(repRange) : 0;
-  const progress = !!last && top > 0 && last.sets.length > 0 && last.sets.every((s) => s.reps >= top);
+  const progress =
+    !!last && top > 0 && last.sets.length > 0 && last.sets.every((s) => s.reps >= top);
   return Array.from({ length: setCount }, (_, i) => {
     if (!last || last.sets.length === 0) return { weight: 0, reps: 0 };
     const match = last.sets.find((s) => s.setIndex === i + 1) ?? last.sets[last.sets.length - 1];
