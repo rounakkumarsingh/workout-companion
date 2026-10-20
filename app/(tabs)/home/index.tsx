@@ -113,6 +113,11 @@ function weekdayName(date: Date = new Date()): string {
 }
 
 async function computeScreenState(): Promise<HomeScreenState> {
+  // Sessions left open from an earlier day are closed before anything
+  // else, so they never block today's workout. This runs before the week is
+  // resolved because completing one can finish the week.
+  await finalizeStaleSessions();
+
   const schedule = await resolveCurrentSchedule();
 
   if (schedule.status === 'onboarding') {
@@ -122,10 +127,6 @@ async function computeScreenState(): Promise<HomeScreenState> {
   if (schedule.status === 'programCompleted') {
     return { status: 'programCompleted' };
   }
-
-  // Sessions left open from an earlier day are closed before anything
-  // else, so they never block today's workout.
-  await finalizeStaleSessions();
 
   // An open session always wins. Describe it with its own week/day.
   const activeSession = await getActiveSession();
@@ -229,7 +230,10 @@ export default function TodayScheduleScreen() {
       (async () => {
         try {
           const state = await computeScreenState();
-          if (!cancelled) setScreenState(state);
+          if (cancelled) return;
+          setScreenState(state);
+          // A fresh plan starts from its own suggestion.
+          setPicked(null);
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
           if (!cancelled) setScreenState({ status: 'error', message });

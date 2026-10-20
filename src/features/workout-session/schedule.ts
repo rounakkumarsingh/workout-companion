@@ -25,6 +25,8 @@ import {
 } from '../../lib/dates';
 
 const PROGRAM_START_KEY = 'program_start_date';
+/** When the start date was set; a restart must not count the last cycle. */
+const CYCLE_STARTED_AT_KEY = 'program_cycle_started_at';
 
 /** A completed workout (or cardio / mobility log) locks for this many days. */
 export const RECOVERY_WINDOW_DAYS = 7;
@@ -56,10 +58,12 @@ export async function getProgramStartDate(): Promise<string | null> {
 
 export async function setProgramStartDate(date: string): Promise<void> {
   await setSetting(PROGRAM_START_KEY, date);
+  await setSetting(CYCLE_STARTED_AT_KEY, new Date().toISOString());
 }
 
 export async function clearProgramStartDate(): Promise<void> {
   await deleteSetting(PROGRAM_START_KEY);
+  await deleteSetting(CYCLE_STARTED_AT_KEY);
 }
 
 /** Program start as local midnight, or null before onboarding. */
@@ -190,8 +194,18 @@ export function computeStreak(today: Date, completedStartedAts: readonly string[
   return streak;
 }
 
+/**
+ * Completed sessions of the current program cycle: on or after the start
+ * date, and after the start date was set, so restarting on the day the
+ * last cycle ended (or with a past date) does not pick up its sessions.
+ */
 async function getCompletedThisCycle(start: Date | null): Promise<CompletedSession[]> {
-  return start ? getCompletedSessionsSince(start.toISOString()) : [];
+  if (!start) return [];
+  const startIso = start.toISOString();
+  const cycleStartedAt = await getSetting(CYCLE_STARTED_AT_KEY);
+  return getCompletedSessionsSince(
+    cycleStartedAt && cycleStartedAt > startIso ? cycleStartedAt : startIso,
+  );
 }
 
 export async function resolveCurrentSchedule(): Promise<ScheduleResolution> {

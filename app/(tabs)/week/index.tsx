@@ -4,12 +4,19 @@ import { useFocusEffect } from 'expo-router';
 import { useColors, typography, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { resolveCurrentSchedule, getTodayPlan } from '@/src/features/workout-session';
+import {
+  resolveCurrentSchedule,
+  getTodayPlan,
+  finalizeStaleSessions,
+} from '@/src/features/workout-session';
 import type { TodayPlan } from '@/src/features/workout-session';
+import { TOTAL_WEEKS } from '@/src/data/program';
 
 export default function WeekScreen() {
   const colors = useColors();
   const [plan, setPlan] = useState<TodayPlan | null>(null);
+  const [programCompleted, setProgramCompleted] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -18,12 +25,23 @@ export default function WeekScreen() {
       let cancelled = false;
       (async () => {
         try {
+          // Closing yesterday's open session can finish the week.
+          await finalizeStaleSessions();
           const schedule = await resolveCurrentSchedule();
+          if (schedule.status === 'programCompleted') {
+            if (!cancelled) setProgramCompleted(true);
+            return;
+          }
+          // Before onboarding, preview Week 1.
           const currentWeek = schedule.status === 'active' ? schedule.weekNumber : 1;
           const weekPlan = await getTodayPlan(currentWeek);
-          if (!cancelled) setPlan(weekPlan);
+          if (cancelled) return;
+          setProgramCompleted(false);
+          setFailed(false);
+          setPlan(weekPlan);
         } catch (e) {
           console.warn('[week] Failed to load the week:', e);
+          if (!cancelled) setFailed(true);
         } finally {
           if (!cancelled) setLoading(false);
         }
@@ -33,6 +51,18 @@ export default function WeekScreen() {
       };
     }, []),
   );
+
+  if (programCompleted || (failed && !plan)) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.message}>
+          {programCompleted
+            ? `Program complete — all ${TOTAL_WEEKS} weeks done.`
+            : "Couldn't load this week. Please try again."}
+        </Text>
+      </View>
+    );
+  }
 
   if (loading || !plan) {
     return (
@@ -100,6 +130,12 @@ const makeStyles = (c: ColorSet) =>
       backgroundColor: c.background,
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    message: {
+      ...typography.body,
+      color: c.textSecondary,
+      textAlign: 'center',
+      paddingHorizontal: spacing.xxl,
     },
     planDays: {
       paddingHorizontal: spacing.xxl,
