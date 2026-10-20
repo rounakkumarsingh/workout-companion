@@ -42,7 +42,15 @@
         }
       ],
       "expo-sqlite",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos so you can add progress pictures.",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to use the camera for progress photos.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -64,6 +64,10 @@ The MVP should support:
 * Progress screen with:
   * week-by-week summaries
   * exercise progression charts
+  * bodyweight trend (daily weigh-ins, judged by the 7-day average)
+  * progress photos (front, side, rear) with a comparison to the previous set
+* Daily weigh-in: a skippable prompt when starting a workout if today has no entry, plus a Home card on any day without one
+* Monthly progress photos: a Home banner when 30 days have passed since the last set (or at program start if none)
 * Dark-themed mobile UI
 * Offline-first functionality
 
