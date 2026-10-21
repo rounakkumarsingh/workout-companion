@@ -24,6 +24,7 @@ import { ExerciseRow } from '@/components/workout/ExerciseRow';
 import { QuickLogOverlay } from '@/components/workout/QuickLogOverlay';
 import { ElapsedTimer, ElapsedText } from '@/components/workout/ElapsedTimer';
 import { LastTimeSheet } from '@/components/workout/LastTimeSheet';
+import { GeneralWarmupCard } from '@/components/workout/GeneralWarmupCard';
 import { summarizeLastTime } from '@/src/features/workout-session/last-time';
 import type {
   ActiveSession,
@@ -449,6 +450,8 @@ export default function ActiveWorkoutScreen() {
                 />
               </View>
             </View>
+
+            <GeneralWarmupCard />
 
             {allComplete && (
               <View style={styles.completeCard}>
