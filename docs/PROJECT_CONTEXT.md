@@ -70,6 +70,7 @@ The MVP should support:
   * progress photos (front, side, rear) with a comparison to the previous set
 * Daily weigh-in: a skippable prompt when starting or resuming a workout if today has no entry, plus a Home card on any day without one
 * Monthly progress photos: a Home banner when 30 days have passed since the last set (or at program start if none)
+* Data backup: a History action that saves all workouts, weigh-ins, cardio logs, photo records and settings to a JSON file through the share sheet (history lives only on the phone; restore is not built yet)
 * Dark-themed mobile UI
 * Offline-first functionality
 
