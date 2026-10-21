@@ -1,6 +1,6 @@
 # Expo HAS CHANGED
 
-Expo SDK 54 (package pins `~54.0.x`): read the versioned docs at https://docs.expo.dev/versions/v54.0.0/ before writing any code.
+Expo SDK 57 (package pins `~57.0.x`): read the versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any code. Use `bun`/`bunx` for all package and script commands, not npm/npx. Stay on the SDK the App Store's Expo Go supports (check `expoGoSdkVersion` at https://api.expo.dev/v2/versions/latest) before upgrading.
 
 # AI Agent Operating Rules
 
