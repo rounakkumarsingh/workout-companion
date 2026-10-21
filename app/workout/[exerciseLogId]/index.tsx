@@ -478,10 +478,11 @@ export default function ExerciseDetailScreen() {
   }, [state, router, restTimer]);
 
   const prescribedName = state.phase === 'active' ? state.exercise.prescribedExerciseName : null;
+  const weekNumber = state.phase === 'active' ? state.session.weekNumber : null;
   useEffect(() => {
-    if (!prescribedName) return;
+    if (!prescribedName || weekNumber === null) return;
     let cancelled = false;
-    getPreferredExercise(prescribedName)
+    getPreferredExercise(prescribedName, weekNumber)
       .then((name) => {
         if (!cancelled) setAlwaysName(name);
       })
@@ -489,7 +490,7 @@ export default function ExerciseDetailScreen() {
     return () => {
       cancelled = true;
     };
-  }, [prescribedName]);
+  }, [prescribedName, weekNumber]);
 
   const applySubstitution = useCallback(
     async (targetName: string, permanent: boolean) => {
@@ -621,7 +622,7 @@ export default function ExerciseDetailScreen() {
   const pres = exercise.prescription;
   const exerciseMeta = PROGRAM.exercises[exercise.exerciseName];
   const isSubstituted = exercise.exerciseName !== exercise.prescribedExerciseName;
-  const rawOptions = getSubstitutionOptions(exercise.prescribedExerciseName);
+  const rawOptions = getSubstitutionOptions(exercise.prescribedExerciseName, session.weekNumber);
   const substitutionOptions = isSubstituted
     ? [
         { name: exercise.prescribedExerciseName },
