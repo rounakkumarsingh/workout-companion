@@ -16,10 +16,14 @@ import {
   hitSlopFor,
   MIN_TAP_SIZE,
 } from '@/src/theme';
+import { WEIGHT_INCREMENT_KG } from '@/src/features/workout-session/progression';
+import { buildWarmupLadder, clampWarmupCount } from '@/src/features/workout-session/warmup-ladder';
 
 interface WarmupSectionProps {
   prescribedMin: number;
   prescribedMax: number;
+  /** The planned working weight (kg) the warm-up percentages apply to; 0 when not known yet. */
+  workingWeight: number;
   warmupSets: { setIndex: number; weight: number; reps: number }[];
   onLogWarmupSet: (weight: number, reps: number) => Promise<void>;
 }
@@ -27,6 +31,7 @@ interface WarmupSectionProps {
 export function WarmupSection({
   prescribedMin,
   prescribedMax,
+  workingWeight,
   warmupSets,
   onLogWarmupSet,
 }: WarmupSectionProps) {
@@ -37,6 +42,12 @@ export function WarmupSection({
   const [weight, setWeight] = useState(0);
   const [reps, setReps] = useState(10);
   const editorRef = useRef<View>(null);
+  const loggingLadderRef = useRef(false);
+  // The PDF's pyramid for the top of the listed range, steppable down to the minimum.
+  const [ladderCount, setLadderCount] = useState(prescribedMax);
+  const count = clampWarmupCount(ladderCount, prescribedMin, prescribedMax);
+  const ladder = buildWarmupLadder(count, workingWeight, WEIGHT_INCREMENT_KG);
+  const remaining = ladder.slice(warmupSets.length);
   const highlight = useSharedValue(0);
 
   const animHeight = useSharedValue(0);
@@ -51,7 +62,7 @@ export function WarmupSection({
   }));
 
   useEffect(() => {
-    animHeight.value = withTiming(expanded ? 500 : 0, { duration: 300 });
+    animHeight.value = withTiming(expanded ? 760 : 0, { duration: 300 });
   }, [expanded, animHeight]);
 
   useEffect(() => {
@@ -77,6 +88,16 @@ export function WarmupSection({
       withTiming(1, { duration: 200 }),
       withTiming(0, { duration: 600 }),
     );
+  };
+
+  const handleLogSuggestion = async (weight: number, reps: number) => {
+    if (loggingLadderRef.current) return;
+    loggingLadderRef.current = true;
+    try {
+      await onLogWarmupSet(weight, reps);
+    } finally {
+      loggingLadderRef.current = false;
+    }
   };
 
   const adjustWeight = (delta: number) => {
@@ -111,6 +132,67 @@ export function WarmupSection({
             </Text>
           </View>
         ))}
+        {ladder.length > 0 && (
+          <View style={styles.ladder}>
+            <View style={styles.ladderHead}>
+              <Text style={styles.ladderTitle}>SUGGESTED LADDER</Text>
+              {prescribedMax > prescribedMin ? (
+                <View style={styles.stepper}>
+                  <TouchableOpacity
+                    style={styles.stepBtn}
+                    hitSlop={hitSlopFor(36)}
+                    onPress={() => setLadderCount(count - 1)}
+                    disabled={count <= prescribedMin}
+                    accessibilityLabel="Fewer warmup sets"
+                    activeOpacity={0.6}
+                  >
+                    <Text style={styles.stepBtnText}>−</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.stepVal}>{count} sets</Text>
+                  <TouchableOpacity
+                    style={styles.stepBtn}
+                    hitSlop={hitSlopFor(36)}
+                    onPress={() => setLadderCount(count + 1)}
+                    disabled={count >= prescribedMax}
+                    accessibilityLabel="More warmup sets"
+                    activeOpacity={0.6}
+                  >
+                    <Text style={styles.stepBtnText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+            </View>
+            {workingWeight <= 0 ? (
+              <Text style={styles.ladderHint}>
+                No working weight yet: percentages are of the weight you plan to use.
+              </Text>
+            ) : null}
+            {remaining.length === 0 ? (
+              <Text style={styles.ladderHint}>Ladder complete.</Text>
+            ) : (
+              remaining.map((step, i) => (
+                <View key={step.setIndex} style={styles.ladderRow}>
+                  <Text style={styles.ladderText}>
+                    Warmup {step.setIndex} · ~{step.percent}%
+                    {step.weight !== null ? ` · ${step.weight} kg × ${step.reps}` : ''}
+                    {` (${step.repsLabel} reps)`}
+                  </Text>
+                  {i === 0 && step.weight !== null ? (
+                    <TouchableOpacity
+                      style={styles.ladderLog}
+                      onPress={() => handleLogSuggestion(step.weight as number, step.reps)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Log warmup ${step.setIndex}: ${step.weight} kilograms for ${step.reps} reps`}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.logBtnText}>Log</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              ))
+            )}
+          </View>
+        )}
         {showEditor && warmupSets.length < prescribedMax && (
           <Animated.View ref={editorRef} style={[styles.logRow, highlightStyle]}>
             <Text style={styles.logRowLabel}>Warmup {warmupSets.length + 1}</Text>
@@ -233,6 +315,52 @@ const makeStyles = (c: ColorSet) =>
       ...typography.monoSmall,
       color: c.textSecondary,
       marginBottom: spacing.sm,
+    },
+    ladder: {
+      backgroundColor: c.goldSurface,
+      borderWidth: 0.5,
+      borderColor: c.goldBorder,
+      borderRadius: radii.row,
+      padding: spacing.lg,
+      marginTop: spacing.sm,
+      marginBottom: spacing.sm,
+    },
+    ladderHead: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing.sm,
+    },
+    ladderTitle: {
+      ...typography.monoLabel,
+      color: c.goldText,
+      letterSpacing: 0.1,
+    },
+    ladderHint: {
+      ...typography.monoLabel,
+      color: c.textSecondary,
+      marginBottom: spacing.sm,
+    },
+    ladderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    ladderText: {
+      ...typography.monoSmall,
+      color: c.textPrimary,
+      flex: 1,
+    },
+    ladderLog: {
+      minHeight: MIN_TAP_SIZE,
+      minWidth: 64,
+      borderRadius: radii.button,
+      backgroundColor: c.gold,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.lg,
     },
     stepperRow: {
       flexDirection: 'row',

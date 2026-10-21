@@ -673,6 +673,7 @@ export default function ExerciseDetailScreen() {
       <WarmupSection
         prescribedMin={pres?.warmupSetsMin ?? 0}
         prescribedMax={pres?.warmupSetsMax ?? 0}
+        workingWeight={exercise.sets.find((s) => !s.isWarmup)?.weight ?? 0}
         warmupSets={exercise.warmupSets}
         onLogWarmupSet={handleLogWarmup}
       />
