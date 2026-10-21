@@ -34,6 +34,6 @@ Short, current status. History lives in git (`git log`) and the merged PRs; the 
 
 **Design-board gaps:** the program-complete screen has no PR count or best streak; no cardio icon on rows; the old "almost ready" badge is no longer shown (`progressionStatus: 'almost'` is still in `ExerciseRow`'s props but unused); (the board's cardio icon has no data: the program has no cardio exercise rows). Home gutters (16px) and the mm:ss timer now match the board.
 
-**Lint:** 0 errors, about 36 warnings (hook dependencies, `set-state-in-effect`, purity). They were left alone because fixing them can change when effects run.
+**Lint:** 0 errors, 21 warnings (down from 35). The safe ones (shared-value dependencies, extracted dependency expressions) are fixed. The rest are left alone on purpose because fixing them changes when effects run or needs a device to test: `new Date()` called during render (could go stale), `setState` inside effects, and effects keyed on a session id (`app/workout/index.tsx`, the exercise screen). The exercise screen's back-button effect depends on `hasLoggedSetsRef.current` deliberately.
 
 **Still to check by hand:** video titles cannot prove the right movement. Single-Arm DB Row ("DB ROW") and DB Bench Press ("Dumbbell Chest Press") were confirmed fine by the owner, as was the Walking Lunge video shared by two exercise names.
