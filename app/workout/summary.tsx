@@ -53,7 +53,7 @@ function FadeInView({ index, children }: { index: number; children: React.ReactN
       delay,
       withTiming(0, { duration: 200, easing: Easing.out(Easing.quad) }),
     );
-  }, [index]);
+  }, [index, opacity, translateY]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -81,7 +81,7 @@ export default function WorkoutSummaryScreen() {
     if (!reducedMotion) {
       heroScale.value = withSpring(1, { damping: 10, stiffness: 150 });
     }
-  }, []);
+  }, [reducedMotion, heroScale]);
 
   useEffect(() => {
     if (!sessionId) {

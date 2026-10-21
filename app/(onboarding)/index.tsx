@@ -37,7 +37,7 @@ function StaggeredFadeSlide({ index, children }: { index: number; children: Reac
       delay,
       withTiming(0, { duration: 300, easing: Easing.out(Easing.quad) }),
     );
-  }, [index]);
+  }, [index, opacity, translateY]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,

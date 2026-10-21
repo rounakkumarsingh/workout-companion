@@ -21,7 +21,7 @@ function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
       return () => clearTimeout(timer);
     }
     prevRef.current = focused;
-  }, [focused, reducedMotion]);
+  }, [focused, reducedMotion, scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],

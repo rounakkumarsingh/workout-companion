@@ -32,7 +32,7 @@ export function StreakBanner({ count, nextSessionLabel }: StreakBannerProps) {
       });
     }
     prevCount.current = count;
-  }, [count, reducedMotion]);
+  }, [count, reducedMotion, animProgress]);
 
   const animatedStyle = useAnimatedStyle(() => {
     const scale = interpolate(animProgress.value, [0, 0.3, 1], [1, 1.15, 1]);

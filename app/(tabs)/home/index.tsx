@@ -233,8 +233,11 @@ export default function TodayScheduleScreen() {
   const resumePulse = useSharedValue(1);
   const pulseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const isInProgress = screenState.status === 'inProgress';
+  const inProgressSessionId = screenState.status === 'inProgress' ? screenState.sessionId : null;
+
   useEffect(() => {
-    if (screenState.status === 'inProgress' && !reducedMotion) {
+    if (isInProgress && !reducedMotion) {
       resumePulse.value = withRepeat(
         withTiming(1.02, { duration: 1000, easing: Easing.inOut(Easing.sin) }),
         -1,
@@ -247,7 +250,7 @@ export default function TodayScheduleScreen() {
     return () => {
       if (pulseTimeoutRef.current) clearTimeout(pulseTimeoutRef.current);
     };
-  }, [screenState.status === 'inProgress' ? true : false]);
+  }, [isInProgress, reducedMotion, resumePulse]);
 
   const resumePulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: resumePulse.value }],
@@ -255,11 +258,11 @@ export default function TodayScheduleScreen() {
 
   // Hydrate active session when entering inProgress state
   useEffect(() => {
-    if (screenState.status === 'inProgress') {
+    if (inProgressSessionId !== null) {
       setHydrating(true);
       (async () => {
         try {
-          const session = await hydrateActiveSession(screenState.sessionId);
+          const session = await hydrateActiveSession(inProgressSessionId);
           setHydratedSession(session);
         } catch {
           setHydratedSession(null);
@@ -270,14 +273,14 @@ export default function TodayScheduleScreen() {
     } else {
       setHydratedSession(null);
     }
-  }, [screenState.status === 'inProgress' ? screenState.sessionId : null]);
+  }, [inProgressSessionId]);
 
   useEffect(() => {
     if (screenState.status === 'programCompleted' && !didAutoRedirect) {
       setDidAutoRedirect(true);
       router.replace('/completed');
     }
-  }, [screenState.status, didAutoRedirect]);
+  }, [screenState.status, didAutoRedirect, router]);
 
   useFocusEffect(
     useCallback(() => {

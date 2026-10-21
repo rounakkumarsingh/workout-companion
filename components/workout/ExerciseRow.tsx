@@ -91,7 +91,7 @@ export function ExerciseRow({
       }
     }
     prevStatus.current = status;
-  }, [status]);
+  }, [status, reducedMotion, checkProgress]);
 
   // Shimmer on active
   useEffect(() => {
@@ -101,7 +101,7 @@ export function ExerciseRow({
         withTiming(-SHIMMER_WIDTH, { duration: 0 }),
       );
     }
-  }, [status]);
+  }, [status, reducedMotion, shimmerOffset]);
 
   // Completion flash when last set of exercise is done
   useEffect(() => {
@@ -113,7 +113,7 @@ export function ExerciseRow({
         );
       }
     }
-  }, [status]);
+  }, [status, reducedMotion, flashOpacity]);
 
   const animatedCheckProps = useAnimatedProps(() => ({
     strokeDashoffset: CHECK_LENGTH * (1 - checkProgress.value),
