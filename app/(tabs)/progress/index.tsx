@@ -17,6 +17,7 @@ import { VolumeTrendChart } from '@/features/progress/VolumeTrendChart';
 import { ExerciseProgressionCard } from '@/features/progress/ExerciseProgressionCard';
 import { BodyweightSection } from '@/features/bodyweight/BodyweightSection';
 import { PhotoSummaryCard } from '@/features/progress-photos/PhotoSummaryCard';
+import { BackupCard } from '@/features/backup/BackupCard';
 
 interface VolumeBar {
   weekNumber: number;
@@ -163,6 +164,12 @@ export default function HistoryScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Progress photos</Text>
         <PhotoSummaryCard />
+      </View>
+
+      {/* Backup */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Backup</Text>
+        <BackupCard />
       </View>
 
       <View style={{ height: 80 }} />

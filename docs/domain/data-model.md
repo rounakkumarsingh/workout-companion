@@ -287,6 +287,8 @@ The data model is separated into three layers:
 
 **Frequency guidance**: Roughly once every 2–3 months, no more than once per week.
 
+**Backup**: the History tab can export every user-data table (sessions, exercise logs, set logs, bodyweight entries, cardio sessions, photo records, app settings) as one versioned JSON file (`format: "workout-companion-backup"`, `version: 1`, with per-table row counts). Photo image files are not part of the export, only their records. There is no import yet.
+
 ---
 
 ### 2.14 CardioSession

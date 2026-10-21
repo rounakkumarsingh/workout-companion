@@ -14,7 +14,10 @@
     "serve:program": "python3 scripts/serve_program.py",
     "lint:fix": "oxlint --fix",
     "format": "oxfmt",
-    "format:check": "oxfmt --check"
+    "format:check": "oxfmt --check",
+    "start:go": "expo start --go",
+    "update:preview": "bunx eas-cli update --branch preview --message",
+    "update:stable": "bunx eas-cli update:republish --branch preview --destination-branch stable --message"
   },
   "dependencies": {
     "@expo-google-fonts/barlow-condensed": "^0.4.1",
@@ -32,6 +35,7 @@
     "expo-linking": "~57.0.13",
     "expo-notifications": "~57.0.23",
     "expo-router": "~57.0.28",
+    "expo-sharing": "~57.0.23",
     "expo-splash-screen": "~57.0.10",
     "expo-sqlite": "~57.0.4",
     "expo-status-bar": "~57.0.1",
