@@ -55,6 +55,7 @@ The MVP should support:
   * Start Workout button
 * Workout screen with:
 
+  * the program's general warm-up (5-10 min, from the PDF's warm-up protocol) as a collapsible checklist above the exercises; ticks are not saved and never block starting
   * hardcoded BTS Beginner exercises
   * up to 4 sets per exercise
   * weight logging
