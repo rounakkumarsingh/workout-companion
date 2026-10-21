@@ -94,6 +94,9 @@ function shortDate(date: Date): string {
   return `${(WEEKDAY_NAMES[date.getDay()] ?? '').slice(0, 3)} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
 }
 
+/** The design's single 16px side gutter, shared by every row on Home. */
+const SCREEN_GUTTER = spacing.xl;
+
 /** Week 6 prescribes 1 working set per exercise at lower RPE: the program's deload. */
 const DELOAD_WEEK = 6;
 
@@ -551,18 +554,22 @@ export default function TodayScheduleScreen() {
           </View>
         )}
         {photoNudge.due ? (
-          <PhotoDueBanner
-            daysSinceLast={photoNudge.daysSince}
-            onPress={() => router.push('/(tabs)/progress/photos' as Href)}
-          />
+          <View style={styles.nudge}>
+            <PhotoDueBanner
+              daysSinceLast={photoNudge.daysSince}
+              onPress={() => router.push('/(tabs)/progress/photos' as Href)}
+            />
+          </View>
         ) : weighedToday === false ? (
-          <WeighInCard
-            onPress={() => {
-              setPendingChoice(null);
-              setResumePending(false);
-              setWeighInOpen(true);
-            }}
-          />
+          <View style={styles.nudge}>
+            <WeighInCard
+              onPress={() => {
+                setPendingChoice(null);
+                setResumePending(false);
+                setWeighInOpen(true);
+              }}
+            />
+          </View>
         ) : null}
         <View style={styles.block}>{block}</View>
       </ScrollView>
@@ -804,7 +811,7 @@ const makeStyles = (c: ColorSet) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-end',
-      paddingHorizontal: spacing.xxl,
+      paddingHorizontal: SCREEN_GUTTER,
       paddingBottom: spacing.xl,
     },
     headerText: { gap: 2 },
@@ -821,7 +828,7 @@ const makeStyles = (c: ColorSet) =>
       color: c.textPrimary,
     },
     stripWrap: {
-      paddingHorizontal: spacing.xxl,
+      paddingHorizontal: SCREEN_GUTTER,
       marginBottom: spacing.xl,
       gap: spacing.sm,
     },
@@ -831,9 +838,10 @@ const makeStyles = (c: ColorSet) =>
       letterSpacing: 1.5,
       color: c.textSecondary,
     },
-    block: { paddingHorizontal: spacing.xxl, gap: spacing.xl },
+    block: { paddingHorizontal: SCREEN_GUTTER, gap: spacing.xl },
+    nudge: { paddingHorizontal: SCREEN_GUTTER, marginBottom: spacing.xl },
     dock: {
-      paddingHorizontal: spacing.xxl,
+      paddingHorizontal: SCREEN_GUTTER,
       paddingTop: spacing.lg,
       paddingBottom: spacing.lg,
       gap: spacing.md,

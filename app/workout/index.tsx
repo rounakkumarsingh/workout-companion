@@ -22,6 +22,7 @@ import { useColors, typography, radii, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { ExerciseRow } from '@/components/workout/ExerciseRow';
 import { QuickLogOverlay } from '@/components/workout/QuickLogOverlay';
+import { ElapsedTimer, ElapsedText } from '@/components/workout/ElapsedTimer';
 import { LastTimeSheet } from '@/components/workout/LastTimeSheet';
 import { summarizeLastTime } from '@/src/features/workout-session/last-time';
 import type {
@@ -36,7 +37,6 @@ import {
   abandonSession,
   updateSet,
   getSessionProgress,
-  getElapsedMinutes,
   getProgressionSuggestions,
   getProgramDayNumber,
 } from '@/src/features/workout-session';
@@ -62,13 +62,6 @@ function getExerciseStatus(exercise: {
   return 'pending';
 }
 
-function formatElapsed(minutes: number): string {
-  if (minutes < 60) return `${minutes}m`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${h}h ${m}m`;
-}
-
 interface ActiveState {
   phase: 'active';
   session: ActiveSession;
@@ -88,7 +81,6 @@ export default function ActiveWorkoutScreen() {
   const reducedMotion = useReducedMotion();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const [elapsed, setElapsed] = useState('0m');
   const [progressionSuggestions, setProgressionSuggestions] = useState<
     Map<string, ProgressionSuggestion>
   >(new Map());
@@ -161,17 +153,6 @@ export default function ActiveWorkoutScreen() {
       };
     }, [params.sessionId, hydrate]),
   );
-
-  useEffect(() => {
-    if (state.phase !== 'active') return;
-    setElapsed(formatElapsed(getElapsedMinutes(state.session)));
-    const interval = setInterval(() => {
-      if (activeRef.current) {
-        setElapsed(formatElapsed(getElapsedMinutes(activeRef.current.session)));
-      }
-    }, 60000);
-    return () => clearInterval(interval);
-  }, [phase, sessionId]);
 
   useEffect(() => {
     if (state.phase === 'active') {
@@ -405,19 +386,7 @@ export default function ActiveWorkoutScreen() {
         <Text style={styles.topTitle}>
           {dayCode} · Day {dayNumber}
         </Text>
-        <View style={styles.timer} accessibilityRole="timer" accessibilityLabel="Elapsed time">
-          <Svg width={16} height={16} viewBox="0 0 24 24">
-            <Path
-              d="M5 13.5a7 7 0 1 0 14 0a7 7 0 1 0 -14 0zM12 13.5V10M10 3h4M12 3v3.5"
-              stroke={colors.textSecondary}
-              strokeWidth={1.75}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-          </Svg>
-          <Text style={styles.timerText}>{elapsed}</Text>
-        </View>
+        <ElapsedTimer startedAt={session.startedAt} />
       </View>
 
       <FlatList
@@ -497,7 +466,7 @@ export default function ActiveWorkoutScreen() {
                   <Text style={styles.completeLabel}>SESSION COMPLETE</Text>
                   <Text style={styles.completeMeta}>
                     {session.exercises.length} of {session.exercises.length} ·{' '}
-                    {progress.completedSets} sets · {elapsed}
+                    {progress.completedSets} sets · <ElapsedText startedAt={session.startedAt} />
                   </Text>
                 </View>
               </View>
@@ -617,18 +586,6 @@ const makeStyles = (c: ColorSet) =>
       letterSpacing: 0.08,
       color: c.goldText,
       textTransform: 'uppercase',
-    },
-    timer: {
-      minWidth: 44,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.xs,
-      paddingRight: spacing.md,
-    },
-    timerText: {
-      fontFamily: 'SpaceMono_700Bold',
-      fontSize: 15,
-      color: c.textPrimary,
     },
     listHeader: {
       gap: spacing.lg,

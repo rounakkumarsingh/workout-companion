@@ -49,7 +49,7 @@ export function ProgramProgressBar({
 const makeStyles = (c: ColorSet) =>
   StyleSheet.create({
     wrap: {
-      marginHorizontal: spacing.xxl,
+      marginHorizontal: spacing.xl,
       marginBottom: spacing.xl,
     },
     labelRow: {
