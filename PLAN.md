@@ -32,7 +32,7 @@ Short, current status. History lives in git (`git log`) and the merged PRs; the 
 
 **Not built:** import/restore of an export; Phase 2 extras (warm-up load ladder, loop back to week 1 after week 12, bodyweight chart).
 
-**Design-board gaps:** the program-complete screen has no PR count or best streak; no cardio icon on rows; the old "almost ready" badge is no longer shown (`progressionStatus: 'almost'` is still in `ExerciseRow`'s props but unused); the timer shows whole minutes; Home margins are 20px, the board shows 16px.
+**Design-board gaps:** the program-complete screen has no PR count or best streak; no cardio icon on rows; the old "almost ready" badge is no longer shown (`progressionStatus: 'almost'` is still in `ExerciseRow`'s props but unused); (the board's cardio icon has no data: the program has no cardio exercise rows). Home gutters (16px) and the mm:ss timer now match the board.
 
 **Lint:** 0 errors, about 36 warnings (hook dependencies, `set-state-in-effect`, purity). They were left alone because fixing them can change when effects run.
 
