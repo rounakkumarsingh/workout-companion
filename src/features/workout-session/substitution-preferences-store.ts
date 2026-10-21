@@ -23,11 +23,14 @@ export async function setSubstitutionPreference(
 }
 
 /** The permanent substitute to use for `prescribed` in a new session, if any. */
-export async function getPreferredExercise(prescribed: string): Promise<string | null> {
+export async function getPreferredExercise(
+  prescribed: string,
+  weekNumber: number,
+): Promise<string | null> {
   const prefs = await getSubstitutionPreferences();
   return resolvePreferredExercise(
     prefs,
     prescribed,
-    getSubstitutionOptions(prescribed).map((o) => o.substituteName),
+    getSubstitutionOptions(prescribed, weekNumber).map((o) => o.substituteName),
   );
 }

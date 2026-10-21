@@ -142,9 +142,10 @@ export async function swapExercise(
   if (!exercise || exercise.exerciseName === targetName) return session;
 
   const isRevert = targetName === exercise.prescribedExerciseName;
-  const isListedSubstitute = getSubstitutionOptions(exercise.prescribedExerciseName).some(
-    (o) => o.substituteName === targetName,
-  );
+  const isListedSubstitute = getSubstitutionOptions(
+    exercise.prescribedExerciseName,
+    session.weekNumber,
+  ).some((o) => o.substituteName === targetName);
   if (!isRevert && !isListedSubstitute) return session;
 
   await updateExerciseLog(exerciseLogId, {

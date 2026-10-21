@@ -36,7 +36,7 @@ export async function initializeSession(
   const exercises = [];
   for (const prescription of dayPrescription.exercises) {
     // A substitute the user chose to use every time replaces the prescribed exercise.
-    const preferred = await getPreferredExercise(prescription.exerciseName);
+    const preferred = await getPreferredExercise(prescription.exerciseName, weekNumber);
     const performedName = preferred ?? prescription.exerciseName;
     const suggestions = await getSuggestedSetValues(performedName, prescription.workingSets, {
       repRange: prescription.repRange,
