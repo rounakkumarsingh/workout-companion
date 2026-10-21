@@ -1,11 +1,12 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useRouter, type Href } from 'expo-router';
 import { TOTAL_WEEKS, MAX_SESSIONS_PER_WEEK } from '@/src/data/program';
 import { useColors } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
-import { clearProgramStartDate } from '@/src/features/workout-session';
-import { getSessionsWithVolume, getSessionCountByWeek } from '@/src/db/repositories/sessions';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { getCycleStartIso, getProgramCycle, startNextCycle } from '@/src/features/workout-session';
+import { cycleAdherencePercent } from '@/src/features/workout-session/cycle';
+import { getSessionsWithVolume } from '@/src/db/repositories/sessions';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export default function ProgramCompletedScreen() {
   const router = useRouter();
@@ -14,22 +15,39 @@ export default function ProgramCompletedScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [totalSessions, setTotalSessions] = useState(0);
   const [adherenceRate, setAdherenceRate] = useState(0);
+  const [cycle, setCycle] = useState(1);
+  const startingRef = useRef(false);
 
   useEffect(() => {
     (async () => {
-      const sessions = await getSessionsWithVolume();
-      const volume = sessions.reduce((sum, s) => sum + (s.totalVolume ?? 0), 0);
-      setTotalVolume(volume);
+      // Only the cycle that was just finished: earlier cycles stay in the history.
+      const [cycleStartIso, cycleNumber, all] = await Promise.all([
+        getCycleStartIso(),
+        getProgramCycle(),
+        getSessionsWithVolume(1000),
+      ]);
+      const sessions = all.filter(
+        (s) => s.status === 'completed' && (!cycleStartIso || s.startedAt >= cycleStartIso),
+      );
+      setCycle(cycleNumber);
+      setTotalVolume(sessions.reduce((sum, s) => sum + (s.totalVolume ?? 0), 0));
       setTotalSessions(sessions.length);
-      const weeks = await getSessionCountByWeek();
-      const maxSessions = MAX_SESSIONS_PER_WEEK * TOTAL_WEEKS;
-      setAdherenceRate(Math.round((weeks.reduce((s, w) => s + w.count, 0) / maxSessions) * 100));
+      setAdherenceRate(cycleAdherencePercent(sessions.length, MAX_SESSIONS_PER_WEEK * TOTAL_WEEKS));
     })();
   }, []);
 
-  const handleRestart = useCallback(async () => {
-    await clearProgramStartDate();
-    router.replace('/(onboarding)');
+  const handleStartNextCycle = useCallback(async () => {
+    if (startingRef.current) return;
+    startingRef.current = true;
+    try {
+      await startNextCycle();
+      router.replace('/(tabs)/home' as Href);
+    } catch (e) {
+      console.error('[completed] Failed to start the next cycle:', e);
+      Alert.alert('Error', 'Failed to start the next cycle. Please try again.');
+    } finally {
+      startingRef.current = false;
+    }
   }, [router]);
 
   return (
@@ -37,7 +55,7 @@ export default function ProgramCompletedScreen() {
       <Text style={styles.emoji}>🎉</Text>
       <Text style={[styles.title, { color: colors.textPrimary }]}>Program Complete</Text>
       <Text style={[styles.subtitle, { color: colors.textTertiary }]}>
-        {`You finished all ${TOTAL_WEEKS} weeks of the program.`}
+        {`You finished all ${TOTAL_WEEKS} weeks${cycle > 1 ? ` (cycle ${cycle})` : ''}.`}
       </Text>
 
       <View style={styles.statsRow}>
@@ -60,13 +78,16 @@ export default function ProgramCompletedScreen() {
       </View>
 
       <Text style={[styles.description, { color: colors.textTertiary }]}>
-        Great work completing the program. You can restart from week 1 or take a deload.
+        The program loops back seamlessly: Week 1 (one set per exercise at lower effort) doubles as
+        a deload. Your history is kept.
       </Text>
       <TouchableOpacity
         style={[styles.button, { backgroundColor: colors.gold }]}
-        onPress={handleRestart}
+        onPress={handleStartNextCycle}
+        accessibilityRole="button"
+        accessibilityLabel="Start the next cycle at week 1 today"
       >
-        <Text style={styles.buttonText}>Restart Program</Text>
+        <Text style={styles.buttonText}>Start next cycle</Text>
       </TouchableOpacity>
     </View>
   );

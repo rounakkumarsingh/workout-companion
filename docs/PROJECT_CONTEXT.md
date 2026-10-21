@@ -27,6 +27,8 @@ The order isn't fixed. Each time the user opens the app, they choose today's wor
 
 Rest days are never chosen. The user simply doesn't train that day.
 
+After Week 12 the program loops, as the guidebook intends: **Start next cycle** begins Week 1 (the deload) today, with no onboarding. Earlier cycles stay in the history but do not count towards the new one; the Home progress label shows `CYCLE n` from the second cycle, and the Program Complete stats cover only the cycle just finished.
+
 The experience should feel fast, focused, dark-themed, and optimized for phone use during workouts.
 
 ---

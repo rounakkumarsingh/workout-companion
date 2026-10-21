@@ -8,6 +8,8 @@ interface ProgramProgressBarProps {
   /** When given, the bar tracks completed sessions instead of the week. */
   sessionsDone?: number;
   totalSessions?: number;
+  /** Shown as "CYCLE n" from the second pass through the program. */
+  cycle?: number;
 }
 
 export function ProgramProgressBar({
@@ -15,6 +17,7 @@ export function ProgramProgressBar({
   totalWeeks = 12,
   sessionsDone,
   totalSessions = 60,
+  cycle = 1,
 }: ProgramProgressBarProps) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -28,7 +31,7 @@ export function ProgramProgressBar({
       <View style={styles.labelRow}>
         <Text style={styles.label}>
           {bySessions
-            ? `WEEK ${currentWeek} OF ${totalWeeks}`
+            ? `WEEK ${currentWeek} OF ${totalWeeks}${cycle > 1 ? ` · CYCLE ${cycle}` : ''}`
             : `Week ${currentWeek} of ${totalWeeks}`}
         </Text>
         <Text style={styles.pct}>
