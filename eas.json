@@ -5,13 +5,16 @@
   },
   "build": {
     "development": {
+      "bun": "1.4.3",
       "developmentClient": true,
       "distribution": "internal"
     },
     "preview": {
+      "bun": "1.4.3",
       "distribution": "internal"
     },
     "production": {
+      "bun": "1.4.3",
       "autoIncrement": true
     }
   },
