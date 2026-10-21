@@ -65,6 +65,12 @@
         "projectId": "6111427d-ee0b-4e68-8731-36b57b7fa535"
       }
     },
-    "owner": "rounakkumarsingh"
+    "owner": "rounakkumarsingh",
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6111427d-ee0b-4e68-8731-36b57b7fa535"
+    }
   }
 }

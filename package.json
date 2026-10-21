@@ -16,7 +16,7 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "start:go": "expo start --go",
-    "update:preview": "bunx eas-cli update --branch preview --message",
+    "update:preview": "bunx eas-cli update --branch preview --environment preview --message",
     "update:stable": "bunx eas-cli update:republish --branch preview --destination-branch stable --message"
   },
   "dependencies": {
@@ -41,6 +41,7 @@
     "expo-status-bar": "~57.0.1",
     "expo-symbols": "~57.0.3",
     "expo-system-ui": "~57.0.4",
+    "expo-updates": "~57.0.26",
     "expo-web-browser": "~57.0.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
