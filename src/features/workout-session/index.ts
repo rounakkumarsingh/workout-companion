@@ -31,6 +31,9 @@ export {
   getTodayPlan,
   getCurrentStreak,
   getCompletedSessionCount,
+  getCycleStartIso,
+  getProgramCycle,
+  startNextCycle,
   getProgramDayNumber,
 } from './schedule';
 

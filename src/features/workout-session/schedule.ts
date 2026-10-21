@@ -9,6 +9,7 @@ import type {
 } from './types';
 import type { DayPrescription } from '../../data/program';
 import { PROGRAM, TOTAL_WEEKS } from '../../data/program';
+import { cycleBoundaryIso, parseCycle } from './cycle';
 import { getSetting, setSetting, deleteSetting } from '../../db/repositories/settings';
 import {
   getCompletedSessionsSince,
@@ -27,6 +28,8 @@ import {
 const PROGRAM_START_KEY = 'program_start_date';
 /** When the start date was set; a restart must not count the last cycle. */
 const CYCLE_STARTED_AT_KEY = 'program_cycle_started_at';
+/** Which pass through the 12 weeks this is (1 = the first). */
+const PROGRAM_CYCLE_KEY = 'program_cycle';
 
 /** A completed workout (or cardio / mobility log) locks for this many days. */
 export const RECOVERY_WINDOW_DAYS = 7;
@@ -64,6 +67,7 @@ export async function setProgramStartDate(date: string): Promise<void> {
 export async function clearProgramStartDate(): Promise<void> {
   await deleteSetting(PROGRAM_START_KEY);
   await deleteSetting(CYCLE_STARTED_AT_KEY);
+  await deleteSetting(PROGRAM_CYCLE_KEY);
 }
 
 /** Program start as local midnight, or null before onboarding. */
@@ -202,11 +206,31 @@ export function computeStreak(today: Date, completedStartedAts: readonly string[
  */
 async function getCompletedThisCycle(start: Date | null): Promise<CompletedSession[]> {
   if (!start) return [];
-  const startIso = start.toISOString();
-  const cycleStartedAt = await getSetting(CYCLE_STARTED_AT_KEY);
   return getCompletedSessionsSince(
-    cycleStartedAt && cycleStartedAt > startIso ? cycleStartedAt : startIso,
+    cycleBoundaryIso(start.toISOString(), await getSetting(CYCLE_STARTED_AT_KEY)),
   );
+}
+
+/** The first moment of the current cycle, or null before onboarding. */
+export async function getCycleStartIso(): Promise<string | null> {
+  const start = await getProgramStart();
+  if (!start) return null;
+  return cycleBoundaryIso(start.toISOString(), await getSetting(CYCLE_STARTED_AT_KEY));
+}
+
+/** 1 for the first pass through the 12 weeks, 2 after the first restart, and so on. */
+export async function getProgramCycle(): Promise<number> {
+  return parseCycle(await getSetting(PROGRAM_CYCLE_KEY));
+}
+
+/**
+ * Loops back to Week 1 (the deload) starting today. History is kept; sessions
+ * of earlier cycles stop counting towards the new one.
+ */
+export async function startNextCycle(): Promise<void> {
+  const next = (await getProgramCycle()) + 1;
+  await setSetting(PROGRAM_CYCLE_KEY, String(next));
+  await setProgramStartDate(toLocalDateKey(new Date()));
 }
 
 export async function resolveCurrentSchedule(): Promise<ScheduleResolution> {

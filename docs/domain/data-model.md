@@ -601,3 +601,9 @@ Computed on demand for the Progress screen.
 ## Permanent substitutions (app setting)
 
 The `app_settings` key `preferred_substitutions` holds a JSON object mapping a prescribed exercise name to the substitute the user chose to use every time (for example `{"Smith Machine Squat": "DB Bulgarian Split Squat"}`). New workouts use the substitute in place of the prescribed exercise (the exercise log keeps the prescribed name and a substitution note). A saved substitute that is not one of the exercise's listed options for the current week is ignored (some exercises, e.g. Walking Lunge, list different substitutes in the Foundation and Ramping blocks, so a Foundation choice stops applying from Week 6). A one-time substitution only changes that workout's exercise log and never writes this setting.
+
+---
+
+## Program cycles (app settings)
+
+The `app_settings` key `program_cycle` holds which pass through the 12 weeks the user is on (absent means 1). **Start next cycle** (after Week 12) increments it and sets a new program start date of today; `program_cycle_started_at` (set by `setProgramStartDate`) marks the boundary, so sessions before it do not count towards the current cycle's weeks, streak, session count or completion stats. Clearing the program start date also clears `program_cycle`.

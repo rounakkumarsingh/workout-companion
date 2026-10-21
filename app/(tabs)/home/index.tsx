@@ -39,6 +39,7 @@ import {
   finalizeStaleSessions,
   getCurrentStreak,
   getCompletedSessionCount,
+  getProgramCycle,
   getProgramDayNumber,
   getProgramStart,
   TRAINING_DAY_TYPES,
@@ -206,7 +207,9 @@ export default function TodayScheduleScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [screenState, setScreenState] = useState<HomeScreenState>({ status: 'loading' });
-  const [didAutoRedirect, setDidAutoRedirect] = useState(false);
+  // Redirect to the completed screen once per completion (reset when a new cycle starts).
+  const redirectedRef = useRef(false);
+  const [cycle, setCycle] = useState(1);
   const reducedMotion = useReducedMotion();
   const [hydratedSession, setHydratedSession] = useState<ActiveSession | null>(null);
   const [hydrating, setHydrating] = useState(false);
@@ -276,11 +279,13 @@ export default function TodayScheduleScreen() {
   }, [inProgressSessionId]);
 
   useEffect(() => {
-    if (screenState.status === 'programCompleted' && !didAutoRedirect) {
-      setDidAutoRedirect(true);
+    if (screenState.status !== 'programCompleted') {
+      redirectedRef.current = false;
+    } else if (!redirectedRef.current) {
+      redirectedRef.current = true;
       router.replace('/completed');
     }
-  }, [screenState.status, didAutoRedirect, router]);
+  }, [screenState.status, router]);
 
   useFocusEffect(
     useCallback(() => {
@@ -315,17 +320,20 @@ export default function TodayScheduleScreen() {
     let cancelled = false;
     (async () => {
       try {
-        const [streakNow, done, days, weights, latestPhotos, programStart] = await Promise.all([
-          getCurrentStreak(),
-          getCompletedSessionCount(),
-          getRecentDays(),
-          getBodyweightEntries(30),
-          getProgressPhotos(1),
-          getProgramStart(),
-        ]);
+        const [streakNow, done, cycleNow, days, weights, latestPhotos, programStart] =
+          await Promise.all([
+            getCurrentStreak(),
+            getCompletedSessionCount(),
+            getProgramCycle(),
+            getRecentDays(),
+            getBodyweightEntries(30),
+            getProgressPhotos(1),
+            getProgramStart(),
+          ]);
         if (cancelled) return;
         setStreak(streakNow);
         setSessionsDone(done);
+        setCycle(cycleNow);
         setRecentDays(days);
         const now = new Date();
         setWeighedToday(hasEntryToday(weights, now));
@@ -549,6 +557,7 @@ export default function TodayScheduleScreen() {
           totalWeeks={TOTAL_WEEKS}
           sessionsDone={sessionsDone}
           totalSessions={TOTAL_SESSIONS}
+          cycle={cycle}
         />
         {recentDays.length > 0 && (
           <View style={styles.stripWrap}>
