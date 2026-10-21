@@ -7,8 +7,11 @@ own history in its own local SQLite database.
 ## What this setup is, and is not
 
 - It is Expo Go, not a standalone installed app: you open the app inside Expo Go.
-- Updates are published **without a `runtimeVersion`**. The Expo docs say updates published with a
-  `runtimeVersion` cannot be loaded in Expo Go, so do not add one to `app.json`.
+- `expo-updates` is installed and `app.json` uses `runtimeVersion: { "policy": "sdkVersion" }`, which
+  publishes as `exposdk:57.0.0`, the same runtime version Expo Go itself reports. Do **not** use the
+  `appVersion` policy (`eas update` writes that by default): it publishes as `1.0.0`, which Expo Go
+  does not match. (One Expo docs page says any `runtimeVersion` blocks Expo Go; the published
+  `exposdk:` form is the exception that is meant for it. Confirm on a phone, see below.)
 - Only Expo Go-compatible libraries work. Local rest-timer notifications (`expo-notifications`) may
   behave differently inside Expo Go; the in-app timer works either way.
 - The project's SDK must match the SDK the **App Store / Play Store Expo Go** supports. Check
@@ -53,8 +56,20 @@ the app (fully close, then open) to pick up a new update.
 
 ## Unverified until tested on real phones
 
-- How the iPhone's Expo Go opens a private project's update (whether she needs access to the Expo
-  project). Test with the first real update and write down what works here.
-- Whether `eas update` asks to install `expo-updates` for this project. If it does, follow its prompt
-  but do not set `runtimeVersion`.
+- **That Expo Go actually opens the update.** Checked so far: the first update (branch `preview`,
+  runtime `exposdk:57.0.0`) is served by Expo's servers with HTTP 200 and no login for the iOS and
+  Android platforms. Not checked: the Expo Go app itself on either phone.
 - Rest-timer notifications in Expo Go on both platforms.
+
+## Opening an update in Expo Go
+
+Use the link `exp://u.expo.dev/<projectId>/group/<update group id>` (the group id is printed when you
+publish, and the EAS dashboard shows a QR code for it). On Android, open Expo Go and paste the link
+or scan the QR code; on the iPhone, scan the QR with the Camera app.
+
+## Notes from the first publish
+
+- `eas update` in non-interactive mode needs `--environment preview` (the scripts pass it).
+- The first two attempts failed with "Asset processing timed out" on the JavaScript bundles; the
+  third, with `runtimeVersion: sdkVersion`, went through. If it times out again, retry once and then
+  investigate before retrying more.
