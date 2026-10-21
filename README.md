@@ -4,7 +4,7 @@ A structured bodybuilding tracker app for executing a 12-week hypertrophy transf
 
 ## Prerequisites
 
-- [Node.js (LTS)](https://nodejs.org/)
+- [Bun](https://bun.sh/)
 - [Expo Go](https://expo.dev/go) installed on your phone (iOS or Android)
 - Your computer and phone on the same Wi-Fi network
 
@@ -13,7 +13,7 @@ A structured bodybuilding tracker app for executing a 12-week hypertrophy transf
 ```sh
 git clone <repo-url>
 cd workout-companion
-npm install
+bun install
 ```
 
 ## Run on your phone
@@ -21,7 +21,7 @@ npm install
 ### 1. Start the dev server
 
 ```sh
-npx expo start
+bunx expo start --go
 ```
 
 ### 2. Open in Expo Go
@@ -34,7 +34,7 @@ npx expo start
 Use tunnel mode (slower but works on restricted networks):
 
 ```sh
-npx expo start --tunnel
+bunx expo start --go --tunnel
 ```
 
 Then scan the QR code again.
@@ -52,7 +52,7 @@ Then scan the QR code again.
 If you need native modules not available in Expo Go:
 
 ```sh
-npx eas build --profile development --platform all
+bunx eas-cli build --profile development --platform all
 ```
 
 ## Lint & format
@@ -60,10 +60,10 @@ npx eas build --profile development --platform all
 Linting uses [oxlint](https://oxc.rs/docs/guide/usage/linter) (`.oxlintrc.json`) and formatting uses [oxfmt](https://oxc.rs/docs/guide/usage/formatter) (`.oxfmtrc.json`).
 
 ```sh
-npm run lint          # oxlint
-npm run lint:fix      # oxlint, applying safe fixes
-npm run format        # oxfmt, rewrite files
-npm run format:check  # oxfmt, fail if anything is unformatted
+bun run lint          # oxlint
+bun run lint:fix      # oxlint, applying safe fixes
+bun run format        # oxfmt, rewrite files
+bun run format:check  # oxfmt, fail if anything is unformatted
 ```
 
 The one-off formatting commit is listed in `.git-blame-ignore-revs`. To skip it in `git blame`:
