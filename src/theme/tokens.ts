@@ -197,6 +197,8 @@ export const typography = {
   exerciseName: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 16, lineHeight: 16 },
   bodyLarge: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 20, lineHeight: 22 },
   body: { fontFamily: 'BarlowCondensed_600SemiBold', fontSize: 15, lineHeight: 18 },
+  bodyStrong: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 15, lineHeight: 18 },
+  caption: { fontFamily: 'SpaceMono_400Regular', fontSize: 11, lineHeight: 14 },
   monoDisplay: { fontFamily: 'SpaceMono_700Bold', fontSize: 64, lineHeight: 64 },
   monoHero: { fontFamily: 'SpaceMono_700Bold', fontSize: 48, lineHeight: 48 },
   monoLarge: { fontFamily: 'SpaceMono_700Bold', fontSize: 40, lineHeight: 40 },
@@ -209,7 +211,8 @@ export const typography = {
     fontFamily: 'BarlowCondensed_800ExtraBold',
     fontSize: 17,
     lineHeight: 20,
-    letterSpacing: 0.05,
+    // Points (React Native has no em units): 0.05em at 17pt.
+    letterSpacing: 0.85,
   },
 };
 
