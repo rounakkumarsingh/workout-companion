@@ -4,7 +4,6 @@ import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { useColors, typography, radii, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { CtaButton } from '@/components/ui/CtaButton';
-import { GhostButton } from '@/components/ui/GhostButton';
 import { hydrateActiveSession } from '@/src/features/workout-session';
 import {
   detectPersonalRecords,
@@ -54,10 +53,6 @@ export default function PrCelebrationScreen() {
     router.dismissAll();
   }, [router]);
 
-  const handleShare = useCallback(() => {
-    // Share PR - future scope
-  }, []);
-
   if (loading) {
     return (
       <View style={[styles.screen, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -91,7 +86,7 @@ export default function PrCelebrationScreen() {
           </View>
         )}
         <Text style={styles.heroTitle}>
-          {prs.length > 0 ? 'You just lifted\nmore than ever.' : 'Great session!'}
+          {prs.length > 0 ? 'You just lifted\nmore than ever.' : 'Session done.'}
         </Text>
         {firstPr && (
           <Text style={styles.heroSub}>
@@ -164,7 +159,9 @@ export default function PrCelebrationScreen() {
             <Text style={styles.summaryLbl}>Sets</Text>
           </View>
           <View style={styles.summaryStat}>
-            <Text style={styles.summaryVal}>{session?.exercises.length ?? 0}</Text>
+            <Text style={styles.summaryVal}>
+              {session?.exercises.filter((ex) => ex.sets.some((s) => s.isComplete)).length ?? 0}
+            </Text>
             <Text style={styles.summaryLbl}>Exercises</Text>
           </View>
         </View>
@@ -173,7 +170,6 @@ export default function PrCelebrationScreen() {
       <View style={{ height: spacing.md }} />
 
       <CtaButton label="Back to Home" onPress={handleContinue} />
-      {prs.length > 0 && <GhostButton label="Share PR" onPress={handleShare} />}
 
       <View style={{ height: spacing.xl }} />
     </ScrollView>

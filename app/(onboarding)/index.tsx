@@ -14,13 +14,11 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { PROGRAM } from '@/src/data/program';
 
 const STEPS = [
-  { num: 1, title: 'Open on workout days', sub: 'Your plan tells you what to do, when' },
+  { num: 1, title: 'Open on workout days', sub: 'Five workouts a week, in any order' },
   { num: 2, title: 'Log each set as you go', sub: 'Tap "Log Set" after every set' },
-  { num: 3, title: 'Rest timer auto-starts', sub: 'Default 90s — adjust anytime' },
-  { num: 4, title: 'Build your streak', sub: 'Don&apos;t break the chain' },
+  { num: 3, title: 'Rest timer auto-starts', sub: 'Rest time follows your plan' },
+  { num: 4, title: 'Build your streak', sub: "Don't break the chain" },
 ];
-
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function StaggeredFadeSlide({ index, children }: { index: number; children: React.ReactNode }) {
   const opacity = useSharedValue(0);
@@ -55,10 +53,7 @@ export default function WelcomeScreen() {
   const programDays = useMemo(() => {
     return (PROGRAM.weeks[0]?.days ?? [])
       .filter((d) => d.activityType !== 'FullRest' && d.activityType !== 'OptionalCardioHIIT')
-      .map((d) => {
-        const shortDay = DAY_NAMES[d.dayIndex % 7];
-        return `${shortDay} — ${d.dayType}`;
-      });
+      .map((d) => d.dayType);
   }, []);
 
   return (
@@ -100,7 +95,7 @@ export default function WelcomeScreen() {
               style={styles.cta}
               onPress={() => router.push('/(onboarding)/set-start-date')}
             >
-              <Text style={styles.ctaText}>Start Day 1 →</Text>
+              <Text style={styles.ctaText}>Start Week 1 →</Text>
             </TouchableOpacity>
           </>
         ) : (
@@ -146,7 +141,7 @@ export default function WelcomeScreen() {
                 style={styles.cta}
                 onPress={() => router.push('/(onboarding)/set-start-date')}
               >
-                <Text style={styles.ctaText}>Start Day 1 →</Text>
+                <Text style={styles.ctaText}>Start Week 1 →</Text>
               </TouchableOpacity>
             </StaggeredFadeSlide>
           </>

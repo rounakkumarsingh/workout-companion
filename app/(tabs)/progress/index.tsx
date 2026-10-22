@@ -135,7 +135,6 @@ export default function HistoryScreen() {
 
       {/* Weekly Adherence */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Weekly Adherence</Text>
         <AdherenceGrid weeks={adherenceWeeks} />
       </View>
 

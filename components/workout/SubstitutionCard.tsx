@@ -50,7 +50,7 @@ function OptionCard({
       </Text>
       {prescription && (
         <Text style={optStyles.optionDetail}>
-          {prescription.workingSets}×{prescription.repRange} · RPE ~{prescription.lastSetRpe}
+          {prescription.workingSets}×{prescription.repRange} · RPE {prescription.lastSetRpe}
         </Text>
       )}
     </AnimatedTouchable>
