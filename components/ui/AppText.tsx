@@ -7,12 +7,7 @@ interface AppTextProps extends TextProps {
 }
 
 /** Themed text: the font comes from a typography token, so fontWeight is never needed. */
-export function AppText({
-  variant = 'body',
-  color = 'textPrimary',
-  style,
-  ...rest
-}: AppTextProps) {
+export function AppText({ variant = 'body', color = 'textPrimary', style, ...rest }: AppTextProps) {
   const colors = useColors();
   return <Text {...rest} style={[typography[variant], { color: colors[color] }, style]} />;
 }

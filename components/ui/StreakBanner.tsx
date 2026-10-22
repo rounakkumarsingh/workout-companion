@@ -78,9 +78,8 @@ const makeStyles = (c: ColorSet) =>
       flex: 1,
     },
     text: {
-      ...typography.body,
+      ...typography.bodyStrong,
       color: c.gold,
-      fontWeight: '700',
     },
     sub: {
       ...typography.monoSmall,

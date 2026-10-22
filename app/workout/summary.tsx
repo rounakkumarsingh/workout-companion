@@ -307,9 +307,8 @@ const makeStyles = (c: ColorSet) =>
     },
     exName: {
       flex: 1,
-      ...typography.body,
+      ...typography.bodyStrong,
       color: c.successText,
-      fontWeight: '600',
     },
     exDetail: {
       ...typography.monoSmall,

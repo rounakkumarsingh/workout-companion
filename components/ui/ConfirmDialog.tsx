@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { radii, spacing, typography, useColors, type ColorSet } from '@/src/theme';
 import { AppText } from '@/components/ui/AppText';
@@ -119,7 +112,11 @@ function DialogButtonView({
     <TouchableOpacity
       style={[
         styles.button,
-        cancel ? styles.cancel : button.style === 'destructive' ? styles.destructive : styles.action,
+        cancel
+          ? styles.cancel
+          : button.style === 'destructive'
+            ? styles.destructive
+            : styles.action,
       ]}
       onPress={onPress}
       activeOpacity={0.85}
