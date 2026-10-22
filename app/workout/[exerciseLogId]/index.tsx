@@ -28,6 +28,7 @@ import { RpeSelector } from '@/components/workout/RpeSelector';
 import { WarmupSection } from '@/components/workout/WarmupSection';
 import { SubstitutionCard } from '@/components/workout/SubstitutionCard';
 import { LastTimeChip } from '@/components/workout/LastTimeChip';
+import { RecordsChip } from '@/components/workout/RecordsChip';
 import { LastTimeSheet } from '@/components/workout/LastTimeSheet';
 import { summarizeLastTime } from '@/src/features/workout-session/last-time';
 import {
@@ -736,6 +737,18 @@ export default function ExerciseDetailScreen() {
       {!comparisonLoading && lastTime ? (
         <View style={styles.lastTimeWrap}>
           <LastTimeChip summary={lastTime} onPress={() => setLastTimeOpen(true)} />
+        </View>
+      ) : null}
+      {priorBests ? (
+        <View style={styles.lastTimeWrap}>
+          <RecordsChip
+            onPress={() =>
+              router.push({
+                pathname: '/workout/records/[name]',
+                params: { name: exercise.exerciseName },
+              })
+            }
+          />
         </View>
       ) : null}
       <LastTimeSheet

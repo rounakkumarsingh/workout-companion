@@ -20,6 +20,7 @@ export default function WorkoutLayout() {
         <Stack.Screen name="[exerciseLogId]/index" />
         <Stack.Screen name="summary" />
         <Stack.Screen name="pr-celebration" />
+        <Stack.Screen name="records/[name]" />
       </Stack>
     </DialogProvider>
   );
