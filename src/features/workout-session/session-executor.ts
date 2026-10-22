@@ -157,6 +157,7 @@ export async function swapExercise(
 
   const suggestions = await getSuggestedSetValues(targetName, exercise.sets.length, {
     excludeSessionId: session.id,
+    dayType: session.dayType,
     repRange: exercise.prescription?.repRange,
   });
   for (const [i, set] of exercise.sets.entries()) {
@@ -325,8 +326,12 @@ export async function getExerciseHistoryComparison(
   exerciseName: string,
   repRange: string,
   excludeSessionId?: string,
+  dayType?: string,
 ): Promise<ExerciseHistoryComparison> {
-  const lastSession = await getLastCompletedSessionForExercise(exerciseName, { excludeSessionId });
+  const lastSession = await getLastCompletedSessionForExercise(exerciseName, {
+    excludeSessionId,
+    dayType,
+  });
   const progressionSuggestion = await checkProgression(exerciseName, repRange, lastSession);
 
   const prs: { weight: number; reps: number; previousBest: number | null }[] = [];

@@ -30,6 +30,7 @@ export interface ExerciseHistoryRow {
   sessionId: string;
   sessionDate: string;
   weekNumber: number;
+  dayType: string;
   setIndex: number;
   weight: number;
   reps: number;
@@ -145,13 +146,14 @@ export async function getSetLogsByExerciseLog(exerciseLogId: string) {
  * sessions that have ended (completed, or abandoned with logged sets).
  * Suggested values pre-filled into unlogged sets are never history.
  */
-function historyFilter(exerciseName: string, excludeSessionId?: string) {
+function historyFilter(exerciseName: string, excludeSessionId?: string, dayType?: string) {
   return and(
     eq(exerciseLogs.exerciseName, exerciseName),
     isNotNull(workoutSetLogs.loggedAt),
     eq(workoutSetLogs.isWarmup, 0),
     inArray(workoutSessions.status, ['completed', 'abandoned']),
     excludeSessionId ? ne(workoutSessions.id, excludeSessionId) : undefined,
+    dayType ? eq(workoutSessions.dayType, dayType) : undefined,
   );
 }
 
@@ -162,7 +164,7 @@ function historyFilter(exerciseName: string, excludeSessionId?: string) {
 export async function getExerciseHistory(
   exerciseName: string,
   limit = 50,
-  options: { excludeSessionId?: string } = {},
+  options: { excludeSessionId?: string; dayType?: string } = {},
 ): Promise<ExerciseHistoryRow[]> {
   const db = await getDb();
   const rows = db
@@ -170,6 +172,7 @@ export async function getExerciseHistory(
       sessionId: workoutSessions.id,
       sessionDate: workoutSessions.startedAt,
       weekNumber: workoutSessions.weekNumber,
+      dayType: workoutSessions.dayType,
       setIndex: workoutSetLogs.setIndex,
       weight: workoutSetLogs.weight,
       reps: workoutSetLogs.reps,
@@ -178,7 +181,7 @@ export async function getExerciseHistory(
     .from(workoutSetLogs)
     .innerJoin(exerciseLogs, eq(workoutSetLogs.exerciseLogId, exerciseLogs.id))
     .innerJoin(workoutSessions, eq(exerciseLogs.workoutSessionId, workoutSessions.id))
-    .where(historyFilter(exerciseName, options.excludeSessionId))
+    .where(historyFilter(exerciseName, options.excludeSessionId, options.dayType))
     .orderBy(desc(workoutSessions.startedAt), desc(workoutSetLogs.setIndex))
     .limit(limit)
     .all();
