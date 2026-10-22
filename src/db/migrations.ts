@@ -141,6 +141,17 @@ const MIGRATIONS: { version: number; description: string; statements: string[] }
       `CREATE INDEX IF NOT EXISTS idx_workout_set_logs_exercise ON workout_set_logs(exercise_log_id)`,
     ],
   },
+  {
+    version: 5,
+    description: 'Add exercise_notes for per-exercise user notes',
+    statements: [
+      `CREATE TABLE IF NOT EXISTS exercise_notes (
+        exercise_name TEXT PRIMARY KEY,
+        note TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+      )`,
+    ],
+  },
 ];
 
 /**

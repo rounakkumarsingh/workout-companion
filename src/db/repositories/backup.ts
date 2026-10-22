@@ -4,6 +4,7 @@ import {
   bodyweightEntries,
   cardioSessions,
   exerciseLogs,
+  exerciseNotes,
   progressPhotos,
   workoutSessions,
   workoutSetLogs,
@@ -21,5 +22,6 @@ export async function readAllTablesForBackup(): Promise<BackupTables> {
     cardioSessions: db.select().from(cardioSessions).all(),
     progressPhotos: db.select().from(progressPhotos).all(),
     appSettings: db.select().from(appSettings).all(),
+    exerciseNotes: db.select().from(exerciseNotes).all(),
   };
 }

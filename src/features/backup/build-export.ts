@@ -12,6 +12,7 @@ export interface BackupTables {
   cardioSessions: readonly object[];
   progressPhotos: readonly object[];
   appSettings: readonly object[];
+  exerciseNotes: readonly object[];
 }
 
 export interface AppDataBackup {

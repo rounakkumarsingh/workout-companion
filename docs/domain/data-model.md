@@ -512,6 +512,16 @@ Derived:
 | note | string or null | Optional |
 | logged_at | datetime | When the session was logged |
 
+### 4.13 ExerciseNote
+
+| Attribute | Type | Notes |
+|-----------|------|-------|
+| exercise_name | string | Primary key. The performed exercise (a substitute has its own note) |
+| note | string | The user's free text (seat height, grip, cues). Saving an empty note deletes the row |
+| updated_at | datetime | Last edit |
+
+Stored in the `exercise_notes` table (migration 5) and included in the JSON backup.
+
 ---
 
 ## 5. Static vs. Dynamic Boundary
