@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   BackHandler,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -146,6 +147,7 @@ export default function ExerciseDetailScreen() {
   // The user's note for the performed exercise (keyed on its name).
   const [exerciseNote, setExerciseNote] = useState<string | null>(null);
   const hasLoggedSetsRef = useRef(false);
+  const scrollRef = useRef<ScrollView>(null);
   const loggingSetRef = useRef(false);
 
   const handleRestExpired = useCallback(() => {
@@ -659,6 +661,12 @@ export default function ExerciseDetailScreen() {
     [state, exerciseLogId, dialog],
   );
 
+  // The keyboard animates in after focus; wait for the layout to settle, then
+  // bring the note card (the last block above Start Logging) into view.
+  const scrollNoteIntoView = useCallback(() => {
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 250);
+  }, []);
+
   const handleSaveNote = useCallback(
     async (text: string) => {
       if (state.phase !== 'active') return;
@@ -808,7 +816,11 @@ export default function ExerciseDetailScreen() {
 
       <TechniqueNotes notes={exerciseMeta?.notes ?? null} />
 
-      <ExerciseNoteCard note={exerciseNote} onSave={handleSaveNote} />
+      <ExerciseNoteCard
+        note={exerciseNote}
+        onSave={handleSaveNote}
+        onEditFocus={scrollNoteIntoView}
+      />
 
       <View style={styles.spacerLg} />
 
@@ -1179,13 +1191,16 @@ export default function ExerciseDetailScreen() {
       {loggingPhase === 'resting' ? (
         <View style={styles.screen}>{phaseContent}</View>
       ) : (
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-        >
-          {phaseContent}
-        </ScrollView>
+        <KeyboardAvoidingView style={styles.screen} behavior="padding">
+          <ScrollView
+            ref={scrollRef}
+            style={styles.scroll}
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+          >
+            {phaseContent}
+          </ScrollView>
+        </KeyboardAvoidingView>
       )}
       {prBanner ? <PrBanner banner={prBanner} onDismiss={() => setPrBanner(null)} /> : null}
     </View>

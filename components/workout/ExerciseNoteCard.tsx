@@ -8,10 +8,12 @@ interface ExerciseNoteCardProps {
   note: string | null;
   /** Persist the text (empty clears the note). */
   onSave: (text: string) => Promise<void>;
+  /** Called when the editor takes focus, so the screen can scroll it above the keyboard. */
+  onEditFocus?: () => void;
 }
 
 /** "MY NOTES" card: empty (tap to add), editing inline, or filled (tap to edit). */
-export function ExerciseNoteCard({ note, onSave }: ExerciseNoteCardProps) {
+export function ExerciseNoteCard({ note, onSave, onEditFocus }: ExerciseNoteCardProps) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [draft, setDraft] = useState<string | null>(null);
@@ -42,6 +44,7 @@ export function ExerciseNoteCard({ note, onSave }: ExerciseNoteCardProps) {
           placeholderTextColor={colors.textTertiary}
           multiline
           autoFocus
+          onFocus={onEditFocus}
           accessibilityLabel="Exercise note"
         />
         <View style={styles.actions}>
