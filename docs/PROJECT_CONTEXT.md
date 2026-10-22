@@ -64,6 +64,8 @@ The MVP should support:
   * reps logging
   * a suggested warm-up ladder per exercise, from the program PDF's warm-up protocol (percentages of the planned working weight, chosen by the number of warm-up sets listed), logged with one tap
   * a "last time" reference on each exercise that has been done before (workout list and exercise screen); tapping it shows every set from that session
+  * per-exercise notes (seat height, grip, cues), kept across sessions and shown on the exercise screen
+  * a "previous" column per set, a live session header (duration, volume, sets), personal-record detection and per-exercise records
   * substitutions: choosing a substitute asks whether it is for this workout only or for every time (a permanent substitute replaces the prescribed exercise in later workouts until changed back)
 * Rest Day 1 cardio/HIIT tracking
 * SQLite persistence for all workout logs

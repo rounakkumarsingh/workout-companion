@@ -184,3 +184,11 @@ export const appSettings = sqliteTable('app_settings', {
     .notNull()
     .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`),
 });
+
+export const exerciseNotes = sqliteTable('exercise_notes', {
+  exerciseName: text('exercise_name').primaryKey(),
+  note: text('note').notNull(),
+  updatedAt: text('updated_at')
+    .notNull()
+    .default(sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`),
+});
