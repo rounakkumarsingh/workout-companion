@@ -53,7 +53,7 @@ const makeStyles = (c: ColorSet, compact: boolean) =>
       backgroundColor: c.surface,
     },
     cell: compact
-      ? { flex: 1, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 6 }
+      ? { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }
       : { flex: 1, padding: 12, justifyContent: 'space-between' },
     divider: {
       borderLeftWidth: 0.5,
