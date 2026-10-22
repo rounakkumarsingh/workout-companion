@@ -8,7 +8,13 @@ import { hydrateActiveSession } from '@/src/features/workout-session';
 import {
   detectPersonalRecords,
   computeAllStatistics,
+  type SessionPr,
 } from '@/src/features/workout-session/statistics';
+import {
+  PR_KIND_LABEL,
+  formatPrDelta,
+  formatPrValue,
+} from '@/src/features/workout-session/personal-records';
 import type { ActiveSession, SessionStatistics } from '@/src/features/workout-session/types';
 
 export default function PrCelebrationScreen() {
@@ -20,13 +26,7 @@ export default function PrCelebrationScreen() {
 
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<ActiveSession | null>(null);
-  const [prs, setPrs] = useState<
-    {
-      exerciseName: string;
-      set: { setIndex: number; weight: number; reps: number };
-      previousBestWeight: number | null;
-    }[]
-  >([]);
+  const [prs, setPrs] = useState<SessionPr[]>([]);
   const [statistics, setStatistics] = useState<SessionStatistics | null>(null);
 
   useEffect(() => {
@@ -62,16 +62,6 @@ export default function PrCelebrationScreen() {
     );
   }
 
-  const firstPr = prs.length > 0 ? prs[0] : null;
-
-  const newWeight = firstPr ? firstPr.set.weight : 0;
-  const improvement =
-    firstPr && firstPr.previousBestWeight !== null ? newWeight - firstPr.previousBestWeight : 0;
-  const improvementPct =
-    firstPr && firstPr.previousBestWeight !== null && firstPr.previousBestWeight > 0
-      ? (improvement / firstPr.previousBestWeight) * 100
-      : 0;
-
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ title: 'PR', headerShown: false }} />
@@ -88,38 +78,37 @@ export default function PrCelebrationScreen() {
         <Text style={styles.heroTitle}>
           {prs.length > 0 ? 'You just lifted\nmore than ever.' : 'Session done.'}
         </Text>
-        {firstPr && (
-          <Text style={styles.heroSub}>
-            {firstPr.exerciseName} · Week {session?.weekNumber ?? ''}
-          </Text>
-        )}
       </View>
 
-      {prs.length > 0 && firstPr && (
-        <View style={styles.compareCard}>
-          <Text style={styles.compareLabel}>{firstPr.exerciseName} — Weight PR</Text>
-          <View style={styles.compareRow}>
-            <View style={styles.prevBox}>
-              <Text style={styles.prevVal}>
-                {firstPr.previousBestWeight ?? '—'}
-                {firstPr.previousBestWeight !== null && <Text style={styles.prevUnit}>kg</Text>}
-              </Text>
-              <Text style={styles.prevLbl}>Previous Best</Text>
-            </View>
-            <Text style={styles.arrow}>→</Text>
-            <View style={styles.newBox}>
-              <Text style={styles.newVal}>
-                {newWeight}
-                <Text style={styles.newUnit}>kg</Text>
-              </Text>
-              <Text style={styles.newLbl}>New PR</Text>
-            </View>
-          </View>
-          {firstPr.previousBestWeight !== null && (
-            <Text style={styles.improvement}>
-              +{improvement} kg · +{improvementPct.toFixed(1)}% improvement
+      {prs.length > 0 && (
+        <View style={styles.prList}>
+          <View style={styles.prListHeader}>
+            <Text style={styles.prCount}>
+              {prs.length} {prs.length === 1 ? 'PR' : 'PRS'} THIS SESSION
             </Text>
-          )}
+            <Text style={styles.prVs}>VS PREVIOUS BEST</Text>
+          </View>
+          <View style={styles.prCard}>
+            {prs.map((pr, i) => (
+              <View
+                key={`${pr.exerciseName}-${pr.kind}`}
+                style={[styles.prRow, i > 0 && styles.prRowRule]}
+                accessible
+                accessibilityLabel={`${pr.exerciseName}, ${PR_KIND_LABEL[pr.kind]}, ${formatPrValue(pr.kind, pr.value, pr.set)}, up ${formatPrDelta(pr.kind, pr.value, pr.previous)}`}
+              >
+                <View style={styles.prRowMain}>
+                  <Text style={styles.prExercise}>{pr.exerciseName}</Text>
+                  <Text style={styles.prType}>{PR_KIND_LABEL[pr.kind].toUpperCase()}</Text>
+                </View>
+                <View style={styles.prRowValue}>
+                  <Text style={styles.prValue}>{formatPrValue(pr.kind, pr.value, pr.set)}</Text>
+                  <Text style={styles.prDelta}>
+                    ↑ {formatPrDelta(pr.kind, pr.value, pr.previous)}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
       )}
 
@@ -223,89 +212,69 @@ const makeStyles = (c: ColorSet) =>
       color: c.textTertiary,
       marginTop: spacing.sm,
     },
-    compareCard: {
+    prList: {
       marginHorizontal: spacing.xxl,
       marginBottom: spacing.lg,
-      backgroundColor: c.surfaceElevated,
-      borderWidth: 0.5,
-      borderColor: c.border,
-      borderRadius: radii.card,
-      padding: spacing.xl,
     },
-    compareLabel: {
+    prListHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+      marginBottom: spacing.sm,
+    },
+    prCount: {
+      ...typography.monoLabel,
+      fontFamily: 'SpaceMono_700Bold',
+      letterSpacing: 0.9,
+      color: c.goldText,
+    },
+    prVs: {
       ...typography.monoTiny,
       color: c.textTertiary,
-      letterSpacing: 0.08,
-      textTransform: 'uppercase',
-      marginBottom: 11,
     },
-    compareRow: {
+    prCard: {
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.goldBorder,
+      borderRadius: radii.card,
+      overflow: 'hidden',
+    },
+    prRow: {
+      minHeight: 64,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
     },
-    prevBox: {
+    prRowRule: {
+      borderTopWidth: 0.5,
+      borderTopColor: c.border,
+    },
+    prRowMain: {
       flex: 1,
-      backgroundColor: c.background,
-      borderWidth: 0.5,
-      borderColor: c.textDim,
-      borderRadius: radii.icon,
-      padding: 11,
-      alignItems: 'center',
+      gap: 2,
     },
-    prevVal: {
+    prExercise: {
+      ...typography.exerciseName,
+      lineHeight: 18,
+      color: c.textPrimary,
+    },
+    prType: {
+      ...typography.monoTiny,
+      color: c.textTertiary,
+    },
+    prRowValue: {
+      alignItems: 'flex-end',
+      gap: 2,
+    },
+    prValue: {
       fontFamily: 'SpaceMono_700Bold',
-      fontSize: 26,
-      color: c.textMuted,
+      fontSize: 16,
+      color: c.goldText,
     },
-    prevUnit: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 13,
-      color: c.textMuted,
-    },
-    prevLbl: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 9,
-      color: c.textMuted,
-      textTransform: 'uppercase',
-      letterSpacing: 0.08,
-      marginTop: 3,
-    },
-    arrow: {
-      fontSize: 20,
-      color: c.gold,
-    },
-    newBox: {
-      flex: 1,
-      backgroundColor: c.goldSurface,
-      borderWidth: 0.5,
-      borderColor: c.gold,
-      borderRadius: radii.icon,
-      padding: 11,
-      alignItems: 'center',
-    },
-    newVal: {
-      fontFamily: 'SpaceMono_700Bold',
-      fontSize: 30,
-      color: c.gold,
-    },
-    newUnit: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 15,
-      color: c.goldDim,
-    },
-    newLbl: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 9,
-      color: c.goldDim,
-      textTransform: 'uppercase',
-      letterSpacing: 0.08,
-      marginTop: 3,
-    },
-    improvement: {
-      textAlign: 'center',
-      marginTop: 8,
-      ...typography.monoSmall,
+    prDelta: {
+      ...typography.monoLabel,
       color: c.successText,
     },
     greatSessionCard: {
