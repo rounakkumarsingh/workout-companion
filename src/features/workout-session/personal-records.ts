@@ -32,6 +32,8 @@ export interface RecordHistoryRow {
 export interface RecordEntry {
   value: number;
   date: string;
+  /** The set behind a best-set record. */
+  set?: WorkingSetValues;
 }
 
 export interface ExerciseRecords {
@@ -48,6 +50,8 @@ export interface SessionPoint {
   /** Null when no set of the session had 1-12 reps. */
   bestE1rm: number | null;
   bestSetVolume: number;
+  /** The set with the highest weight x reps. */
+  bestSet: WorkingSetValues;
   sessionVolume: number;
 }
 
@@ -121,8 +125,13 @@ export function detectSetPrs(prior: ExerciseBests | null, set: WorkingSetValues)
   return prs;
 }
 
-function better(current: RecordEntry | null, value: number, date: string): RecordEntry {
-  return current === null || value > current.value ? { value, date } : current;
+function better(
+  current: RecordEntry | null,
+  value: number,
+  date: string,
+  set?: WorkingSetValues,
+): RecordEntry {
+  return current === null || value > current.value ? { value, date, set } : current;
 }
 
 /** Records and a per-session series from chronological working-set rows. */
@@ -144,6 +153,7 @@ export function buildExerciseRecords(rows: readonly RecordHistoryRow[]): Exercis
   const series: SessionPoint[] = [];
   for (const [sessionId, { date, sets }] of bySession) {
     const bests = computeBests(sets);
+    const bestSet = sets.reduce((a, b) => (b.weight * b.reps > a.weight * a.reps ? b : a));
     const sessionVolume = sets.reduce((sum, s) => sum + s.weight * s.reps, 0);
     // Every set is positive here, so heaviest and set volume are non-null.
     const point: SessionPoint = {
@@ -152,12 +162,13 @@ export function buildExerciseRecords(rows: readonly RecordHistoryRow[]): Exercis
       heaviest: bests.heaviest ?? 0,
       bestE1rm: bests.bestE1rm,
       bestSetVolume: bests.bestSetVolume ?? 0,
+      bestSet: { weight: bestSet.weight, reps: bestSet.reps },
       sessionVolume,
     };
     series.push(point);
     records.heaviest = better(records.heaviest, point.heaviest, date);
     if (point.bestE1rm !== null) records.bestE1rm = better(records.bestE1rm, point.bestE1rm, date);
-    records.bestSetVolume = better(records.bestSetVolume, point.bestSetVolume, date);
+    records.bestSetVolume = better(records.bestSetVolume, point.bestSetVolume, date, point.bestSet);
     records.bestSessionVolume = better(records.bestSessionVolume, sessionVolume, date);
   }
   series.sort((a, b) => a.date.localeCompare(b.date));

@@ -1,7 +1,14 @@
 import { useCallback, useMemo, useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { useFocusEffect } from 'expo-router';
-import { useColors, typography, spacing } from '@/src/theme';
+import {
+  ScrollView,
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useColors, typography, spacing, radii } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import {
@@ -32,12 +39,14 @@ interface AdherenceWeek {
 
 export default function HistoryScreen() {
   const colors = useColors();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [workoutDates, setWorkoutDates] = useState<string[]>([]);
   const [volumeBars, setVolumeBars] = useState<VolumeBar[]>([]);
   const [adherenceWeeks, setAdherenceWeeks] = useState<AdherenceWeek[]>([]);
   const [topExercises, setTopExercises] = useState<string[]>([]);
+  const [allExercises, setAllExercises] = useState<string[]>([]);
   const [exerciseHistoryMap, setExerciseHistoryMap] = useState<
     Record<string, { date: string; weekNumber: number; sets: { weight: number; reps: number }[] }[]>
   >({});
@@ -82,6 +91,7 @@ export default function HistoryScreen() {
 
           const sorted = exerciseVolumes.slice(0, 5).map((e) => e.exerciseName);
           setTopExercises(sorted);
+          setAllExercises(exerciseVolumes.map((e) => e.exerciseName));
 
           const historyMap: Record<
             string,
@@ -114,6 +124,9 @@ export default function HistoryScreen() {
       };
     }, []),
   );
+
+  const openRecords = (exerciseName: string) =>
+    router.push({ pathname: '/progress/exercise/[name]', params: { name: exerciseName } });
 
   if (loading) {
     return (
@@ -149,8 +162,38 @@ export default function HistoryScreen() {
           <Text style={styles.sectionTitle}>Exercise Progression</Text>
           {topExercises.slice(0, 3).map((exName) => {
             const history = exerciseHistoryMap[exName] ?? [];
-            return <ExerciseProgressionCard key={exName} exerciseName={exName} history={history} />;
+            return (
+              <ExerciseProgressionCard
+                key={exName}
+                exerciseName={exName}
+                history={history}
+                onPress={() => openRecords(exName)}
+              />
+            );
           })}
+        </View>
+      )}
+
+      {/* All exercises */}
+      {allExercises.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>All exercises</Text>
+          <View style={styles.exerciseList}>
+            {allExercises.map((exName, i) => (
+              <TouchableOpacity
+                key={exName}
+                style={[styles.exerciseRow, i > 0 && styles.exerciseRowRule]}
+                onPress={() => openRecords(exName)}
+                accessibilityRole="button"
+                accessibilityLabel={`${exName} records and trend`}
+              >
+                <Text style={styles.exerciseRowName} numberOfLines={2}>
+                  {exName}
+                </Text>
+                <Text style={styles.exerciseRowChevron}>›</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       )}
 
@@ -194,6 +237,33 @@ const makeStyles = (c: ColorSet) =>
     section: {
       paddingHorizontal: spacing.xxl,
       marginBottom: spacing.xl,
+    },
+    exerciseList: {
+      borderRadius: radii.card,
+      borderWidth: 0.5,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+      overflow: 'hidden',
+    },
+    exerciseRow: {
+      minHeight: 48,
+      paddingHorizontal: spacing.lg,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    exerciseRowRule: {
+      borderTopWidth: 0.5,
+      borderTopColor: c.border,
+    },
+    exerciseRowName: {
+      ...typography.exerciseName,
+      flex: 1,
+      color: c.textPrimary,
+    },
+    exerciseRowChevron: {
+      ...typography.bodyLarge,
+      color: c.textTertiary,
     },
     sectionTitle: {
       ...typography.monoLabel,

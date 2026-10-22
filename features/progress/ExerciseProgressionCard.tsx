@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, typography, radii, spacing } from '@/src/theme';
 
 interface ProgressionEntry {
@@ -10,6 +10,8 @@ interface ProgressionEntry {
 interface ExerciseProgressionCardProps {
   exerciseName: string;
   history: ProgressionEntry[];
+  /** Opens the exercise's records; the card is not tappable without it. */
+  onPress?: () => void;
 }
 
 function formatVolume(vol: number): string {
@@ -17,7 +19,11 @@ function formatVolume(vol: number): string {
   return String(vol);
 }
 
-export function ExerciseProgressionCard({ exerciseName, history }: ExerciseProgressionCardProps) {
+export function ExerciseProgressionCard({
+  exerciseName,
+  history,
+  onPress,
+}: ExerciseProgressionCardProps) {
   const latest = history[history.length - 1];
   if (!latest) return null;
   const previous = history.length > 1 ? history[history.length - 2] : null;
@@ -27,8 +33,18 @@ export function ExerciseProgressionCard({ exerciseName, history }: ExerciseProgr
   const change = prevVolume > 0 ? latestVolume - prevVolume : 0;
   const pctChange = prevVolume > 0 ? (change / prevVolume) * 100 : 0;
 
+  const Container = onPress ? TouchableOpacity : View;
+  const containerProps = onPress
+    ? {
+        onPress,
+        activeOpacity: 0.8,
+        accessibilityRole: 'button' as const,
+        accessibilityLabel: `${exerciseName} records and trend`,
+      }
+    : {};
+
   return (
-    <View style={styles.card}>
+    <Container style={styles.card} {...containerProps}>
       <View style={styles.header}>
         <Text style={styles.exerciseName}>{exerciseName}</Text>
         {previous && (
@@ -54,7 +70,7 @@ export function ExerciseProgressionCard({ exerciseName, history }: ExerciseProgr
             </Text>
           </View>
         ))}
-    </View>
+    </Container>
   );
 }
 
