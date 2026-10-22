@@ -11,14 +11,23 @@ const ACTIVE_REST_KEY = 'active_rest';
 export interface ActiveRest {
   sessionId: string;
   exerciseLogId: string;
-  /** The working set to log once the rest is over. */
-  nextSetIndex: number;
+  /**
+   * The working set to log once the rest is over, or null when the rest
+   * follows the exercise's last set (the next thing is the next exercise).
+   */
+  nextSetIndex: number | null;
   durationSec: number;
   endAt: number;
   notificationId: string | null;
 }
 
-function restNotificationText(exerciseName: string, nextSetIndex: number) {
+function restNotificationText(exerciseName: string, nextSetIndex: number | null) {
+  if (nextSetIndex === null) {
+    return {
+      title: 'Rest over',
+      body: `${exerciseName} done — the next exercise is up.`,
+    };
+  }
   return {
     title: 'Rest over',
     body: `${exerciseName} — set ${nextSetIndex} is up next.`,

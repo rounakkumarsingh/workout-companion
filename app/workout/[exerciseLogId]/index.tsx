@@ -161,6 +161,7 @@ export default function ExerciseDetailScreen() {
             exercise.exerciseName,
             exercise.prescription.repRange,
             session.id,
+            session.dayType,
           );
           if (cancelled) return;
           setComparison(comp);
@@ -172,17 +173,26 @@ export default function ExerciseDetailScreen() {
         hasLoggedSetsRef.current = someLogged;
 
         if (!nextSet) {
+          // The rest after this exercise's last set may still be running.
+          const lastRest = await getActiveRest();
+          if (cancelled) return;
+          const resumeLastRest =
+            lastRest !== null &&
+            lastRest.sessionId === session.id &&
+            lastRest.exerciseLogId === exerciseLogId &&
+            lastRest.nextSetIndex === null &&
+            exercise.status !== 'completed';
           setState({
             phase: 'active',
-            loggingPhase: 'sets_completed',
+            loggingPhase: resumeLastRest ? 'resting' : 'sets_completed',
             session,
             exercise,
             currentSetIndex: exercise.sets.length,
             weight: 0,
             reps: 0,
             selectedRpe: null,
-            restDuration: getRestSeconds(exercise),
-            restEndAt: null,
+            restDuration: resumeLastRest ? lastRest.durationSec : getRestSeconds(exercise),
+            restEndAt: resumeLastRest ? lastRest.endAt : null,
           });
           return;
         }
@@ -195,9 +205,13 @@ export default function ExerciseDetailScreen() {
           activeRest !== null &&
           activeRest.sessionId === session.id &&
           activeRest.exerciseLogId === exerciseLogId &&
+          activeRest.nextSetIndex !== null &&
           exercise.sets.some((s) => s.setIndex === activeRest.nextSetIndex && !s.isComplete);
 
-        const currentSetIndex = resumeRest ? activeRest.nextSetIndex : nextSet.setIndex;
+        const currentSetIndex =
+          resumeRest && activeRest.nextSetIndex !== null
+            ? activeRest.nextSetIndex
+            : nextSet.setIndex;
         const defaults = getSetDefaults(exercise, currentSetIndex);
         setState({
           phase: 'active',
@@ -411,19 +425,37 @@ export default function ExerciseDetailScreen() {
           updatedExercise.exerciseName,
         ).catch((e) => console.warn('[exercise] Failed to persist rest:', e));
       } else {
+        // Last working set: rest before the next exercise, unless this was the
+        // final exercise of the workout.
+        const hasNextExercise = getNextIncompleteExercise(updatedSession, exerciseLogId) !== null;
+        const restSeconds = getRestSeconds(updatedExercise);
+        const restEndAt = hasNextExercise ? Date.now() + restSeconds * 1000 : null;
         setState({
           phase: 'active',
-          loggingPhase: 'sets_completed',
+          loggingPhase: hasNextExercise ? 'resting' : 'sets_completed',
           session: updatedSession,
           exercise: updatedExercise,
           currentSetIndex,
           weight,
           reps,
           selectedRpe: null,
-          restDuration: getRestSeconds(updatedExercise),
-          restEndAt: null,
+          restDuration: restSeconds,
+          restEndAt,
         });
-        clearActiveRest().catch((e) => console.warn('[exercise] Failed to clear rest:', e));
+        if (restEndAt !== null) {
+          beginRest(
+            {
+              sessionId: updatedSession.id,
+              exerciseLogId,
+              nextSetIndex: null,
+              durationSec: restSeconds,
+              endAt: restEndAt,
+            },
+            updatedExercise.exerciseName,
+          ).catch((e) => console.warn('[exercise] Failed to persist rest:', e));
+        } else {
+          clearActiveRest().catch((e) => console.warn('[exercise] Failed to clear rest:', e));
+        }
       }
     } catch (e) {
       console.error('[exercise] Failed to log set:', e);
@@ -514,6 +546,7 @@ export default function ExerciseDetailScreen() {
             updatedExercise.exerciseName,
             updatedExercise.prescription.repRange,
             updated.id,
+            updated.dayType,
           );
           setComparison(comp);
           setComparisonLoading(false);
@@ -846,7 +879,7 @@ export default function ExerciseDetailScreen() {
 
           {pres && (
             <Text style={styles.prevBest}>
-              Prescribed: {pres.workingSets}×{pres.repRange} · RPE ~{pres.lastSetRpe}
+              Prescribed: {pres.workingSets}×{pres.repRange} · RPE {pres.lastSetRpe}
             </Text>
           )}
         </View>
@@ -880,7 +913,9 @@ export default function ExerciseDetailScreen() {
 
       <View style={styles.hero}>
         <Text style={styles.exName}>{exercise.exerciseName}</Text>
-        {pres && <Text style={styles.exType}>{pres.workingSets} SETS COMPLETED</Text>}
+        <Text style={styles.exType}>
+          {exercise.sets.filter((s) => s.isComplete).length} SETS COMPLETED
+        </Text>
       </View>
 
       <SectionLabel label="Set log" />
@@ -920,7 +955,11 @@ export default function ExerciseDetailScreen() {
     const strokeDashoffset = circumference * (1 - pct);
 
     const ringColor = isOvertime ? colors.success : colors.gold;
-    const nextSetLabel = `Set ${state.currentSetIndex} of ${exercise.sets.length}`;
+    const afterLastSet = exercise.sets.every((s) => s.isComplete);
+    const upNextLabel =
+      afterLastSet && nextExercise
+        ? nextExercise.exerciseName
+        : `Set ${state.currentSetIndex} of ${exercise.sets.length} · ${exercise.exerciseName}`;
 
     return (
       <>
@@ -928,9 +967,7 @@ export default function ExerciseDetailScreen() {
 
         <View style={styles.restWrap}>
           <Text style={styles.restLabel}>{isOvertime ? 'REST OVER' : 'REST'}</Text>
-          <Text style={styles.restContext}>
-            Up next: {nextSetLabel} · {exercise.exerciseName}
-          </Text>
+          <Text style={styles.restContext}>Up next: {upNextLabel}</Text>
 
           <Animated.View style={[styles.restRing, !reducedMotion && pulseStyle]}>
             <Svg width={200} height={200} viewBox="0 0 200 200">

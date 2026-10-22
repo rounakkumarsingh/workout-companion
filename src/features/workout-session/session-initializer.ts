@@ -39,6 +39,7 @@ export async function initializeSession(
     const preferred = await getPreferredExercise(prescription.exerciseName, weekNumber);
     const performedName = preferred ?? prescription.exerciseName;
     const suggestions = await getSuggestedSetValues(performedName, prescription.workingSets, {
+      dayType: dayPrescription.dayType,
       repRange: prescription.repRange,
     });
     exercises.push({

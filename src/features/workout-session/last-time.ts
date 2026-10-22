@@ -3,6 +3,9 @@ import { isoToLocalDateKey, parseLocalDateKey } from '../../lib/dates';
 export interface LastTimeSession {
   date: string;
   weekNumber: number;
+  /** Day type of that session; set when "last time" may come from another day. */
+  dayType?: string;
+  sameDayType?: boolean;
   sets: { setIndex: number; weight: number; reps: number; loggedRpe: number | null }[];
 }
 
