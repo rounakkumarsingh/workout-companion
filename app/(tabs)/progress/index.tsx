@@ -126,7 +126,7 @@ export default function HistoryScreen() {
   );
 
   const openRecords = (exerciseName: string) =>
-    router.push({ pathname: '/progress/exercise/[name]', params: { name: exerciseName } } as Href);
+    router.push(`/progress/exercise/${encodeURIComponent(exerciseName)}` as Href);
 
   if (loading) {
     return (
