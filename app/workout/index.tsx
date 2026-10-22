@@ -22,6 +22,7 @@ import type { ColorSet } from '@/src/theme';
 import { ExerciseRow } from '@/components/workout/ExerciseRow';
 import { QuickLogOverlay } from '@/components/workout/QuickLogOverlay';
 import { ElapsedTimer, ElapsedText } from '@/components/workout/ElapsedTimer';
+import { SessionStatsBar } from '@/components/workout/SessionStatsBar';
 import { LastTimeSheet } from '@/components/workout/LastTimeSheet';
 import { GeneralWarmupCard } from '@/components/workout/GeneralWarmupCard';
 import { summarizeLastTime } from '@/src/features/workout-session/last-time';
@@ -391,6 +392,8 @@ export default function ActiveWorkoutScreen() {
         <ElapsedTimer startedAt={session.startedAt} />
       </View>
 
+      <SessionStatsBar session={session} />
+
       <FlatList
         ref={flatListRef}
         data={session.exercises}
@@ -426,9 +429,6 @@ export default function ActiveWorkoutScreen() {
               <View style={styles.progressLabels}>
                 <Text style={styles.progressLabel}>
                   {exercisesDone} OF {session.exercises.length} EXERCISES
-                </Text>
-                <Text style={styles.progressSets}>
-                  {progress.completedSets} / {progress.totalSets} sets
                 </Text>
               </View>
               <View
@@ -606,10 +606,6 @@ const makeStyles = (c: ColorSet) =>
       fontFamily: 'BarlowCondensed_700Bold',
       fontSize: 13,
       letterSpacing: 1.5,
-      color: c.textSecondary,
-    },
-    progressSets: {
-      ...typography.monoSmall,
       color: c.textSecondary,
     },
     track: {

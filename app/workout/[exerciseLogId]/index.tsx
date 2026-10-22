@@ -27,6 +27,7 @@ import { SetLogList } from '@/components/workout/SetLogList';
 import { RpeSelector } from '@/components/workout/RpeSelector';
 import { WarmupSection } from '@/components/workout/WarmupSection';
 import { SubstitutionCard } from '@/components/workout/SubstitutionCard';
+import { SessionStatsBar } from '@/components/workout/SessionStatsBar';
 import { LastTimeChip } from '@/components/workout/LastTimeChip';
 import { RecordsChip } from '@/components/workout/RecordsChip';
 import { LastTimeSheet } from '@/components/workout/LastTimeSheet';
@@ -817,6 +818,8 @@ export default function ExerciseDetailScreen() {
           <Text style={styles.exName}>{exercise.exerciseName}</Text>
         </View>
 
+        <SessionStatsBar session={session} compact />
+
         <SectionLabel label="Set log" />
         <SetLogList
           sets={exercise.sets}
@@ -970,6 +973,8 @@ export default function ExerciseDetailScreen() {
           {exercise.sets.filter((s) => s.isComplete).length} SETS COMPLETED
         </Text>
       </View>
+
+      <SessionStatsBar session={session} compact />
 
       <SectionLabel label="Set log" />
       <SetLogList
