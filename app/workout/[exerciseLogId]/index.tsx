@@ -743,10 +743,7 @@ export default function ExerciseDetailScreen() {
         <View style={styles.lastTimeWrap}>
           <RecordsChip
             onPress={() =>
-              router.push({
-                pathname: '/workout/records/[name]',
-                params: { name: exercise.exerciseName },
-              } as Href)
+              router.push(`/workout/records/${encodeURIComponent(exercise.exerciseName)}` as Href)
             }
           />
         </View>
