@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -74,6 +73,7 @@ import type {
 import { CardioLogger } from '@/components/cardio/CardioLogger';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { DevClearDbButton } from '@/components/ui/DevClearDbButton';
+import { useDialog } from '@/components/ui/ConfirmDialog';
 
 type Selection = TrainingDayType | 'Mobility';
 
@@ -204,6 +204,7 @@ async function computeScreenState(): Promise<HomeScreenState> {
 }
 
 export default function TodayScheduleScreen() {
+  const dialog = useDialog();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [screenState, setScreenState] = useState<HomeScreenState>({ status: 'loading' });
@@ -371,15 +372,15 @@ export default function TodayScheduleScreen() {
           note: data.note,
           loggedAt: new Date().toISOString(),
         });
-        Alert.alert('Logged', `${data.durationMinutes} min of ${data.activity} saved.`);
+        dialog.show('Logged', `${data.durationMinutes} min of ${data.activity} saved.`);
         // Refresh so the history and the mobility lock show the new log.
         setScreenState(await computeScreenState());
       } catch (e) {
         console.error('[home] Failed to log cardio:', e);
-        Alert.alert('Error', 'Failed to log cardio. Please try again.');
+        dialog.show('Error', 'Failed to log cardio. Please try again.');
       }
     },
-    [screenState],
+    [screenState, dialog],
   );
 
   const startSession = useCallback(
@@ -394,12 +395,12 @@ export default function TodayScheduleScreen() {
         router.push(`/workout?sessionId=${session.id}` as Href);
       } catch (e) {
         console.error('[home] Failed to start session:', e);
-        Alert.alert('Error', 'Failed to start the workout. Please try again.');
+        dialog.show('Error', 'Failed to start the workout. Please try again.');
       } finally {
         startingRef.current = false;
       }
     },
-    [router],
+    [router, dialog],
   );
 
   const doResume = useCallback(async () => {
@@ -459,18 +460,18 @@ export default function TodayScheduleScreen() {
         await logWeightEntry(weight, unit);
       } catch (e) {
         console.error('[home] Failed to log weight:', e);
-        Alert.alert('Error', 'Failed to save your weight. Please try again, or skip.');
+        dialog.show('Error', 'Failed to save your weight. Please try again, or skip.');
         return;
       }
       setWeighedToday(true);
       await finishWeighIn();
     },
-    [finishWeighIn],
+    [finishWeighIn, dialog],
   );
 
   const handleAbandon = useCallback(() => {
     if (screenState.status !== 'inProgress' || !hydratedSession) return;
-    Alert.alert(
+    dialog.show(
       'Abandon Session',
       'This will mark the session as incomplete. All logged sets will be kept.',
       [
@@ -485,13 +486,13 @@ export default function TodayScheduleScreen() {
               setScreenState(newState);
             } catch (e) {
               console.error('[home] Failed to abandon session:', e);
-              Alert.alert('Error', 'Failed to abandon session. Please try again.');
+              dialog.show('Error', 'Failed to abandon session. Please try again.');
             }
           },
         },
       ],
     );
-  }, [screenState, hydratedSession]);
+  }, [screenState, hydratedSession, dialog]);
 
   if (screenState.status === 'loading') {
     return (

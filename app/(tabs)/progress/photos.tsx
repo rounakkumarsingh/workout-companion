@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,6 +20,7 @@ import { PhotoComparison } from '@/features/progress-photos/PhotoComparison';
 import { PhotoViewer } from '@/features/progress-photos/PhotoViewer';
 import { deletePhotoFile } from '@/features/progress-photos/photo-storage';
 import type { ProgressPhotoRow } from '@/features/progress-photos/types';
+import { useDialog } from '@/components/ui/ConfirmDialog';
 
 type LoadState =
   | { status: 'loading' }
@@ -28,6 +28,7 @@ type LoadState =
   | { status: 'ready'; photos: ProgressPhotoRow[]; now: Date };
 
 export default function ProgressPhotosScreen() {
+  const dialog = useDialog();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
@@ -54,7 +55,7 @@ export default function ProgressPhotosScreen() {
 
   const handleDelete = useCallback(
     (photo: ProgressPhotoRow) => {
-      Alert.alert(
+      dialog.show(
         'Delete photo',
         'This photo will be removed from your device. This cannot be undone.',
         [
@@ -70,14 +71,14 @@ export default function ProgressPhotosScreen() {
                 await load();
               } catch (e) {
                 console.error('[photos] Failed to delete:', e);
-                Alert.alert('Error', 'Could not delete that photo. Please try again.');
+                dialog.show('Error', 'Could not delete that photo. Please try again.');
               }
             },
           },
         ],
       );
     },
-    [load],
+    [load, dialog],
   );
 
   const back = (

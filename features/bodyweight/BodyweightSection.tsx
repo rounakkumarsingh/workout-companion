@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import {
   typography,
@@ -27,6 +27,7 @@ import {
 import { WeighInSheet } from './WeighInSheet';
 import { WeightTrendChart } from './WeightTrendChart';
 import { getWeightUnit, isWeightUnit, logWeightEntry } from './weight-settings';
+import { useDialog } from '@/components/ui/ConfirmDialog';
 
 /** Enough history for the 12-week chart plus the change-since-start baseline. */
 const ENTRY_LIMIT = 400;
@@ -47,6 +48,7 @@ type LoadState =
 
 /** Bodyweight on the History tab: trend chart, log action and recent entries. */
 export function BodyweightSection() {
+  const dialog = useDialog();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [state, setState] = useState<LoadState>({ phase: 'loading' });
@@ -87,12 +89,12 @@ export function BodyweightSection() {
       await load();
     } catch (e) {
       console.error('[bodyweight] Failed to log:', e);
-      Alert.alert('Error', 'Failed to log bodyweight. Please try again.');
+      dialog.show('Error', 'Failed to log bodyweight. Please try again.');
     }
   };
 
   const confirmDelete = (entry: WeightEntry & { id: string }) => {
-    Alert.alert('Delete weigh-in', `Delete ${formatEntry(entry)}?`, [
+    dialog.show('Delete weigh-in', `Delete ${formatEntry(entry)}?`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -103,7 +105,7 @@ export function BodyweightSection() {
             await load();
           } catch (e) {
             console.error('[bodyweight] Failed to delete:', e);
-            Alert.alert('Error', 'Failed to delete the weigh-in. Please try again.');
+            dialog.show('Error', 'Failed to delete the weigh-in. Please try again.');
           }
         },
       },
