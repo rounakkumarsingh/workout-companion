@@ -334,20 +334,8 @@ export async function getExerciseHistoryComparison(
   });
   const progressionSuggestion = await checkProgression(exerciseName, repRange, lastSession);
 
-  const prs: { weight: number; reps: number; previousBest: number | null }[] = [];
-  if (lastSession && lastSession.sets.length > 0) {
-    for (const set of lastSession.sets) {
-      prs.push({
-        weight: set.weight,
-        reps: set.reps,
-        previousBest: null,
-      });
-    }
-  }
-
   return {
     lastSession,
-    prs,
     progressionSuggestion,
   };
 }

@@ -1,5 +1,6 @@
 import { eq, asc, and, ne, desc, inArray, isNotNull, sql } from 'drizzle-orm';
 import { getDb } from '../client';
+import { computeBests, type ExerciseBests } from '../../features/workout-session/personal-records';
 import { exerciseLogs, workoutSetLogs, workoutSessions } from '../drizzle-schema';
 
 export interface CreateExerciseLogInput {
@@ -189,23 +190,41 @@ export async function getExerciseHistory(
   return rows.reverse();
 }
 
-/** Heaviest logged working-set weight for an exercise, excluding one session. */
-export async function getBestWorkingWeight(
+/**
+ * Every logged working set for an exercise (no row limit), chronological.
+ * Warm-ups and unlogged prefills never count.
+ */
+export async function getExerciseWorkingSets(
   exerciseName: string,
-  excludeSessionId: string,
-): Promise<number | null> {
+  options: { excludeSessionId?: string; dayType?: string } = {},
+): Promise<ExerciseHistoryRow[]> {
   const db = await getDb();
-  const rows = db
+  return db
     .select({
-      best: sql<number | null>`MAX(${workoutSetLogs.weight})`,
+      sessionId: workoutSessions.id,
+      sessionDate: workoutSessions.startedAt,
+      weekNumber: workoutSessions.weekNumber,
+      dayType: workoutSessions.dayType,
+      setIndex: workoutSetLogs.setIndex,
+      weight: workoutSetLogs.weight,
+      reps: workoutSetLogs.reps,
+      loggedRpe: workoutSetLogs.loggedRpe,
     })
     .from(workoutSetLogs)
     .innerJoin(exerciseLogs, eq(workoutSetLogs.exerciseLogId, exerciseLogs.id))
     .innerJoin(workoutSessions, eq(exerciseLogs.workoutSessionId, workoutSessions.id))
-    .where(historyFilter(exerciseName, excludeSessionId))
+    .where(historyFilter(exerciseName, options.excludeSessionId, options.dayType))
+    .orderBy(asc(workoutSessions.startedAt), asc(workoutSetLogs.setIndex))
     .all();
+}
 
-  return rows[0]?.best ?? null;
+/** Best heaviest / est. 1RM / set volume from earlier sessions; null with no history. */
+export async function getExerciseBests(
+  exerciseName: string,
+  excludeSessionId?: string,
+): Promise<ExerciseBests | null> {
+  const rows = await getExerciseWorkingSets(exerciseName, { excludeSessionId });
+  return rows.length === 0 ? null : computeBests(rows);
 }
 
 /** Total logged working volume per performed exercise, highest first. */

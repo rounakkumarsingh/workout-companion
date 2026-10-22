@@ -3,7 +3,7 @@
  * program judges progress within rep ranges, so the UI labels it "Est. 1RM".
  */
 
-export type PrKind = "weight" | "e1rm" | "setVolume";
+export type PrKind = 'weight' | 'e1rm' | 'setVolume';
 
 export interface WorkingSetValues {
   weight: number;
@@ -75,12 +75,9 @@ export function computeBests(sets: readonly WorkingSetValues[]): ExerciseBests {
     if (set.weight <= 0 || set.reps <= 0) continue;
     const e1rm = estimateOneRepMax(set.weight, set.reps);
     const volume = set.weight * set.reps;
-    if (bests.heaviest === null || set.weight > bests.heaviest)
-      bests.heaviest = set.weight;
-    if (e1rm !== null && (bests.bestE1rm === null || e1rm > bests.bestE1rm))
-      bests.bestE1rm = e1rm;
-    if (bests.bestSetVolume === null || volume > bests.bestSetVolume)
-      bests.bestSetVolume = volume;
+    if (bests.heaviest === null || set.weight > bests.heaviest) bests.heaviest = set.weight;
+    if (e1rm !== null && (bests.bestE1rm === null || e1rm > bests.bestE1rm)) bests.bestE1rm = e1rm;
+    if (bests.bestSetVolume === null || volume > bests.bestSetVolume) bests.bestSetVolume = volume;
   }
   return bests;
 }
@@ -103,23 +100,20 @@ export function mergeBests(a: ExerciseBests, b: ExerciseBests): ExerciseBests {
  * Records a set beats. Strictly greater than the prior best, and none at all
  * without prior history (the first time nothing can be beaten).
  */
-export function detectSetPrs(
-  prior: ExerciseBests | null,
-  set: WorkingSetValues,
-): SetPr[] {
+export function detectSetPrs(prior: ExerciseBests | null, set: WorkingSetValues): SetPr[] {
   if (!prior || set.weight <= 0 || set.reps <= 0) return [];
   const prs: SetPr[] = [];
   if (prior.heaviest !== null && set.weight > prior.heaviest) {
-    prs.push({ kind: "weight", value: set.weight, previous: prior.heaviest });
+    prs.push({ kind: 'weight', value: set.weight, previous: prior.heaviest });
   }
   const e1rm = estimateOneRepMax(set.weight, set.reps);
   if (e1rm !== null && prior.bestE1rm !== null && e1rm > prior.bestE1rm) {
-    prs.push({ kind: "e1rm", value: e1rm, previous: prior.bestE1rm });
+    prs.push({ kind: 'e1rm', value: e1rm, previous: prior.bestE1rm });
   }
   const volume = set.weight * set.reps;
   if (prior.bestSetVolume !== null && volume > prior.bestSetVolume) {
     prs.push({
-      kind: "setVolume",
+      kind: 'setVolume',
       value: volume,
       previous: prior.bestSetVolume,
     });
@@ -127,28 +121,19 @@ export function detectSetPrs(
   return prs;
 }
 
-function better(
-  current: RecordEntry | null,
-  value: number,
-  date: string,
-): RecordEntry {
+function better(current: RecordEntry | null, value: number, date: string): RecordEntry {
   return current === null || value > current.value ? { value, date } : current;
 }
 
 /** Records and a per-session series from chronological working-set rows. */
-export function buildExerciseRecords(
-  rows: readonly RecordHistoryRow[],
-): ExerciseRecordsData {
+export function buildExerciseRecords(rows: readonly RecordHistoryRow[]): ExerciseRecordsData {
   const records: ExerciseRecords = {
     heaviest: null,
     bestE1rm: null,
     bestSetVolume: null,
     bestSessionVolume: null,
   };
-  const bySession = new Map<
-    string,
-    { date: string; sets: WorkingSetValues[] }
-  >();
+  const bySession = new Map<string, { date: string; sets: WorkingSetValues[] }>();
   for (const row of rows) {
     if (row.weight <= 0 || row.reps <= 0) continue;
     const entry = bySession.get(row.sessionId);
@@ -171,19 +156,32 @@ export function buildExerciseRecords(
     };
     series.push(point);
     records.heaviest = better(records.heaviest, point.heaviest, date);
-    if (point.bestE1rm !== null)
-      records.bestE1rm = better(records.bestE1rm, point.bestE1rm, date);
-    records.bestSetVolume = better(
-      records.bestSetVolume,
-      point.bestSetVolume,
-      date,
-    );
-    records.bestSessionVolume = better(
-      records.bestSessionVolume,
-      sessionVolume,
-      date,
-    );
+    if (point.bestE1rm !== null) records.bestE1rm = better(records.bestE1rm, point.bestE1rm, date);
+    records.bestSetVolume = better(records.bestSetVolume, point.bestSetVolume, date);
+    records.bestSessionVolume = better(records.bestSessionVolume, sessionVolume, date);
   }
   series.sort((a, b) => a.date.localeCompare(b.date));
   return { records, series };
+}
+
+export const PR_KIND_LABEL: Record<PrKind, string> = {
+  weight: 'Heaviest weight',
+  e1rm: 'Est. 1RM',
+  setVolume: 'Best set',
+};
+
+export function trimNumber(value: number): string {
+  return String(Math.round(value * 10) / 10);
+}
+
+/** "80 kg" for weight and est. 1RM, "80 kg × 8" for a best set. */
+export function formatPrValue(kind: PrKind, value: number, set: WorkingSetValues): string {
+  if (kind === 'setVolume') return `${trimNumber(set.weight)} kg × ${set.reps}`;
+  return `${trimNumber(value)} kg`;
+}
+
+/** Gain over the previous best, e.g. "+2.5 kg" (best sets show the volume gained). */
+export function formatPrDelta(kind: PrKind, value: number, previous: number): string {
+  const gain = trimNumber(value - previous);
+  return kind === 'setVolume' ? `+${gain} kg vol.` : `+${gain} kg`;
 }

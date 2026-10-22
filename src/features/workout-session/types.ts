@@ -112,13 +112,13 @@ export interface ExerciseHistoryComparison {
   lastSession: {
     date: string;
     weekNumber: number;
-    sets: { setIndex: number; weight: number; reps: number; loggedRpe: number | null }[];
+    sets: {
+      setIndex: number;
+      weight: number;
+      reps: number;
+      loggedRpe: number | null;
+    }[];
   } | null;
-  prs: {
-    weight: number;
-    reps: number;
-    previousBest: number | null;
-  }[];
   progressionSuggestion: ProgressionSuggestion;
 }
 
