@@ -17,6 +17,11 @@ export function computeTotalVolume(session: ActiveSession): number {
   return total;
 }
 
+/** Volume for display next to a "KG" caption: "4,280". */
+export function formatVolumeKg(volume: number): string {
+  return String(Math.round(volume)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
 export function computePerExerciseVolume(session: ActiveSession): PerExerciseVolume[] {
   return session.exercises.map((exercise) => {
     const totalVolume = exercise.sets.reduce(
