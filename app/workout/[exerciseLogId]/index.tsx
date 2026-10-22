@@ -28,6 +28,7 @@ import { RpeSelector } from '@/components/workout/RpeSelector';
 import { WarmupSection } from '@/components/workout/WarmupSection';
 import { SubstitutionCard } from '@/components/workout/SubstitutionCard';
 import { SessionStatsBar } from '@/components/workout/SessionStatsBar';
+import { ExerciseNoteCard, ExerciseNoteLine } from '@/components/workout/ExerciseNoteCard';
 import { PreviousHint } from '@/components/workout/PreviousHint';
 import { LastTimeChip } from '@/components/workout/LastTimeChip';
 import { RecordsChip } from '@/components/workout/RecordsChip';
@@ -75,6 +76,7 @@ import {
   mergeBests,
   type ExerciseBests,
 } from '@/src/features/workout-session/personal-records';
+import { getExerciseNote, saveExerciseNote } from '@/src/db/repositories/exercise-notes';
 
 function parseRestSeconds(rest: string): number {
   const minutes = rest.match(/(\d+)/)?.[1];
@@ -141,6 +143,8 @@ export default function ExerciseDetailScreen() {
   const [prBanner, setPrBanner] = useState<PrBannerData | null>(null);
   // The substitute saved as "always" for this exercise, if any.
   const [alwaysName, setAlwaysName] = useState<string | null>(null);
+  // The user's note for the performed exercise (keyed on its name).
+  const [exerciseNote, setExerciseNote] = useState<string | null>(null);
   const hasLoggedSetsRef = useRef(false);
   const loggingSetRef = useRef(false);
 
@@ -185,6 +189,12 @@ export default function ExerciseDetailScreen() {
           setState({ phase: 'error', message: 'Exercise not found.' });
           return;
         }
+
+        getExerciseNote(exercise.exerciseName)
+          .then((n) => {
+            if (!cancelled) setExerciseNote(n);
+          })
+          .catch((e) => console.warn('[exercise] Failed to load note:', e));
 
         if (exercise.prescription?.repRange) {
           const comp = await getExerciseHistoryComparison(
@@ -587,6 +597,7 @@ export default function ExerciseDetailScreen() {
           await setSubstitutionPreference(prescribed, substitute);
           setAlwaysName(substitute);
         }
+        setExerciseNote(await getExerciseNote(updatedExercise.exerciseName));
         if (updatedExercise.prescription?.repRange) {
           setComparisonLoading(true);
           const comp = await getExerciseHistoryComparison(
@@ -646,6 +657,14 @@ export default function ExerciseDetailScreen() {
       }
     },
     [state, exerciseLogId, dialog],
+  );
+
+  const handleSaveNote = useCallback(
+    async (text: string) => {
+      if (state.phase !== 'active') return;
+      setExerciseNote(await saveExerciseNote(state.exercise.exerciseName, text));
+    },
+    [state],
   );
 
   const handleBack = useCallback(() => {
@@ -789,6 +808,8 @@ export default function ExerciseDetailScreen() {
 
       <TechniqueNotes notes={exerciseMeta?.notes ?? null} />
 
+      <ExerciseNoteCard note={exerciseNote} onSave={handleSaveNote} />
+
       <View style={styles.spacerLg} />
 
       <CtaButton label="Start Logging" onPress={handleStartLogging} />
@@ -824,6 +845,8 @@ export default function ExerciseDetailScreen() {
         </View>
 
         <SessionStatsBar session={session} compact />
+
+        {exerciseNote ? <ExerciseNoteLine note={exerciseNote} /> : null}
 
         <SectionLabel label="Set log" />
         <SetLogList
