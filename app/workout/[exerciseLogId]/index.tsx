@@ -62,8 +62,15 @@ import {
   clearActiveRest,
 } from '@/src/features/workout-session';
 import { getSubstitutionOptions } from '@/src/features/workout-session/substitution';
-import { getExerciseLogById } from '@/src/db/repositories/exercises';
 import { useDialog } from '@/components/ui/ConfirmDialog';
+import { getExerciseBests, getExerciseLogById } from '@/src/db/repositories/exercises';
+import { PrBanner, type PrBannerData } from '@/components/workout/PrBanner';
+import {
+  computeBests,
+  detectSetPrs,
+  mergeBests,
+  type ExerciseBests,
+} from '@/src/features/workout-session/personal-records';
 
 function parseRestSeconds(rest: string): number {
   const minutes = rest.match(/(\d+)/)?.[1];
@@ -125,6 +132,9 @@ export default function ExerciseDetailScreen() {
   const [comparison, setComparison] = useState<ExerciseHistoryComparison | null>(null);
   const [comparisonLoading, setComparisonLoading] = useState(true);
   const [lastTimeOpen, setLastTimeOpen] = useState(false);
+  // Bests from earlier sessions (null with no history) and the live PR banner.
+  const [priorBests, setPriorBests] = useState<ExerciseBests | null>(null);
+  const [prBanner, setPrBanner] = useState<PrBannerData | null>(null);
   // The substitute saved as "always" for this exercise, if any.
   const [alwaysName, setAlwaysName] = useState<string | null>(null);
   const hasLoggedSetsRef = useRef(false);
@@ -134,6 +144,21 @@ export default function ExerciseDetailScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   }, []);
   const restTimer = useRestTimer({ onExpire: handleRestExpired });
+
+  const activeExerciseName = state.phase === 'active' ? state.exercise.exerciseName : null;
+  const activeSessionId = state.phase === 'active' ? state.session.id : null;
+  useEffect(() => {
+    if (!activeExerciseName || !activeSessionId) return;
+    let cancelled = false;
+    getExerciseBests(activeExerciseName, activeSessionId)
+      .then((bests) => {
+        if (!cancelled) setPriorBests(bests);
+      })
+      .catch((e) => console.warn('[exercise] Failed to load prior bests:', e));
+    return () => {
+      cancelled = true;
+    };
+  }, [activeExerciseName, activeSessionId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -399,6 +424,23 @@ export default function ExerciseDetailScreen() {
       )!;
       const nextSet = updatedExercise.sets.find((s) => !s.isComplete);
 
+      // Beat an earlier session, or this session's earlier sets?
+      const earlierSets = updatedExercise.sets.filter(
+        (s) => s.isComplete && s.setIndex !== currentSetIndex,
+      );
+      const prsHit = detectSetPrs(
+        priorBests ? mergeBests(priorBests, computeBests(earlierSets)) : null,
+        { weight, reps },
+      );
+      if (prsHit.length > 0) {
+        setPrBanner({
+          id: Date.now(),
+          setIndex: currentSetIndex,
+          prs: prsHit,
+          set: { weight, reps },
+        });
+      }
+
       if (nextSet) {
         const restSeconds = getRestSeconds(updatedExercise);
         const restEndAt = Date.now() + restSeconds * 1000;
@@ -464,7 +506,7 @@ export default function ExerciseDetailScreen() {
     } finally {
       loggingSetRef.current = false;
     }
-  }, [state, exerciseLogId, dialog]);
+  }, [state, exerciseLogId, priorBests, dialog]);
 
   const handleCompleteExercise = useCallback(async () => {
     if (state.phase !== 'active') return;
@@ -1089,6 +1131,7 @@ export default function ExerciseDetailScreen() {
           {phaseContent}
         </ScrollView>
       )}
+      {prBanner ? <PrBanner banner={prBanner} onDismiss={() => setPrBanner(null)} /> : null}
     </View>
   );
 }
