@@ -1,18 +1,20 @@
-import { Alert, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { colors, typography } from '@/src/theme';
 import { clearAllTables } from '@/src/db/client';
+import { useDialog } from '@/components/ui/ConfirmDialog';
 
 interface DevClearDbButtonProps {
   onCleared?: () => void;
 }
 
 export function DevClearDbButton({ onCleared }: DevClearDbButtonProps) {
+  const dialog = useDialog();
   if (!__DEV__) return null;
   return (
     <TouchableOpacity
       style={styles.container}
       onPress={() => {
-        Alert.alert('Dev: Clear DB', 'This will delete ALL data. Are you sure?', [
+        dialog.show('Dev: Clear DB', 'This will delete ALL data. Are you sure?', [
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Clear',

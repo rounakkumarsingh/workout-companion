@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   StyleSheet,
   Text,
@@ -44,6 +43,7 @@ import {
 import { getActiveSession } from '@/src/db/repositories/sessions';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { DevClearDbButton } from '@/components/ui/DevClearDbButton';
+import { useDialog } from '@/components/ui/ConfirmDialog';
 
 const DAY_CODES: Record<string, string> = {
   Upper: 'UP',
@@ -72,6 +72,7 @@ interface ActiveState {
 type ScreenState = { phase: 'loading' } | ActiveState | { phase: 'error'; message: string };
 
 export default function ActiveWorkoutScreen() {
+  const dialog = useDialog();
   const router = useRouter();
   const params = useLocalSearchParams<{ sessionId?: string }>();
   const insets = useSafeAreaInsets();
@@ -226,7 +227,7 @@ export default function ActiveWorkoutScreen() {
       if (!exercise) return;
       const pendingSet = exercise.sets.find((s) => !s.isComplete);
       if (!pendingSet) {
-        Alert.alert(
+        dialog.show(
           'All sets logged',
           `Every working set of ${exercise.exerciseName} is already logged.`,
         );
@@ -250,12 +251,12 @@ export default function ActiveWorkoutScreen() {
         }
       } catch (e) {
         console.error('[workout] Failed to quick log set:', e);
-        Alert.alert('Error', 'Failed to log set. Please try again.');
+        dialog.show('Error', 'Failed to log set. Please try again.');
       } finally {
         quickLogBusyRef.current = false;
       }
     },
-    [quickLogExercise],
+    [quickLogExercise, dialog],
   );
 
   const handleComplete = useCallback(() => {
@@ -265,7 +266,7 @@ export default function ActiveWorkoutScreen() {
     const allComplete = session.exercises.every((e) => e.status === 'completed');
     if (!allComplete) {
       const unfinishedCount = session.exercises.filter((e) => e.status !== 'completed').length;
-      Alert.alert(
+      dialog.show(
         `${unfinishedCount} ${unfinishedCount === 1 ? 'exercise' : 'exercises'} not finished`,
         "Complete anyway? Sets you haven't logged will be skipped.",
         [
@@ -279,14 +280,14 @@ export default function ActiveWorkoutScreen() {
                 router.replace(`/workout/pr-celebration?sessionId=${completed.id}`);
               } catch (e) {
                 console.error('[workout] Failed to complete session:', e);
-                Alert.alert('Error', 'Failed to complete workout. Please try again.');
+                dialog.show('Error', 'Failed to complete workout. Please try again.');
               }
             },
           },
         ],
       );
     } else {
-      Alert.alert('Complete Workout', 'Are you sure you want to finish this session?', [
+      dialog.show('Complete Workout', 'Are you sure you want to finish this session?', [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Complete',
@@ -297,16 +298,16 @@ export default function ActiveWorkoutScreen() {
               router.replace(`/workout/pr-celebration?sessionId=${completed.id}`);
             } catch (e) {
               console.error('[workout] Failed to complete session:', e);
-              Alert.alert('Error', 'Failed to complete workout. Please try again.');
+              dialog.show('Error', 'Failed to complete workout. Please try again.');
             }
           },
         },
       ]);
     }
-  }, [router]);
+  }, [router, dialog]);
 
   const handleAbandon = useCallback(() => {
-    Alert.alert(
+    dialog.show(
       'End Session',
       'This will mark the session as incomplete. All logged sets will be kept.',
       [
@@ -322,13 +323,13 @@ export default function ActiveWorkoutScreen() {
               router.dismissAll();
             } catch (e) {
               console.error('[workout] Failed to abandon session:', e);
-              Alert.alert('Error', 'Failed to end session. Please try again.');
+              dialog.show('Error', 'Failed to end session. Please try again.');
             }
           },
         },
       ],
     );
-  }, [router]);
+  }, [router, dialog]);
 
   if (state.phase === 'loading') {
     return (

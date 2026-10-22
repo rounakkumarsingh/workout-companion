@@ -14,6 +14,7 @@ import 'react-native-reanimated';
 
 import { runMigrations } from '../src/db/migrations';
 import { ThemeManager, colors } from '@/src/theme';
+import { DialogProvider } from '@/components/ui/ConfirmDialog';
 import { configureRestNotifications } from '@/src/features/workout-session/rest-notifications';
 
 SplashScreen.preventAutoHideAsync();
@@ -100,12 +101,17 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeManager>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-          <Stack.Screen name="workout" options={{ presentation: 'modal', headerShown: false }} />
-          <Stack.Screen name="completed" options={{ presentation: 'modal', headerShown: false }} />
-        </Stack>
+        <DialogProvider>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+            <Stack.Screen name="workout" options={{ presentation: 'modal', headerShown: false }} />
+            <Stack.Screen
+              name="completed"
+              options={{ presentation: 'modal', headerShown: false }}
+            />
+          </Stack>
+        </DialogProvider>
       </ThemeManager>
     </SafeAreaProvider>
   );

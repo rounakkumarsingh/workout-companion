@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   BackHandler,
-  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -64,6 +63,7 @@ import {
 } from '@/src/features/workout-session';
 import { getSubstitutionOptions } from '@/src/features/workout-session/substitution';
 import { getExerciseLogById } from '@/src/db/repositories/exercises';
+import { useDialog } from '@/components/ui/ConfirmDialog';
 
 function parseRestSeconds(rest: string): number {
   const minutes = rest.match(/(\d+)/)?.[1];
@@ -116,6 +116,7 @@ type ScreenState =
     };
 
 export default function ExerciseDetailScreen() {
+  const dialog = useDialog();
   const router = useRouter();
   const params = useLocalSearchParams();
   const { exerciseLogId } = params as { exerciseLogId: string };
@@ -241,7 +242,7 @@ export default function ExerciseDetailScreen() {
     state.phase === 'active' ? state.exercise.sets.every((s) => s.isComplete) : false;
 
   const confirmLeave = useCallback(() => {
-    Alert.alert(
+    dialog.show(
       'Leave exercise?',
       "You have logged sets but haven't finished all yet. Progress will be saved.",
       [
@@ -459,11 +460,11 @@ export default function ExerciseDetailScreen() {
       }
     } catch (e) {
       console.error('[exercise] Failed to log set:', e);
-      Alert.alert('Error', 'Failed to log set. Please try again.');
+      dialog.show('Error', 'Failed to log set. Please try again.');
     } finally {
       loggingSetRef.current = false;
     }
-  }, [state, exerciseLogId]);
+  }, [state, exerciseLogId, dialog]);
 
   const handleCompleteExercise = useCallback(async () => {
     if (state.phase !== 'active') return;
@@ -480,14 +481,14 @@ export default function ExerciseDetailScreen() {
       }
     } catch (e) {
       console.error('[exercise] Failed to complete exercise:', e);
-      Alert.alert('Error', 'Failed to complete exercise. Please try again.');
+      dialog.show('Error', 'Failed to complete exercise. Please try again.');
     }
-  }, [state, exerciseLogId, router]);
+  }, [state, exerciseLogId, router, dialog]);
 
   const handleFinishWorkout = useCallback(() => {
     if (state.phase !== 'active') return;
     const { session } = state;
-    Alert.alert(
+    dialog.show(
       'Finish Workout',
       "End this session now? Sets you haven't logged will be skipped.",
       [
@@ -501,13 +502,13 @@ export default function ExerciseDetailScreen() {
               router.replace(`/workout/pr-celebration?sessionId=${completed.id}`);
             } catch (e) {
               console.error('[exercise] Failed to finish workout:', e);
-              Alert.alert('Error', 'Failed to finish workout. Please try again.');
+              dialog.show('Error', 'Failed to finish workout. Please try again.');
             }
           },
         },
       ],
     );
-  }, [state, router, restTimer]);
+  }, [state, router, restTimer, dialog]);
 
   const prescribedName = state.phase === 'active' ? state.exercise.prescribedExerciseName : null;
   const weekNumber = state.phase === 'active' ? state.session.weekNumber : null;
@@ -553,10 +554,10 @@ export default function ExerciseDetailScreen() {
         }
       } catch (e) {
         console.error('[exercise] Failed to substitute exercise:', e);
-        Alert.alert('Error', 'Failed to change exercise. Please try again.');
+        dialog.show('Error', 'Failed to change exercise. Please try again.');
       }
     },
-    [state, exerciseLogId],
+    [state, exerciseLogId, dialog],
   );
 
   // Ask whether the switch is for this workout only or for every time.
@@ -564,7 +565,7 @@ export default function ExerciseDetailScreen() {
     (targetName: string) => {
       if (state.phase !== 'active') return;
       const backToPrescribed = targetName === state.exercise.prescribedExerciseName;
-      Alert.alert(
+      dialog.show(
         backToPrescribed ? `Go back to ${targetName}?` : `Switch to ${targetName}?`,
         backToPrescribed
           ? 'Just for this workout, or from now on?'
@@ -579,7 +580,7 @@ export default function ExerciseDetailScreen() {
         ],
       );
     },
-    [state, applySubstitution],
+    [state, applySubstitution, dialog],
   );
 
   const handleLogWarmup = useCallback(
@@ -595,10 +596,10 @@ export default function ExerciseDetailScreen() {
         hasLoggedSetsRef.current = true;
       } catch (e) {
         console.error('[exercise] Failed to log warmup set:', e);
-        Alert.alert('Error', 'Failed to log warmup set. Please try again.');
+        dialog.show('Error', 'Failed to log warmup set. Please try again.');
       }
     },
-    [state, exerciseLogId],
+    [state, exerciseLogId, dialog],
   );
 
   const handleBack = useCallback(() => {

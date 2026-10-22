@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, Linking, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Linking, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { typography, radii, spacing, MIN_TAP_SIZE, useColors, type ColorSet } from '@/src/theme';
 import { generateId } from '@/src/lib/ids';
@@ -9,6 +9,7 @@ import type { PhotoAngle } from '@/src/features/progress-tracking/photos';
 import { storePhoto, deletePhotoFile } from './photo-storage';
 import { PhotoThumb } from './PhotoThumb';
 import { PHOTO_ANGLES, ANGLE_LABEL, type ProgressPhotoRow } from './types';
+import { useDialog } from '@/components/ui/ConfirmDialog';
 
 interface PhotoCaptureProps {
   /** All saved photos, newest first; used to show what is already added today. */
@@ -22,6 +23,7 @@ interface PhotoCaptureProps {
 type Source = 'camera' | 'library';
 
 export function PhotoCapture({ photos, todayKey, onChanged }: PhotoCaptureProps) {
+  const dialog = useDialog();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [busyAngle, setBusyAngle] = useState<PhotoAngle | null>(null);
@@ -40,7 +42,7 @@ export function PhotoCapture({ photos, todayKey, onChanged }: PhotoCaptureProps)
         if (source === 'camera') {
           const permission = await ImagePicker.requestCameraPermissionsAsync();
           if (!permission.granted) {
-            Alert.alert(
+            dialog.show(
               'Camera access needed',
               permission.canAskAgain
                 ? 'Allow camera access to take progress photos, or choose one from your library instead.'
@@ -86,7 +88,7 @@ export function PhotoCapture({ photos, todayKey, onChanged }: PhotoCaptureProps)
         onChanged();
       } catch (e) {
         console.error('[photos] Failed to add photo:', e);
-        Alert.alert(
+        dialog.show(
           'Could not save photo',
           'Something went wrong saving that photo. Please try again.',
         );

@@ -7,8 +7,10 @@ import { getCycleStartIso, getProgramCycle, startNextCycle } from '@/src/feature
 import { cycleAdherencePercent } from '@/src/features/workout-session/cycle';
 import { getSessionsWithVolume } from '@/src/db/repositories/sessions';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useDialog } from '@/components/ui/ConfirmDialog';
 
 export default function ProgramCompletedScreen() {
+  const dialog = useDialog();
   const router = useRouter();
   const colors = useColors();
   const [totalVolume, setTotalVolume] = useState<number | null>(null);
@@ -44,11 +46,11 @@ export default function ProgramCompletedScreen() {
       router.replace('/(tabs)/home' as Href);
     } catch (e) {
       console.error('[completed] Failed to start the next cycle:', e);
-      Alert.alert('Error', 'Failed to start the next cycle. Please try again.');
+      dialog.show('Error', 'Failed to start the next cycle. Please try again.');
     } finally {
       startingRef.current = false;
     }
-  }, [router]);
+  }, [router, dialog]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Alert, View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { typography, radii, spacing, useColors, type ColorSet } from '@/src/theme';
 import { GhostButton } from '@/components/ui/GhostButton';
 import { readAllTablesForBackup } from '@/src/db/repositories/backup';
 import { backupFileName, buildBackup } from '@/src/features/backup/build-export';
+import { useDialog } from '@/components/ui/ConfirmDialog';
 
 /**
  * History-tab card: writes all workouts, weigh-ins, cardio logs, photo records
@@ -13,6 +14,7 @@ import { backupFileName, buildBackup } from '@/src/features/backup/build-export'
  * History lives only on this phone, so this is the safety copy.
  */
 export function BackupCard() {
+  const dialog = useDialog();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [busy, setBusy] = useState(false);
@@ -22,7 +24,7 @@ export function BackupCard() {
     setBusy(true);
     try {
       if (!(await Sharing.isAvailableAsync())) {
-        Alert.alert('Not available', 'Sharing is not available on this device.');
+        dialog.show('Not available', 'Sharing is not available on this device.');
         return;
       }
       const now = new Date();
@@ -38,7 +40,7 @@ export function BackupCard() {
       });
     } catch (e) {
       console.error('[backup] Failed to back up data:', e);
-      Alert.alert('Backup failed', 'Could not create the backup file. Please try again.');
+      dialog.show('Backup failed', 'Could not create the backup file. Please try again.');
     } finally {
       setBusy(false);
     }
