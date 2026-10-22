@@ -250,7 +250,7 @@ export default function ExerciseDetailScreen() {
         { text: 'Leave', onPress: () => router.back() },
       ],
     );
-  }, [router]);
+  }, [router, dialog]);
 
   // Drive the timer from the persisted deadline while resting. It keeps
   // running in the background and never advances on its own.

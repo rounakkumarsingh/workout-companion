@@ -177,10 +177,9 @@ const makeStyles = (c: ColorSet) =>
       marginBottom: spacing.sm,
     },
     subtitle: {
-      fontSize: 14,
+      ...typography.body,
       color: c.textTertiary,
       textAlign: 'center',
-      lineHeight: 21,
       marginBottom: spacing.lg,
     },
     steps: {
@@ -216,13 +215,11 @@ const makeStyles = (c: ColorSet) =>
       flex: 1,
     },
     stepTitle: {
-      ...typography.body,
-      fontWeight: '700',
+      ...typography.bodyStrong,
       color: c.textPrimary,
     },
     stepSub: {
-      fontFamily: 'SpaceMono_400Regular',
-      fontSize: 11,
+      ...typography.caption,
       color: c.textTertiary,
       marginTop: 2,
     },

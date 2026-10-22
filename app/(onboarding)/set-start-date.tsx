@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useColors } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
+import { AppText } from '@/components/ui/AppText';
+import { CtaButton } from '@/components/ui/CtaButton';
 import { setProgramStartDate } from '@/src/features/workout-session';
 
 function formatDate(date: Date): string {
@@ -36,27 +38,34 @@ export default function SetStartDateScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>Set Your Start Date</Text>
-        <Text style={[styles.subtitle, { color: colors.textTertiary }]}>
+        <AppText variant="heading" style={styles.title}>
+          Set your start date
+        </AppText>
+        <AppText variant="body" color="textSecondary" style={styles.subtitle}>
           Choose the day your program begins.
-        </Text>
+        </AppText>
         <View style={styles.datePicker}>
           <TouchableOpacity
             onPress={() => changeDay(-1)}
             style={styles.arrowButton}
             accessibilityLabel="Previous day"
           >
-            <Text style={[styles.arrow, { color: colors.gold }]}>←</Text>
+            <AppText variant="monoMedium" color="gold">
+              ←
+            </AppText>
           </TouchableOpacity>
-          <View style={styles.dateDisplay}>
-            <Text style={[styles.dateText, { color: colors.textPrimary }]}>
+          <View style={styles.dateDisplay} accessibilityLiveRegion="polite">
+            <AppText variant="caption" color="textTertiary">
+              START DATE
+            </AppText>
+            <AppText variant="monoBody" color="goldText" style={styles.dateText}>
               {selectedDate.toLocaleDateString(undefined, {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
               })}
-            </Text>
+            </AppText>
           </View>
           <TouchableOpacity
             onPress={() => changeDay(1)}
@@ -64,18 +73,13 @@ export default function SetStartDateScreen() {
             disabled={isFutureOrToday}
             accessibilityLabel="Next day"
           >
-            <Text style={[styles.arrow, { color: isFutureOrToday ? colors.textDim : colors.gold }]}>
+            <AppText variant="monoMedium" color={isFutureOrToday ? 'textDim' : 'gold'}>
               →
-            </Text>
+            </AppText>
           </TouchableOpacity>
         </View>
       </View>
-      <TouchableOpacity
-        style={[styles.saveButton, { backgroundColor: colors.gold }]}
-        onPress={handleSave}
-      >
-        <Text style={styles.saveButtonText}>Save & Start</Text>
-      </TouchableOpacity>
+      <CtaButton label="Save & Start" onPress={handleSave} style={styles.saveButton} />
     </View>
   );
 }
@@ -93,15 +97,12 @@ const makeStyles = (c: ColorSet) =>
       alignItems: 'center',
     },
     title: {
-      fontSize: 24,
-      fontWeight: '700',
       textAlign: 'center',
-      marginBottom: 12,
+      textTransform: 'uppercase',
+      marginBottom: 8,
     },
     subtitle: {
-      fontSize: 16,
       textAlign: 'center',
-      lineHeight: 24,
       marginBottom: 40,
       paddingHorizontal: 16,
     },
@@ -109,33 +110,30 @@ const makeStyles = (c: ColorSet) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 16,
+      gap: 8,
     },
     dateDisplay: {
-      minWidth: 240,
+      minWidth: 220,
       alignItems: 'center',
+      gap: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      borderRadius: 14,
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.goldStroke,
     },
     dateText: {
-      fontSize: 18,
-      fontWeight: '600',
       textAlign: 'center',
     },
     arrowButton: {
-      padding: 16,
-    },
-    arrow: {
-      fontSize: 28,
-      fontWeight: '600',
+      minWidth: 48,
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     saveButton: {
-      paddingVertical: 16,
-      borderRadius: 12,
-      alignItems: 'center',
+      marginHorizontal: 0,
       marginBottom: 48,
-    },
-    saveButtonText: {
-      color: c.blackText,
-      fontSize: 18,
-      fontWeight: '600',
     },
   });

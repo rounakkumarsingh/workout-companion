@@ -1,15 +1,26 @@
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { TOTAL_WEEKS, MAX_SESSIONS_PER_WEEK } from '@/src/data/program';
-import { useColors } from '@/src/theme';
+import { useColors, typography } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { getCycleStartIso, getProgramCycle, startNextCycle } from '@/src/features/workout-session';
 import { cycleAdherencePercent } from '@/src/features/workout-session/cycle';
 import { getSessionsWithVolume } from '@/src/db/repositories/sessions';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useDialog } from '@/components/ui/ConfirmDialog';
+import { DialogProvider, useDialog } from '@/components/ui/ConfirmDialog';
+import { AppText } from '@/components/ui/AppText';
+import { CtaButton } from '@/components/ui/CtaButton';
 
+// This route is a native modal, so a root-level dialog Modal cannot show over it (iOS).
 export default function ProgramCompletedScreen() {
+  return (
+    <DialogProvider>
+      <ProgramCompleted />
+    </DialogProvider>
+  );
+}
+
+function ProgramCompleted() {
   const dialog = useDialog();
   const router = useRouter();
   const colors = useColors();
@@ -54,43 +65,48 @@ export default function ProgramCompletedScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={styles.emoji}>🎉</Text>
-      <Text style={[styles.title, { color: colors.textPrimary }]}>Program Complete</Text>
-      <Text style={[styles.subtitle, { color: colors.textTertiary }]}>
+      <AppText style={styles.emoji}>🎉</AppText>
+      <AppText variant="heading" style={styles.title}>
+        Program Complete
+      </AppText>
+      <AppText variant="bodyLarge" color="textTertiary" style={styles.subtitle}>
         {`You finished all ${TOTAL_WEEKS} weeks${cycle > 1 ? ` (cycle ${cycle})` : ''}.`}
-      </Text>
+      </AppText>
 
       <View style={styles.statsRow}>
         {totalVolume !== null && (
           <View style={styles.statCard}>
-            <Text style={[styles.statLabel, { color: colors.textTertiary }]}>Total Volume</Text>
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+            <AppText variant="monoLabel" color="textTertiary" style={styles.statLabel}>
+              Total Volume
+            </AppText>
+            <AppText variant="monoMedium" style={styles.statValue}>
               {totalVolume.toLocaleString()} kg
-            </Text>
+            </AppText>
           </View>
         )}
         <View style={styles.statCard}>
-          <Text style={[styles.statLabel, { color: colors.textTertiary }]}>Sessions</Text>
-          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{totalSessions}</Text>
+          <AppText variant="monoLabel" color="textTertiary" style={styles.statLabel}>
+            Sessions
+          </AppText>
+          <AppText variant="monoMedium" style={styles.statValue}>
+            {totalSessions}
+          </AppText>
         </View>
         <View style={styles.statCard}>
-          <Text style={[styles.statLabel, { color: colors.textTertiary }]}>Adherence</Text>
-          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{adherenceRate}%</Text>
+          <AppText variant="monoLabel" color="textTertiary" style={styles.statLabel}>
+            Adherence
+          </AppText>
+          <AppText variant="monoMedium" style={styles.statValue}>
+            {adherenceRate}%
+          </AppText>
         </View>
       </View>
 
-      <Text style={[styles.description, { color: colors.textTertiary }]}>
+      <AppText variant="body" color="textTertiary" style={styles.description}>
         The program loops back seamlessly: Week 1 (one set per exercise at lower effort) doubles as
         a deload. Your history is kept.
-      </Text>
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: colors.gold }]}
-        onPress={handleStartNextCycle}
-        accessibilityRole="button"
-        accessibilityLabel="Start the next cycle at week 1 today"
-      >
-        <Text style={styles.buttonText}>Start next cycle</Text>
-      </TouchableOpacity>
+      </AppText>
+      <CtaButton label="Start next cycle" onPress={handleStartNextCycle} style={styles.button} />
     </View>
   );
 }
@@ -108,15 +124,11 @@ const makeStyles = (c: ColorSet) =>
       marginBottom: 16,
     },
     title: {
-      fontSize: 28,
-      fontWeight: '700',
       marginBottom: 12,
       textAlign: 'center',
     },
     subtitle: {
-      fontSize: 16,
       textAlign: 'center',
-      lineHeight: 24,
       marginBottom: 32,
     },
     statsRow: {
@@ -131,34 +143,24 @@ const makeStyles = (c: ColorSet) =>
       paddingVertical: 16,
       paddingHorizontal: 12,
       borderRadius: 12,
-      backgroundColor: 'rgba(128,128,128,0.1)',
+      backgroundColor: c.surfaceElevated,
     },
     statLabel: {
-      fontSize: 12,
       marginBottom: 4,
       textTransform: 'uppercase',
-      letterSpacing: 0.08,
+      textAlign: 'center',
     },
     statValue: {
-      fontSize: 24,
-      fontWeight: '700',
+      ...typography.monoMedium,
+      fontSize: 18,
+      lineHeight: 22,
     },
     description: {
-      fontSize: 14,
       textAlign: 'center',
-      lineHeight: 20,
       marginBottom: 32,
       paddingHorizontal: 16,
     },
     button: {
-      paddingVertical: 16,
-      paddingHorizontal: 48,
-      borderRadius: 12,
-      alignItems: 'center',
-    },
-    buttonText: {
-      color: c.blackText,
-      fontSize: 18,
-      fontWeight: '600',
+      alignSelf: 'stretch',
     },
   });

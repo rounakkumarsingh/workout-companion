@@ -96,7 +96,7 @@ export function PhotoCapture({ photos, todayKey, onChanged }: PhotoCaptureProps)
         setBusyAngle(null);
       }
     },
-    [busyAngle, todays, onChanged],
+    [busyAngle, todays, onChanged, dialog],
   );
 
   return (
