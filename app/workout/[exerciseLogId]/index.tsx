@@ -28,6 +28,7 @@ import { RpeSelector } from '@/components/workout/RpeSelector';
 import { WarmupSection } from '@/components/workout/WarmupSection';
 import { SubstitutionCard } from '@/components/workout/SubstitutionCard';
 import { SessionStatsBar } from '@/components/workout/SessionStatsBar';
+import { PreviousHint } from '@/components/workout/PreviousHint';
 import { LastTimeChip } from '@/components/workout/LastTimeChip';
 import { RecordsChip } from '@/components/workout/RecordsChip';
 import { LastTimeSheet } from '@/components/workout/LastTimeSheet';
@@ -63,6 +64,7 @@ import {
   moveRestDeadline,
   clearActiveRest,
 } from '@/src/features/workout-session';
+import { WEIGHT_INCREMENT_KG } from '@/src/features/workout-session/progression';
 import { getSubstitutionOptions } from '@/src/features/workout-session/substitution';
 import { useDialog } from '@/components/ui/ConfirmDialog';
 import { getExerciseBests, getExerciseLogById } from '@/src/db/repositories/exercises';
@@ -712,6 +714,9 @@ export default function ExerciseDetailScreen() {
   const substitutionDisabled = exercise.sets.some((s) => s.isComplete);
   const lastTime = summarizeLastTime(comparison?.lastSession ?? null);
   const nextExercise = getNextIncompleteExercise(session, exerciseLogId);
+  const previousBySetIndex = new Map<number, string>(
+    (lastTime?.sets ?? []).map((s) => [s.setIndex, s.text]),
+  );
 
   // --- Phase Renders ---
 
@@ -825,6 +830,7 @@ export default function ExerciseDetailScreen() {
           sets={exercise.sets}
           allSetsLogged={false}
           currentSetIndex={state.currentSetIndex}
+          previousBySetIndex={previousBySetIndex}
         />
 
         <View style={styles.logCard}>
@@ -933,6 +939,17 @@ export default function ExerciseDetailScreen() {
             }}
           />
 
+          {previousBySetIndex.get(state.currentSetIndex) ? (
+            <PreviousHint
+              previous={previousBySetIndex.get(state.currentSetIndex) ?? ''}
+              increaseKg={
+                comparison?.progressionSuggestion.readyForWeightIncrease
+                  ? WEIGHT_INCREMENT_KG
+                  : undefined
+              }
+            />
+          ) : null}
+
           {pres && (
             <Text style={styles.prevBest}>
               Prescribed: {pres.workingSets}×{pres.repRange} · RPE {pres.lastSetRpe}
@@ -981,6 +998,7 @@ export default function ExerciseDetailScreen() {
         sets={exercise.sets}
         allSetsLogged={true}
         currentSetIndex={exercise.sets.length}
+        previousBySetIndex={previousBySetIndex}
       />
 
       <View style={styles.completeBanner}>

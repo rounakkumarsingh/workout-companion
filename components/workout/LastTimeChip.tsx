@@ -22,7 +22,8 @@ export function LastTimeChip({ summary, onPress }: LastTimeChipProps) {
       accessibilityLabel={`Last time, week ${summary.weekNumber}: ${summary.label}. Show all sets`}
     >
       <Text style={styles.text} numberOfLines={1}>
-        Last: {summary.label} · Wk {summary.weekNumber} ›
+        Last: {summary.label} · Wk {summary.weekNumber}
+        {summary.sameDayType === false && summary.dayType ? ` · ${summary.dayType} day` : ''} ›
       </Text>
     </TouchableOpacity>
   );
