@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import Animated from 'react-native-reanimated';
 import { useAnimatedPress } from '@/hooks/useAnimatedPress';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { radii, typography, MIN_TAP_SIZE, useColors, type ColorSet } from '@/src/theme';
+import { radii, typography, useColors, type ColorSet } from '@/src/theme';
 
 interface GhostButtonProps {
   label: string;
@@ -39,18 +39,17 @@ const makeStyles = (c: ColorSet) =>
     button: {
       marginHorizontal: 20,
       marginBottom: 8,
-      borderRadius: radii.row,
-      paddingVertical: 12,
-      minHeight: MIN_TAP_SIZE,
+      borderRadius: radii.button,
+      minHeight: 48,
       justifyContent: 'center',
       alignItems: 'center',
-      borderWidth: 0.5,
-      borderColor: c.borderActive,
+      borderWidth: 1,
+      borderColor: c.borderControl,
     },
     label: {
-      ...typography.body,
-      color: c.textTertiary,
+      ...typography.cta,
+      fontSize: 16,
+      color: c.textPrimary,
       textTransform: 'uppercase',
-      letterSpacing: 0.05,
     },
   });

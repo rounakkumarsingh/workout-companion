@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import Animated from 'react-native-reanimated';
 import { useAnimatedPress } from '@/hooks/useAnimatedPress';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { typography, radii, MIN_TAP_SIZE, useColors, type ColorSet } from '@/src/theme';
+import { typography, radii, useColors, type ColorSet } from '@/src/theme';
 
 interface CtaButtonProps {
   label: string;
@@ -11,6 +11,8 @@ interface CtaButtonProps {
   disabled?: boolean;
   style?: ViewStyle;
 }
+
+const CTA_HEIGHT = 56;
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -43,9 +45,9 @@ const makeStyles = (c: ColorSet) =>
       marginHorizontal: 20,
       marginBottom: 8,
       backgroundColor: c.gold,
-      borderRadius: radii.row,
-      paddingVertical: 15,
-      minHeight: MIN_TAP_SIZE,
+      borderRadius: radii.button,
+      minHeight: CTA_HEIGHT,
+      justifyContent: 'center',
       alignItems: 'center',
     },
     disabled: {
