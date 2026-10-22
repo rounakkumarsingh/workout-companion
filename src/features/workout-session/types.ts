@@ -109,16 +109,7 @@ export interface ProgressionSuggestion {
 }
 
 export interface ExerciseHistoryComparison {
-  lastSession: {
-    date: string;
-    weekNumber: number;
-    sets: {
-      setIndex: number;
-      weight: number;
-      reps: number;
-      loggedRpe: number | null;
-    }[];
-  } | null;
+  lastSession: LastTimeSession | null;
   progressionSuggestion: ProgressionSuggestion;
 }
 

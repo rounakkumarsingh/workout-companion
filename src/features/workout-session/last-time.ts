@@ -3,8 +3,9 @@ import { isoToLocalDateKey, parseLocalDateKey } from '../../lib/dates';
 export interface LastTimeSession {
   date: string;
   weekNumber: number;
-  /** Day type of that session; set when "last time" may come from another day. */
+  /** Day type of that session, when known (e.g. "Push"). */
   dayType?: string;
+  /** False when this came from a different day type than today's. */
   sameDayType?: boolean;
   sets: { setIndex: number; weight: number; reps: number; loggedRpe: number | null }[];
 }
@@ -20,6 +21,8 @@ export interface LastTimeSummary {
   /** Compact one-liner for the chip, e.g. "3 × 10 @ 50 kg". */
   label: string;
   weekNumber: number;
+  dayType?: string;
+  sameDayType?: boolean;
   dateLabel: string;
   sets: LastTimeSet[];
 }
@@ -51,6 +54,8 @@ export function summarizeLastTime(session: LastTimeSession | null): LastTimeSumm
   return {
     label,
     weekNumber: session.weekNumber,
+    dayType: session.dayType,
+    sameDayType: session.sameDayType,
     dateLabel: date.toLocaleDateString('en-US', {
       weekday: 'short',
       day: 'numeric',
