@@ -151,14 +151,16 @@ export default function WorkoutSummaryScreen() {
       accent: false,
     },
     {
-      value: String(session?.exercises.length ?? 0),
+      value: String(
+        session?.exercises.filter((ex) => ex.sets.some((s) => s.isComplete)).length ?? 0,
+      ),
       unit: '',
       label: 'Exercises',
       accent: false,
     },
   ];
 
-  const exercises = session?.exercises ?? [];
+  const exercises = (session?.exercises ?? []).filter((ex) => ex.sets.some((s) => s.isComplete));
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
