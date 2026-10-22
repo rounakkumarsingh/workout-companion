@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { useColors, typography, spacing, radii } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
@@ -126,7 +126,7 @@ export default function HistoryScreen() {
   );
 
   const openRecords = (exerciseName: string) =>
-    router.push({ pathname: '/progress/exercise/[name]', params: { name: exerciseName } });
+    router.push({ pathname: '/progress/exercise/[name]', params: { name: exerciseName } } as Href);
 
   if (loading) {
     return (

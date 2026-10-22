@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   BackHandler,
 } from 'react-native';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
+import { useRouter, useLocalSearchParams, Stack, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   useSharedValue,
@@ -746,7 +746,7 @@ export default function ExerciseDetailScreen() {
               router.push({
                 pathname: '/workout/records/[name]',
                 params: { name: exercise.exerciseName },
-              })
+              } as Href)
             }
           />
         </View>
