@@ -44,7 +44,7 @@ the app (fully close, then open) to pick up a new update.
 ## Notes on Expo Go
 
 - **Ownership rule (since 2026-05-12):** Expo Go only loads EAS Updates for projects owned by the
-  signed-in account or by an organization it belongs to. Sign in to Expo Go as `rounakkumarsingh`
+  signed-in account or by an organization it belongs to. Sign in to Expo Go with an account that is a member of the `chikki-workout-app` organization
   (or move the project to an org both people join).
 - **Expo Go 57 on Android** could not load EAS Updates ("Failed to download remote update",
   expo/expo#50139). Whether Expo Go 58 fixes it is checked by opening the `preview` link on the
