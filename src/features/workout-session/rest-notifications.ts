@@ -1,12 +1,33 @@
 import { Platform } from 'react-native';
-import * as Notifications from 'expo-notifications';
+
+type NotificationsModule = typeof import('expo-notifications');
 
 const CHANNEL_ID = 'rest-timer';
 let handlerConfigured = false;
+let notificationsModule: NotificationsModule | null | undefined;
+
+/**
+ * expo-notifications throws at import time when its native topic module is
+ * missing (Expo Go on Android), which would crash every screen. Load it lazily
+ * so the app still runs; the in-app rest timer does not need it.
+ */
+function loadNotifications(): NotificationsModule | null {
+  if (Platform.OS === 'web') return null;
+  if (notificationsModule !== undefined) return notificationsModule;
+  try {
+    notificationsModule = require('expo-notifications') as NotificationsModule;
+  } catch (e) {
+    console.warn('[rest] expo-notifications is unavailable, rest alerts disabled:', e);
+    notificationsModule = null;
+  }
+  return notificationsModule;
+}
 
 /** Shows rest-over alerts even while the app is open. Call once at startup. */
 export function configureRestNotifications(): void {
-  if (handlerConfigured || Platform.OS === 'web') return;
+  if (handlerConfigured) return;
+  const Notifications = loadNotifications();
+  if (!Notifications) return;
   handlerConfigured = true;
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -18,8 +39,7 @@ export function configureRestNotifications(): void {
   });
 }
 
-async function ensurePermission(): Promise<boolean> {
-  if (Platform.OS === 'web') return false;
+async function ensurePermission(Notifications: NotificationsModule): Promise<boolean> {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
       name: 'Rest timer',
@@ -46,7 +66,8 @@ export async function scheduleRestNotification(
 ): Promise<string | null> {
   try {
     if (endAt <= Date.now()) return null;
-    if (!(await ensurePermission())) return null;
+    const Notifications = loadNotifications();
+    if (!Notifications || !(await ensurePermission(Notifications))) return null;
     return await Notifications.scheduleNotificationAsync({
       content: { title, body, sound: true },
       trigger: {
@@ -62,7 +83,8 @@ export async function scheduleRestNotification(
 }
 
 export async function cancelRestNotification(id: string | null): Promise<void> {
-  if (!id || Platform.OS === 'web') return;
+  const Notifications = id ? loadNotifications() : null;
+  if (!id || !Notifications) return;
   try {
     await Notifications.cancelScheduledNotificationAsync(id);
   } catch (e) {
