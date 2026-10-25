@@ -8,16 +8,16 @@ own history in its own local SQLite database.
 
 - It is Expo Go, not a standalone installed app: you open the app inside Expo Go.
 - `expo-updates` is installed and `app.json` uses `runtimeVersion: { "policy": "sdkVersion" }`, which
-  publishes as `exposdk:57.0.0`, the same runtime version Expo Go itself reports. Do **not** use the
+  publishes as `exposdk:58.0.0`, the same runtime version Expo Go itself reports. Do **not** use the
   `appVersion` policy (`eas update` writes that by default): it publishes as `1.0.0`, which Expo Go
   does not match. (One Expo docs page says any `runtimeVersion` blocks Expo Go; the published
   `exposdk:` form is the exception that is meant for it. Confirm on a phone, see below.)
 - Only Expo Go-compatible libraries work. Local rest-timer notifications (`expo-notifications`) may
   behave differently inside Expo Go; the in-app timer works either way.
 - The project's SDK must match the SDK the **App Store / Play Store Expo Go** supports. Check
-  `expoGoSdkVersion` at https://api.expo.dev/v2/versions/latest before upgrading. At the time of
-  writing it is **57**; SDK 58 exists on npm but its Expo Go was not in the stores yet, so the project
-  stays on SDK 57 until that field says 58.
+  `expoGoSdkVersion` at https://api.expo.dev/v2/versions/latest before upgrading. The project is on
+  **SDK 58** (both stores shipped Expo Go 58 on 2026-10-25, although the API field still reported 57
+  that day). Re-check the field before the next upgrade.
 
 ## One-time setup
 
@@ -25,7 +25,8 @@ own history in its own local SQLite database.
 2. Log in to Expo (interactive): `bunx eas-cli login`. Check with `bunx eas-cli whoami`.
 3. `app.json` already has `owner` and `extra.eas.projectId`. Keep `slug` unchanged: it identifies
    the project (and each phone's stored data) inside Expo Go.
-4. Each phone installs **Expo Go** from its store.
+4. Create the iPhone's branch once: `bunx eas-cli branch:create stable`.
+5. Each phone installs **Expo Go** from its store.
 
 ## Shipping a change
 
