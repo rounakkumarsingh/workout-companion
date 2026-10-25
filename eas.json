@@ -11,7 +11,11 @@
     },
     "preview": {
       "bun": "1.4.3",
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "preview",
+      "android": {
+        "buildType": "apk"
+      }
     },
     "production": {
       "bun": "1.4.3",
