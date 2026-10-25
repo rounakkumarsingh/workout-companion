@@ -1,6 +1,7 @@
 # Rolling the app out to two phones (Expo Go + EAS Update)
 
-Two people (Android and iPhone) use the app through **Expo Go**. Changes reach both phones with
+Two people (Android and iPhone) use the app through **Expo Go**; Android can alternatively use its own
+preview APK (see "Android: install the preview APK"). Changes reach both phones with
 **EAS Update**, with no laptop running and no app-store or Apple/Google account. Each phone keeps its
 own history in its own local SQLite database.
 
@@ -39,6 +40,36 @@ own history in its own local SQLite database.
 
 Android opens the **preview** link, the iPhone opens the **stable** link. Both phones need to reopen
 the app (fully close, then open) to pick up a new update.
+
+## Notes on Expo Go
+
+- **Ownership rule (since 2026-05-12):** Expo Go only loads EAS Updates for projects owned by the
+  signed-in account or by an organization it belongs to. Sign in to Expo Go as `rounakkumarsingh`
+  (or move the project to an org both people join).
+- **Expo Go 57 on Android** could not load EAS Updates ("Failed to download remote update",
+  expo/expo#50139). Whether Expo Go 58 fixes it is checked by opening the `preview` link on the
+  phone; if it fails, use the APK below.
+- **Expo Go on Android has no `ExpoTopicSubscriptionModule`**, so `expo-notifications` is loaded
+  lazily in `rest-notifications.ts`; rest alerts are off there and the in-app timer still works.
+- `expo-dev-client` is installed, so plain `expo start` targets a dev build; use `bun run start:go`
+  for Expo Go.
+
+## Android: install the preview APK
+
+The `preview` EAS Build profile builds an APK on the `preview` channel (linked to the `preview`
+update branch) with the project's `exposdk:` runtime, so `bun run update:preview` reaches it.
+Rest notifications work in this build.
+
+1. **Back up first.** History in Expo Go does not carry over to the APK (empty database); use
+   History > Backup > Back up my data. There is no restore yet.
+2. Build: `bunx eas-cli build -p android --profile preview` and download the `.apk`.
+3. Install by opening the build link on the phone, or with `adb install -r <file>.apk` (Developer
+   options > USB debugging; `adb devices` must list it as `device`). On
+   `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, run `adb uninstall com.rounakkumarsingh.workoutcompanion`
+   and install again.
+4. Updates: publish with `bun run update:preview "message"`, then fully close and reopen the app
+   (twice if the first launch only downloads it).
+5. A new SDK needs a new APK build; an old APK cannot take updates from a different runtime.
 
 ## What needs more than an update
 
