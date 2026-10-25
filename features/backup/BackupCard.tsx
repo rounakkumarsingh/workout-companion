@@ -32,7 +32,7 @@ export function BackupCard() {
       const file = new File(Paths.cache, backupFileName(now));
       if (file.exists) file.delete();
       file.create();
-      file.write(JSON.stringify(backup, null, 2));
+      await file.write(JSON.stringify(backup, null, 2));
       await Sharing.shareAsync(file.uri, {
         mimeType: 'application/json',
         dialogTitle: 'Save your Workout Companion backup',

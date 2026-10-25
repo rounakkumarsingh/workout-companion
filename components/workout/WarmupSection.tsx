@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, type HostInstance } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -41,7 +41,7 @@ export function WarmupSection({
   const [showEditor, setShowEditor] = useState(warmupSets.length === 0);
   const [weight, setWeight] = useState(0);
   const [reps, setReps] = useState(10);
-  const editorRef = useRef<View>(null);
+  const editorRef = useRef<HostInstance>(null);
   const loggingLadderRef = useRef(false);
   // The PDF's pyramid for the top of the listed range, steppable down to the minimum.
   const [ladderCount, setLadderCount] = useState(prescribedMax);
