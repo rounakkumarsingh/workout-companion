@@ -116,9 +116,11 @@ export function WarmupSection({
   return (
     <View style={styles.card}>
       <Text style={styles.label}>WARMUP</Text>
-      <Text style={styles.prescribed}>
-        Prescribed: {prescribedMin}-{prescribedMax} warmup sets
-      </Text>
+      {prescribedMax > 0 && (
+        <Text style={styles.prescribed}>
+          Prescribed: {prescribedMin}-{prescribedMax} warmup sets
+        </Text>
+      )}
       <TouchableOpacity onPress={handleToggle} activeOpacity={0.7}>
         <Text style={hasLogged ? styles.toggleDone : styles.toggleActive}>
           {hasLogged

@@ -148,7 +148,6 @@ export default function ExerciseDetailScreen() {
   const [alwaysName, setAlwaysName] = useState<string | null>(null);
   // The user's note for the performed exercise (keyed on its name).
   const [exerciseNote, setExerciseNote] = useState<string | null>(null);
-  const hasLoggedSetsRef = useRef(false);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const loggingSetRef = useRef(false);
   const [editingSetId, setEditingSetId] = useState<string | null>(null);
@@ -215,7 +214,6 @@ export default function ExerciseDetailScreen() {
 
         const someLogged = exercise.sets.some((s) => s.isComplete);
         const nextSet = exercise.sets.find((s) => !s.isComplete);
-        hasLoggedSetsRef.current = someLogged;
 
         if (!nextSet) {
           // The rest after this exercise's last set may still be running.
@@ -285,7 +283,11 @@ export default function ExerciseDetailScreen() {
   // Drive the timer from the persisted deadline while resting. It keeps
   // running in the background and never advances on its own.
   const restingEndAt =
-    state.phase === 'active' && state.loggingPhase === 'resting' ? state.restEndAt : null;
+    state.phase === 'active' &&
+    state.loggingPhase === 'resting' &&
+    state.session.status === 'in_progress'
+      ? state.restEndAt
+      : null;
   const restingDuration = state.phase === 'active' ? state.restDuration : 0;
   useEffect(() => {
     if (restingEndAt !== null) {
@@ -407,7 +409,6 @@ export default function ExerciseDetailScreen() {
         return;
       }
       const updatedSession = result.session;
-      hasLoggedSetsRef.current = true;
       setEditingWeight(null);
       setEditingReps(null);
 
@@ -629,7 +630,6 @@ export default function ExerciseDetailScreen() {
           if (prev.phase !== 'active') return prev;
           return { ...prev, session: updated, exercise: updatedExercise };
         });
-        hasLoggedSetsRef.current = true;
       } catch (e) {
         console.error('[exercise] Failed to log warmup set:', e);
         dialog.show('Error', 'Failed to log warmup set. Please try again.');
