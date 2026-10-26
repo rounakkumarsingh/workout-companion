@@ -28,6 +28,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { SetLogList } from '@/components/workout/SetLogList';
 import { RpeSelector } from '@/components/workout/RpeSelector';
 import { WarmupSection } from '@/components/workout/WarmupSection';
+import { QuickLogOverlay } from '@/components/workout/QuickLogOverlay';
 import { SubstitutionCard } from '@/components/workout/SubstitutionCard';
 import { SessionStatsBar } from '@/components/workout/SessionStatsBar';
 import { ExerciseNoteCard, ExerciseNoteLine } from '@/components/workout/ExerciseNoteCard';
@@ -55,6 +56,7 @@ import type {
 } from '@/src/features/workout-session/types';
 import {
   hydrateActiveSession,
+  editLoggedSet,
   updateSet,
   completeSession,
   getExerciseHistoryComparison,
@@ -150,6 +152,7 @@ export default function ExerciseDetailScreen() {
   const hasLoggedSetsRef = useRef(false);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const loggingSetRef = useRef(false);
+  const [editingSetId, setEditingSetId] = useState<string | null>(null);
 
   const handleRestExpired = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -663,6 +666,34 @@ export default function ExerciseDetailScreen() {
     [state, exerciseLogId, dialog],
   );
 
+  const handleSaveEditedSet = useCallback(
+    async (setLogId: string, weight: number, reps: number, loggedRpe: number | null) => {
+      if (state.phase !== 'active') return;
+      try {
+        const result = await editLoggedSet(state.session.id, setLogId, {
+          weight,
+          reps,
+          loggedRpe,
+        });
+        if (!result.success) {
+          dialog.show('Cannot save', result.reason ?? 'Could not save the change.');
+          return;
+        }
+        const updatedExercise = result.session.exercises.find(
+          (e) => e.exerciseLogId === exerciseLogId,
+        )!;
+        setState((prev) => {
+          if (prev.phase !== 'active') return prev;
+          return { ...prev, session: result.session, exercise: updatedExercise };
+        });
+      } catch (e) {
+        console.error('[exercise] Failed to edit set:', e);
+        dialog.show('Error', 'Failed to save the change. Please try again.');
+      }
+    },
+    [state, exerciseLogId, dialog],
+  );
+
   // The keyboard animates in after focus; wait for the layout to settle, then
   // bring the note card (the last block above Start Logging) into view.
   const scrollNoteIntoView = useCallback(() => {
@@ -747,6 +778,12 @@ export default function ExerciseDetailScreen() {
     (lastTime?.sets ?? []).map((s) => [s.setIndex, s.text]),
   );
 
+  const editingSet =
+    editingSetId === null
+      ? null
+      : ([...exercise.warmupSets, ...exercise.sets].find((x) => x.setLogId === editingSetId) ??
+        null);
+
   // --- Phase Renders ---
 
   const renderIntro = () => (
@@ -797,6 +834,7 @@ export default function ExerciseDetailScreen() {
         workingWeight={exercise.sets.find((s) => !s.isWarmup)?.weight ?? 0}
         warmupSets={exercise.warmupSets}
         onLogWarmupSet={handleLogWarmup}
+        onEditWarmupSet={setEditingSetId}
       />
 
       {substitutionOptions.length > 0 && (
@@ -868,6 +906,7 @@ export default function ExerciseDetailScreen() {
           allSetsLogged={false}
           currentSetIndex={state.currentSetIndex}
           previousBySetIndex={previousBySetIndex}
+          onEditSet={setEditingSetId}
         />
 
         <View style={styles.logCard}>
@@ -1036,6 +1075,7 @@ export default function ExerciseDetailScreen() {
         allSetsLogged={true}
         currentSetIndex={exercise.sets.length}
         previousBySetIndex={previousBySetIndex}
+        onEditSet={setEditingSetId}
       />
 
       <View style={styles.completeBanner}>
@@ -1205,6 +1245,22 @@ export default function ExerciseDetailScreen() {
         </KeyboardAvoidingView>
       )}
       {prBanner ? <PrBanner banner={prBanner} onDismiss={() => setPrBanner(null)} /> : null}
+      {editingSet ? (
+        <QuickLogOverlay
+          key={editingSet.setLogId}
+          visible
+          title="Edit set"
+          ctaLabel="Save changes"
+          exerciseName={exercise.exerciseName}
+          setLabel={`${editingSet.isWarmup ? 'Warmup' : 'Set'} ${editingSet.setIndex}`}
+          initialWeight={editingSet.weight}
+          initialReps={editingSet.reps}
+          initialRpe={editingSet.loggedRpe}
+          showRpe={!editingSet.isWarmup}
+          onClose={() => setEditingSetId(null)}
+          onLog={(w, r, rpe) => handleSaveEditedSet(editingSet.setLogId, w, r, rpe)}
+        />
+      ) : null}
     </View>
   );
 }
