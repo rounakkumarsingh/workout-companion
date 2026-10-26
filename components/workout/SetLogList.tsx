@@ -10,6 +10,8 @@ interface SetLogListProps {
   currentSetIndex: number;
   /** Last session's result per set index, e.g. "50 kg × 10". */
   previousBySetIndex?: Map<number, string>;
+  /** When given, logged rows are tappable to edit that set. */
+  onEditSet?: (setLogId: string) => void;
 }
 
 export function SetLogList({
@@ -17,6 +19,7 @@ export function SetLogList({
   allSetsLogged,
   currentSetIndex,
   previousBySetIndex,
+  onEditSet,
 }: SetLogListProps) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -46,6 +49,7 @@ export function SetLogList({
             weight={set.weight > 0 ? String(set.weight) : '—'}
             previous={previousBySetIndex?.get(set.setIndex)}
             status={status}
+            onPress={isLogged && onEditSet ? () => onEditSet(set.setLogId) : undefined}
           />
         );
       })}

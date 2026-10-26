@@ -7,7 +7,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  BackHandler,
   KeyboardAvoidingView,
   type ScrollViewInstance,
 } from 'react-native';
@@ -28,6 +27,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { SetLogList } from '@/components/workout/SetLogList';
 import { RpeSelector } from '@/components/workout/RpeSelector';
 import { WarmupSection } from '@/components/workout/WarmupSection';
+import { QuickLogOverlay } from '@/components/workout/QuickLogOverlay';
 import { SubstitutionCard } from '@/components/workout/SubstitutionCard';
 import { SessionStatsBar } from '@/components/workout/SessionStatsBar';
 import { ExerciseNoteCard, ExerciseNoteLine } from '@/components/workout/ExerciseNoteCard';
@@ -55,6 +55,7 @@ import type {
 } from '@/src/features/workout-session/types';
 import {
   hydrateActiveSession,
+  editLoggedSet,
   updateSet,
   completeSession,
   getExerciseHistoryComparison,
@@ -147,9 +148,9 @@ export default function ExerciseDetailScreen() {
   const [alwaysName, setAlwaysName] = useState<string | null>(null);
   // The user's note for the performed exercise (keyed on its name).
   const [exerciseNote, setExerciseNote] = useState<string | null>(null);
-  const hasLoggedSetsRef = useRef(false);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const loggingSetRef = useRef(false);
+  const [editingSetId, setEditingSetId] = useState<string | null>(null);
 
   const handleRestExpired = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -213,7 +214,6 @@ export default function ExerciseDetailScreen() {
 
         const someLogged = exercise.sets.some((s) => s.isComplete);
         const nextSet = exercise.sets.find((s) => !s.isComplete);
-        hasLoggedSetsRef.current = someLogged;
 
         if (!nextSet) {
           // The rest after this exercise's last set may still be running.
@@ -280,24 +280,14 @@ export default function ExerciseDetailScreen() {
     };
   }, [exerciseLogId]);
 
-  const allSetsLogged =
-    state.phase === 'active' ? state.exercise.sets.every((s) => s.isComplete) : false;
-
-  const confirmLeave = useCallback(() => {
-    dialog.show(
-      'Leave exercise?',
-      "You have logged sets but haven't finished all yet. Progress will be saved.",
-      [
-        { text: 'Stay', style: 'cancel' },
-        { text: 'Leave', onPress: () => router.back() },
-      ],
-    );
-  }, [router, dialog]);
-
   // Drive the timer from the persisted deadline while resting. It keeps
   // running in the background and never advances on its own.
   const restingEndAt =
-    state.phase === 'active' && state.loggingPhase === 'resting' ? state.restEndAt : null;
+    state.phase === 'active' &&
+    state.loggingPhase === 'resting' &&
+    state.session.status === 'in_progress'
+      ? state.restEndAt
+      : null;
   const restingDuration = state.phase === 'active' ? state.restDuration : 0;
   useEffect(() => {
     if (restingEndAt !== null) {
@@ -336,19 +326,6 @@ export default function ExerciseDetailScreen() {
     },
     [state, restTimer],
   );
-
-  useEffect(() => {
-    const hasProgress = hasLoggedSetsRef.current;
-    if (!hasProgress) return;
-
-    const onBackPress = () => {
-      confirmLeave();
-      return true;
-    };
-
-    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-    return () => sub.remove();
-  }, [hasLoggedSetsRef.current]);
 
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -432,7 +409,6 @@ export default function ExerciseDetailScreen() {
         return;
       }
       const updatedSession = result.session;
-      hasLoggedSetsRef.current = true;
       setEditingWeight(null);
       setEditingReps(null);
 
@@ -529,11 +505,12 @@ export default function ExerciseDetailScreen() {
     if (state.phase !== 'active') return;
     try {
       const updatedSession = await setExerciseStatus(state.session, exerciseLogId, 'completed');
-      // Go to the next unfinished exercise; only end the workout once every
-      // exercise is done.
+      // Back to the exercise list so any exercise can be picked next; only end
+      // the workout once every exercise is done.
       const next = getNextIncompleteExercise(updatedSession, exerciseLogId);
       if (next) {
-        router.replace(`/workout/${next.exerciseLogId}`);
+        if (router.canGoBack()) router.back();
+        else router.replace(`/workout?sessionId=${updatedSession.id}`);
       } else {
         const completed = await completeSession(updatedSession);
         router.replace(`/workout/pr-celebration?sessionId=${completed.id}`);
@@ -653,10 +630,37 @@ export default function ExerciseDetailScreen() {
           if (prev.phase !== 'active') return prev;
           return { ...prev, session: updated, exercise: updatedExercise };
         });
-        hasLoggedSetsRef.current = true;
       } catch (e) {
         console.error('[exercise] Failed to log warmup set:', e);
         dialog.show('Error', 'Failed to log warmup set. Please try again.');
+      }
+    },
+    [state, exerciseLogId, dialog],
+  );
+
+  const handleSaveEditedSet = useCallback(
+    async (setLogId: string, weight: number, reps: number, loggedRpe: number | null) => {
+      if (state.phase !== 'active') return;
+      try {
+        const result = await editLoggedSet(state.session.id, setLogId, {
+          weight,
+          reps,
+          loggedRpe,
+        });
+        if (!result.success) {
+          dialog.show('Cannot save', result.reason ?? 'Could not save the change.');
+          return;
+        }
+        const updatedExercise = result.session.exercises.find(
+          (e) => e.exerciseLogId === exerciseLogId,
+        )!;
+        setState((prev) => {
+          if (prev.phase !== 'active') return prev;
+          return { ...prev, session: result.session, exercise: updatedExercise };
+        });
+      } catch (e) {
+        console.error('[exercise] Failed to edit set:', e);
+        dialog.show('Error', 'Failed to save the change. Please try again.');
       }
     },
     [state, exerciseLogId, dialog],
@@ -676,13 +680,10 @@ export default function ExerciseDetailScreen() {
     [state],
   );
 
+  // Logged sets are saved as they are entered, so leaving needs no confirmation.
   const handleBack = useCallback(() => {
-    if (hasLoggedSetsRef.current && !allSetsLogged) {
-      confirmLeave();
-    } else {
-      router.back();
-    }
-  }, [allSetsLogged, confirmLeave, router]);
+    router.back();
+  }, [router]);
 
   const adjustFn = useCallback(
     (field: 'weight' | 'reps', delta: number) => {
@@ -746,6 +747,12 @@ export default function ExerciseDetailScreen() {
     (lastTime?.sets ?? []).map((s) => [s.setIndex, s.text]),
   );
 
+  const editingSet =
+    editingSetId === null
+      ? null
+      : ([...exercise.warmupSets, ...exercise.sets].find((x) => x.setLogId === editingSetId) ??
+        null);
+
   // --- Phase Renders ---
 
   const renderIntro = () => (
@@ -755,7 +762,7 @@ export default function ExerciseDetailScreen() {
         style={[styles.backBtn, { paddingTop: insets.top + spacing.sm }]}
         accessibilityLabel="Back to workout"
       >
-        <Text style={styles.backBtnText}>← Today</Text>
+        <Text style={styles.backBtnText}>← Exercises</Text>
       </TouchableOpacity>
 
       <View style={styles.hero}>
@@ -796,6 +803,7 @@ export default function ExerciseDetailScreen() {
         workingWeight={exercise.sets.find((s) => !s.isWarmup)?.weight ?? 0}
         warmupSets={exercise.warmupSets}
         onLogWarmupSet={handleLogWarmup}
+        onEditWarmupSet={setEditingSetId}
       />
 
       {substitutionOptions.length > 0 && (
@@ -850,7 +858,7 @@ export default function ExerciseDetailScreen() {
           style={[styles.backBtn, { paddingTop: insets.top + spacing.sm }]}
           accessibilityLabel="Back to workout"
         >
-          <Text style={styles.backBtnText}>← Today</Text>
+          <Text style={styles.backBtnText}>← Exercises</Text>
         </TouchableOpacity>
 
         <View style={styles.hero}>
@@ -867,6 +875,7 @@ export default function ExerciseDetailScreen() {
           allSetsLogged={false}
           currentSetIndex={state.currentSetIndex}
           previousBySetIndex={previousBySetIndex}
+          onEditSet={setEditingSetId}
         />
 
         <View style={styles.logCard}>
@@ -1017,7 +1026,7 @@ export default function ExerciseDetailScreen() {
         style={[styles.backBtn, { paddingTop: insets.top + spacing.sm }]}
         accessibilityLabel="Back to workout"
       >
-        <Text style={styles.backBtnText}>← Today</Text>
+        <Text style={styles.backBtnText}>← Exercises</Text>
       </TouchableOpacity>
 
       <View style={styles.hero}>
@@ -1035,6 +1044,7 @@ export default function ExerciseDetailScreen() {
         allSetsLogged={true}
         currentSetIndex={exercise.sets.length}
         previousBySetIndex={previousBySetIndex}
+        onEditSet={setEditingSetId}
       />
 
       <View style={styles.completeBanner}>
@@ -1178,18 +1188,61 @@ export default function ExerciseDetailScreen() {
     </>
   );
 
-  const phaseContent = {
-    intro: renderIntro,
-    logging: renderLogging,
-    sets_completed: renderSetsCompleted,
-    resting: renderResting,
-    finished: renderFinished,
-  }[loggingPhase]();
+  // A finished or ended workout: no logging controls, just the sets to correct.
+  const isReview = session.status !== 'in_progress';
+  const renderReview = () => (
+    <>
+      <TouchableOpacity
+        onPress={handleBack}
+        style={[styles.backBtn, { paddingTop: insets.top + spacing.sm }]}
+        accessibilityLabel="Back to workout"
+      >
+        <Text style={styles.backBtnText}>← Exercises</Text>
+      </TouchableOpacity>
+
+      <View style={styles.hero}>
+        <Text style={styles.exName}>{exercise.exerciseName}</Text>
+        <Text style={styles.exType}>TAP A LOGGED SET TO EDIT IT</Text>
+      </View>
+
+      <SectionLabel label="Set log" />
+      <SetLogList
+        sets={exercise.sets}
+        allSetsLogged
+        currentSetIndex={0}
+        previousBySetIndex={previousBySetIndex}
+        onEditSet={setEditingSetId}
+      />
+
+      {exercise.warmupSets.length > 0 && (
+        <WarmupSection
+          prescribedMin={0}
+          prescribedMax={0}
+          workingWeight={0}
+          warmupSets={exercise.warmupSets}
+          onLogWarmupSet={async () => {}}
+          onEditWarmupSet={setEditingSetId}
+        />
+      )}
+
+      <View style={styles.spacerBottom} />
+    </>
+  );
+
+  const phaseContent = isReview
+    ? renderReview()
+    : {
+        intro: renderIntro,
+        logging: renderLogging,
+        sets_completed: renderSetsCompleted,
+        resting: renderResting,
+        finished: renderFinished,
+      }[loggingPhase]();
 
   return (
     <View style={styles.screen}>
       <Stack.Screen options={{ title: exercise.exerciseName, headerShown: false }} />
-      {loggingPhase === 'resting' ? (
+      {loggingPhase === 'resting' && !isReview ? (
         <View style={styles.screen}>{phaseContent}</View>
       ) : (
         <KeyboardAvoidingView style={styles.screen} behavior="padding">
@@ -1204,6 +1257,22 @@ export default function ExerciseDetailScreen() {
         </KeyboardAvoidingView>
       )}
       {prBanner ? <PrBanner banner={prBanner} onDismiss={() => setPrBanner(null)} /> : null}
+      {editingSet ? (
+        <QuickLogOverlay
+          key={editingSet.setLogId}
+          visible
+          title="Edit set"
+          ctaLabel="Save changes"
+          exerciseName={exercise.exerciseName}
+          setLabel={`${editingSet.isWarmup ? 'Warmup' : 'Set'} ${editingSet.setIndex}`}
+          initialWeight={editingSet.weight}
+          initialReps={editingSet.reps}
+          initialRpe={editingSet.loggedRpe}
+          showRpe={!editingSet.isWarmup}
+          onClose={() => setEditingSetId(null)}
+          onLog={(w, r, rpe) => handleSaveEditedSet(editingSet.setLogId, w, r, rpe)}
+        />
+      ) : null}
     </View>
   );
 }

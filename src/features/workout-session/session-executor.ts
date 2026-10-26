@@ -101,6 +101,33 @@ export async function hydrateActiveSession(sessionId: string): Promise<ActiveSes
   };
 }
 
+/**
+ * Corrects an already logged set, in any session status. Unlike `updateSet`
+ * this keeps the original `loggedAt`, so history order and timing stay put.
+ */
+export async function editLoggedSet(
+  sessionId: string,
+  setLogId: string,
+  updates: { weight?: number; reps?: number; loggedRpe?: number | null },
+): Promise<{ session: ActiveSession; success: boolean; reason?: string }> {
+  if (updates.weight !== undefined && !(updates.weight > 0 && Number.isFinite(updates.weight))) {
+    return {
+      session: (await hydrateActiveSession(sessionId))!,
+      success: false,
+      reason: 'Weight must be greater than 0',
+    };
+  }
+  if (updates.reps !== undefined && !(updates.reps > 0 && Number.isFinite(updates.reps))) {
+    return {
+      session: (await hydrateActiveSession(sessionId))!,
+      success: false,
+      reason: 'Reps must be greater than 0',
+    };
+  }
+  await updateSetLog(setLogId, updates);
+  return { session: (await hydrateActiveSession(sessionId))!, success: true };
+}
+
 export async function updateSet(
   session: ActiveSession,
   setLogId: string,

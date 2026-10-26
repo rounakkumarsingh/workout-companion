@@ -24,8 +24,10 @@ interface WarmupSectionProps {
   prescribedMax: number;
   /** The planned working weight (kg) the warm-up percentages apply to; 0 when not known yet. */
   workingWeight: number;
-  warmupSets: { setIndex: number; weight: number; reps: number }[];
+  warmupSets: { setLogId: string; setIndex: number; weight: number; reps: number }[];
   onLogWarmupSet: (weight: number, reps: number) => Promise<void>;
+  /** Tapping a logged warm-up row opens it for editing. */
+  onEditWarmupSet?: (setLogId: string) => void;
 }
 
 export function WarmupSection({
@@ -34,6 +36,7 @@ export function WarmupSection({
   workingWeight,
   warmupSets,
   onLogWarmupSet,
+  onEditWarmupSet,
 }: WarmupSectionProps) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -113,9 +116,11 @@ export function WarmupSection({
   return (
     <View style={styles.card}>
       <Text style={styles.label}>WARMUP</Text>
-      <Text style={styles.prescribed}>
-        Prescribed: {prescribedMin}-{prescribedMax} warmup sets
-      </Text>
+      {prescribedMax > 0 && (
+        <Text style={styles.prescribed}>
+          Prescribed: {prescribedMin}-{prescribedMax} warmup sets
+        </Text>
+      )}
       <TouchableOpacity onPress={handleToggle} activeOpacity={0.7}>
         <Text style={hasLogged ? styles.toggleDone : styles.toggleActive}>
           {hasLogged
@@ -125,12 +130,19 @@ export function WarmupSection({
       </TouchableOpacity>
       <Animated.View style={animatedStyle}>
         {warmupSets.map((ws) => (
-          <View key={ws.setIndex} style={styles.loggedRow}>
+          <TouchableOpacity
+            key={ws.setIndex}
+            style={styles.loggedRow}
+            disabled={!onEditWarmupSet}
+            onPress={() => onEditWarmupSet?.(ws.setLogId)}
+            accessibilityRole="button"
+            accessibilityLabel={`Edit warmup ${ws.setIndex}, ${ws.weight} kg, ${ws.reps} reps`}
+          >
             <Text style={styles.loggedLabel}>Warmup {ws.setIndex} ✓</Text>
             <Text style={styles.loggedDetail}>
-              {ws.weight}kg × {ws.reps} reps
+              {ws.weight}kg × {ws.reps} reps{onEditWarmupSet ? '  ✎' : ''}
             </Text>
-          </View>
+          </TouchableOpacity>
         ))}
         {ladder.length > 0 && (
           <View style={styles.ladder}>
