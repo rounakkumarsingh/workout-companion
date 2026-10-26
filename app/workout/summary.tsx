@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -8,10 +8,11 @@ import Animated, {
   withDelay,
   Easing,
 } from 'react-native-reanimated';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect, Stack, type Href } from 'expo-router';
 import { useColors, typography, radii, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { CtaButton } from '@/components/ui/CtaButton';
+import { GhostButton } from '@/components/ui/GhostButton';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { StreakBanner } from '@/components/ui/StreakBanner';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -83,24 +84,27 @@ export default function WorkoutSummaryScreen() {
     }
   }, [reducedMotion, heroScale]);
 
-  useEffect(() => {
-    if (!sessionId) {
-      setLoading(false);
-      return;
-    }
-    (async () => {
-      const hydrated = await hydrateActiveSession(sessionId);
-      if (!hydrated) {
+  // Refetch on focus so edits made from the review screen show up here.
+  useFocusEffect(
+    useCallback(() => {
+      if (!sessionId) {
         setLoading(false);
         return;
       }
-      setSession(hydrated);
-      setStatistics(computeAllStatistics(hydrated));
-      setLoading(false);
+      (async () => {
+        const hydrated = await hydrateActiveSession(sessionId);
+        if (!hydrated) {
+          setLoading(false);
+          return;
+        }
+        setSession(hydrated);
+        setStatistics(computeAllStatistics(hydrated));
+        setLoading(false);
 
-      setStreakCount(await getCurrentStreak());
-    })();
-  }, [sessionId]);
+        setStreakCount(await getCurrentStreak());
+      })();
+    }, [sessionId]),
+  );
 
   const heroStyle = useAnimatedStyle(() => ({
     transform: [{ scale: heroScale.value }],
@@ -212,6 +216,10 @@ export default function WorkoutSummaryScreen() {
 
       <View style={{ height: spacing.lg }} />
       <CtaButton label="Back to Home" onPress={handleDismiss} />
+      <GhostButton
+        label="Edit sets"
+        onPress={() => router.push(`/workout?sessionId=${sessionId}&review=1` as Href)}
+      />
       <View style={{ height: 40 }} />
     </ScrollView>
   );
