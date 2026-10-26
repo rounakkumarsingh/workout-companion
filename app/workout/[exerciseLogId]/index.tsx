@@ -7,7 +7,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  BackHandler,
   KeyboardAvoidingView,
   type ScrollViewInstance,
 } from 'react-native';
@@ -283,20 +282,6 @@ export default function ExerciseDetailScreen() {
     };
   }, [exerciseLogId]);
 
-  const allSetsLogged =
-    state.phase === 'active' ? state.exercise.sets.every((s) => s.isComplete) : false;
-
-  const confirmLeave = useCallback(() => {
-    dialog.show(
-      'Leave exercise?',
-      "You have logged sets but haven't finished all yet. Progress will be saved.",
-      [
-        { text: 'Stay', style: 'cancel' },
-        { text: 'Leave', onPress: () => router.back() },
-      ],
-    );
-  }, [router, dialog]);
-
   // Drive the timer from the persisted deadline while resting. It keeps
   // running in the background and never advances on its own.
   const restingEndAt =
@@ -339,19 +324,6 @@ export default function ExerciseDetailScreen() {
     },
     [state, restTimer],
   );
-
-  useEffect(() => {
-    const hasProgress = hasLoggedSetsRef.current;
-    if (!hasProgress) return;
-
-    const onBackPress = () => {
-      confirmLeave();
-      return true;
-    };
-
-    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-    return () => sub.remove();
-  }, [hasLoggedSetsRef.current]);
 
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -708,13 +680,10 @@ export default function ExerciseDetailScreen() {
     [state],
   );
 
+  // Logged sets are saved as they are entered, so leaving needs no confirmation.
   const handleBack = useCallback(() => {
-    if (hasLoggedSetsRef.current && !allSetsLogged) {
-      confirmLeave();
-    } else {
-      router.back();
-    }
-  }, [allSetsLogged, confirmLeave, router]);
+    router.back();
+  }, [router]);
 
   const adjustFn = useCallback(
     (field: 'weight' | 'reps', delta: number) => {
@@ -1219,18 +1188,61 @@ export default function ExerciseDetailScreen() {
     </>
   );
 
-  const phaseContent = {
-    intro: renderIntro,
-    logging: renderLogging,
-    sets_completed: renderSetsCompleted,
-    resting: renderResting,
-    finished: renderFinished,
-  }[loggingPhase]();
+  // A finished or ended workout: no logging controls, just the sets to correct.
+  const isReview = session.status !== 'in_progress';
+  const renderReview = () => (
+    <>
+      <TouchableOpacity
+        onPress={handleBack}
+        style={[styles.backBtn, { paddingTop: insets.top + spacing.sm }]}
+        accessibilityLabel="Back to workout"
+      >
+        <Text style={styles.backBtnText}>← Exercises</Text>
+      </TouchableOpacity>
+
+      <View style={styles.hero}>
+        <Text style={styles.exName}>{exercise.exerciseName}</Text>
+        <Text style={styles.exType}>TAP A LOGGED SET TO EDIT IT</Text>
+      </View>
+
+      <SectionLabel label="Set log" />
+      <SetLogList
+        sets={exercise.sets}
+        allSetsLogged
+        currentSetIndex={0}
+        previousBySetIndex={previousBySetIndex}
+        onEditSet={setEditingSetId}
+      />
+
+      {exercise.warmupSets.length > 0 && (
+        <WarmupSection
+          prescribedMin={0}
+          prescribedMax={0}
+          workingWeight={0}
+          warmupSets={exercise.warmupSets}
+          onLogWarmupSet={async () => {}}
+          onEditWarmupSet={setEditingSetId}
+        />
+      )}
+
+      <View style={styles.spacerBottom} />
+    </>
+  );
+
+  const phaseContent = isReview
+    ? renderReview()
+    : {
+        intro: renderIntro,
+        logging: renderLogging,
+        sets_completed: renderSetsCompleted,
+        resting: renderResting,
+        finished: renderFinished,
+      }[loggingPhase]();
 
   return (
     <View style={styles.screen}>
       <Stack.Screen options={{ title: exercise.exerciseName, headerShown: false }} />
-      {loggingPhase === 'resting' ? (
+      {loggingPhase === 'resting' && !isReview ? (
         <View style={styles.screen}>{phaseContent}</View>
       ) : (
         <KeyboardAvoidingView style={styles.screen} behavior="padding">

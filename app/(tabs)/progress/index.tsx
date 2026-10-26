@@ -32,6 +32,14 @@ interface VolumeBar {
   isFuture: boolean;
 }
 
+interface PastSession {
+  id: string;
+  weekNumber: number;
+  dayType: string;
+  startedAt: string;
+  totalSets: number;
+}
+
 interface AdherenceWeek {
   weekNumber: number;
   sessionsCompleted: number;
@@ -47,6 +55,7 @@ export default function HistoryScreen() {
   const [adherenceWeeks, setAdherenceWeeks] = useState<AdherenceWeek[]>([]);
   const [topExercises, setTopExercises] = useState<string[]>([]);
   const [allExercises, setAllExercises] = useState<string[]>([]);
+  const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
   const [exerciseHistoryMap, setExerciseHistoryMap] = useState<
     Record<string, { date: string; weekNumber: number; sets: { weight: number; reps: number }[] }[]>
   >({});
@@ -68,6 +77,11 @@ export default function HistoryScreen() {
           if (cancelled) return;
 
           setWorkoutDates(dates);
+          setPastSessions(
+            sessions
+              .filter((s) => s.status === 'completed' || s.status === 'abandoned')
+              .slice(0, 20),
+          );
 
           const weeks: AdherenceWeek[] = [];
           for (let w = 1; w <= 12; w++) {
@@ -155,6 +169,30 @@ export default function HistoryScreen() {
       <View style={styles.section}>
         <VolumeTrendChart bars={volumeBars} />
       </View>
+
+      {/* Past workouts, reopened to correct logged sets */}
+      {pastSessions.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Past workouts</Text>
+          <View style={styles.exerciseList}>
+            {pastSessions.map((ps, i) => (
+              <TouchableOpacity
+                key={ps.id}
+                style={[styles.exerciseRow, i > 0 && styles.exerciseRowRule]}
+                onPress={() => router.push(`/workout?sessionId=${ps.id}&review=1` as Href)}
+                accessibilityRole="button"
+                accessibilityLabel={`Edit workout from ${new Date(ps.startedAt).toLocaleDateString()}`}
+              >
+                <Text style={styles.exerciseRowName} numberOfLines={2}>
+                  {new Date(ps.startedAt).toLocaleDateString()} · Week {ps.weekNumber} ·{' '}
+                  {ps.dayType} · {ps.totalSets} sets
+                </Text>
+                <Text style={styles.exerciseRowChevron}>›</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
 
       {/* Top Exercises */}
       {topExercises.length > 0 && (

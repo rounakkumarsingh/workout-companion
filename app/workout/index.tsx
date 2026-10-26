@@ -75,8 +75,10 @@ type ScreenState = { phase: 'loading' } | ActiveState | { phase: 'error'; messag
 export default function ActiveWorkoutScreen() {
   const dialog = useDialog();
   const router = useRouter();
-  const params = useLocalSearchParams<{ sessionId?: string }>();
+  const params = useLocalSearchParams<{ sessionId?: string; review?: string }>();
   const insets = useSafeAreaInsets();
+  // `review=1` reopens a finished workout so its sets can be corrected.
+  const isReview = params.review === '1';
   const [state, setState] = useState<ScreenState>({ phase: 'loading' });
   const activeRef = useRef<ActiveState | null>(null);
   const quickLogBusyRef = useRef(false);
@@ -111,7 +113,7 @@ export default function ActiveWorkoutScreen() {
         // getSessionById does not filter on status: a session finished while this
         // list sat in the stack (e.g. back out of the celebration screen) would
         // otherwise re-render as an active workout.
-        if (session.status !== 'in_progress') {
+        if (session.status !== 'in_progress' && !isReview) {
           router.dismissAll();
           return;
         }
@@ -127,7 +129,7 @@ export default function ActiveWorkoutScreen() {
         setState({ phase: 'error', message: e instanceof Error ? e.message : String(e) });
       }
     },
-    [router],
+    [router, isReview],
   );
 
   // Reload on every focus so sets logged on the exercise screen show up
@@ -387,9 +389,13 @@ export default function ActiveWorkoutScreen() {
           </Svg>
         </TouchableOpacity>
         <Text style={styles.topTitle}>
-          {dayCode} · Day {dayNumber}
+          {isReview ? 'Edit workout' : `${dayCode} · Day ${dayNumber}`}
         </Text>
-        <ElapsedTimer startedAt={session.startedAt} />
+        {isReview ? (
+          <View style={styles.topSpacer} />
+        ) : (
+          <ElapsedTimer startedAt={session.startedAt} />
+        )}
       </View>
 
       <SessionStatsBar session={session} />
@@ -419,7 +425,7 @@ export default function ActiveWorkoutScreen() {
               lastTime={summarizeLastTime(prog?.lastSession ?? null)}
               onLastTimePress={() => setLastTimeFor(item.exerciseName)}
               onPress={() => handleViewDetail(item.exerciseLogId)}
-              onLongPress={() => setQuickLogExercise(item.exerciseLogId)}
+              onLongPress={isReview ? undefined : () => setQuickLogExercise(item.exerciseLogId)}
             />
           );
         }}
@@ -482,27 +488,29 @@ export default function ActiveWorkoutScreen() {
         showsVerticalScrollIndicator={false}
       />
 
-      <View style={[styles.dock, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-        <TouchableOpacity
-          style={allComplete ? styles.finishPrimary : styles.finishSecondary}
-          onPress={handleComplete}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-        >
-          <Text style={allComplete ? styles.finishPrimaryText : styles.finishSecondaryText}>
-            Finish workout
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.endBtn}
-          onPress={handleAbandon}
-          activeOpacity={0.7}
-          accessibilityLabel="End current session"
-          accessibilityRole="button"
-        >
-          <Text style={styles.endBtnText}>End Session</Text>
-        </TouchableOpacity>
-      </View>
+      {!isReview && (
+        <View style={[styles.dock, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+          <TouchableOpacity
+            style={allComplete ? styles.finishPrimary : styles.finishSecondary}
+            onPress={handleComplete}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+          >
+            <Text style={allComplete ? styles.finishPrimaryText : styles.finishSecondaryText}>
+              Finish workout
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.endBtn}
+            onPress={handleAbandon}
+            activeOpacity={0.7}
+            accessibilityLabel="End current session"
+            accessibilityRole="button"
+          >
+            <Text style={styles.endBtnText}>End Session</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <DevClearDbButton onCleared={() => router.dismissAll()} />
 
@@ -590,6 +598,9 @@ const makeStyles = (c: ColorSet) =>
       letterSpacing: 0.08,
       color: c.goldText,
       textTransform: 'uppercase',
+    },
+    topSpacer: {
+      width: 24,
     },
     listHeader: {
       gap: spacing.lg,
