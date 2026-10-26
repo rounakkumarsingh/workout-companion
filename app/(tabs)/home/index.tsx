@@ -403,18 +403,11 @@ export default function TodayScheduleScreen() {
     [router, dialog],
   );
 
-  const doResume = useCallback(async () => {
+  // Always open the exercise list so any exercise can be picked, not just the active one.
+  const doResume = useCallback(() => {
     if (screenState.status !== 'inProgress') return;
-    const activeSesh = hydratedSession ?? (await hydrateActiveSession(screenState.sessionId));
-    if (activeSesh) {
-      const activeEx = activeSesh.exercises.find((e) => e.status === 'active');
-      if (activeEx) {
-        router.push(`/workout/${activeEx.exerciseLogId}` as Href);
-        return;
-      }
-    }
     router.push(`/workout?sessionId=${screenState.sessionId}` as Href);
-  }, [screenState, router, hydratedSession]);
+  }, [screenState, router]);
 
   const handleBegin = useCallback(
     async (choice: WorkoutChoice) => {

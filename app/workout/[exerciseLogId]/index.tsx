@@ -529,11 +529,12 @@ export default function ExerciseDetailScreen() {
     if (state.phase !== 'active') return;
     try {
       const updatedSession = await setExerciseStatus(state.session, exerciseLogId, 'completed');
-      // Go to the next unfinished exercise; only end the workout once every
-      // exercise is done.
+      // Back to the exercise list so any exercise can be picked next; only end
+      // the workout once every exercise is done.
       const next = getNextIncompleteExercise(updatedSession, exerciseLogId);
       if (next) {
-        router.replace(`/workout/${next.exerciseLogId}`);
+        if (router.canGoBack()) router.back();
+        else router.replace(`/workout?sessionId=${updatedSession.id}`);
       } else {
         const completed = await completeSession(updatedSession);
         router.replace(`/workout/pr-celebration?sessionId=${completed.id}`);
@@ -755,7 +756,7 @@ export default function ExerciseDetailScreen() {
         style={[styles.backBtn, { paddingTop: insets.top + spacing.sm }]}
         accessibilityLabel="Back to workout"
       >
-        <Text style={styles.backBtnText}>← Today</Text>
+        <Text style={styles.backBtnText}>← Exercises</Text>
       </TouchableOpacity>
 
       <View style={styles.hero}>
@@ -850,7 +851,7 @@ export default function ExerciseDetailScreen() {
           style={[styles.backBtn, { paddingTop: insets.top + spacing.sm }]}
           accessibilityLabel="Back to workout"
         >
-          <Text style={styles.backBtnText}>← Today</Text>
+          <Text style={styles.backBtnText}>← Exercises</Text>
         </TouchableOpacity>
 
         <View style={styles.hero}>
@@ -1017,7 +1018,7 @@ export default function ExerciseDetailScreen() {
         style={[styles.backBtn, { paddingTop: insets.top + spacing.sm }]}
         accessibilityLabel="Back to workout"
       >
-        <Text style={styles.backBtnText}>← Today</Text>
+        <Text style={styles.backBtnText}>← Exercises</Text>
       </TouchableOpacity>
 
       <View style={styles.hero}>
