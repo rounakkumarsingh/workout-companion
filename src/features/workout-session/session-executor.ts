@@ -110,14 +110,14 @@ export async function editLoggedSet(
   setLogId: string,
   updates: { weight?: number; reps?: number; loggedRpe?: number | null },
 ): Promise<{ session: ActiveSession; success: boolean; reason?: string }> {
-  if (updates.weight !== undefined && updates.weight <= 0) {
+  if (updates.weight !== undefined && !(updates.weight > 0 && Number.isFinite(updates.weight))) {
     return {
       session: (await hydrateActiveSession(sessionId))!,
       success: false,
       reason: 'Weight must be greater than 0',
     };
   }
-  if (updates.reps !== undefined && updates.reps <= 0) {
+  if (updates.reps !== undefined && !(updates.reps > 0 && Number.isFinite(updates.reps))) {
     return {
       session: (await hydrateActiveSession(sessionId))!,
       success: false,
