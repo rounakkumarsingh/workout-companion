@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -7,11 +7,12 @@ import Animated, {
   withDelay,
   Easing,
 } from 'react-native-reanimated';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { useColors, typography, radii, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { PROGRAM } from '@/src/data/program';
+import { getProgramStartDate } from '@/src/features/workout-session';
 
 const STEPS = [
   { num: 1, title: 'Open on workout days', sub: 'Five workouts a week, in any order' },
@@ -55,6 +56,25 @@ export default function WelcomeScreen() {
       .filter((d) => d.activityType !== 'FullRest' && d.activityType !== 'OptionalCardioHIIT')
       .map((d) => d.dayType);
   }, []);
+  // This route is '/', so every cold start lands here: skip it once a start date exists.
+  const [startState, setStartState] = useState<'checking' | 'set' | 'unset'>('checking');
+
+  useEffect(() => {
+    let cancelled = false;
+    getProgramStartDate()
+      .then((date) => {
+        if (!cancelled) setStartState(date ? 'set' : 'unset');
+      })
+      .catch(() => {
+        if (!cancelled) setStartState('unset');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (startState === 'checking') return <View style={styles.container} />;
+  if (startState === 'set') return <Redirect href="/(tabs)/home" />;
 
   return (
     <View style={styles.container}>
