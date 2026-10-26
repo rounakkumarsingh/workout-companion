@@ -12,6 +12,12 @@ interface QuickLogOverlayProps {
   detail?: string;
   initialWeight?: number;
   initialReps?: number;
+  initialRpe?: number | null;
+  /** Heading and button text; the defaults are for quick-logging a pending set. */
+  title?: string;
+  ctaLabel?: string;
+  /** Warm-up sets have no RPE. */
+  showRpe?: boolean;
   visible: boolean;
   onClose: () => void;
   onLog: (weight: number, reps: number, rpe: number | null) => void;
@@ -23,6 +29,10 @@ export function QuickLogOverlay({
   detail,
   initialWeight = 0,
   initialReps = 0,
+  initialRpe = null,
+  title = 'Quick Log',
+  ctaLabel = 'Log set → Rest',
+  showRpe = true,
   visible,
   onClose,
   onLog,
@@ -31,7 +41,7 @@ export function QuickLogOverlay({
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [weight, setWeight] = useState(initialWeight);
   const [reps, setReps] = useState(initialReps);
-  const [rpe, setRpe] = useState<number | null>(null);
+  const [rpe, setRpe] = useState<number | null>(initialRpe);
   const [editingWeight, setEditingWeight] = useState<string | null>(null);
   const [editingReps, setEditingReps] = useState<string | null>(null);
 
@@ -54,13 +64,14 @@ export function QuickLogOverlay({
           activeOpacity={1}
           onPress={() => {}}
           accessibilityViewIsModal
-          accessibilityLabel="Quick log"
+          accessibilityLabel={title}
         >
           <View style={styles.grabber} />
           <View style={styles.headRow}>
             <View style={styles.headText}>
               <Text style={styles.title}>
-                Quick Log{setLabel ? ` · ${setLabel.toUpperCase()}` : ''}
+                {title}
+                {setLabel ? ` · ${setLabel.toUpperCase()}` : ''}
               </Text>
               <Text style={styles.exerciseName}>{exerciseName}</Text>
               {detail ? <Text style={styles.detail}>{detail}</Text> : null}
@@ -68,7 +79,7 @@ export function QuickLogOverlay({
             <TouchableOpacity
               style={styles.closeBtn}
               onPress={onClose}
-              accessibilityLabel="Close quick log"
+              accessibilityLabel={`Close ${title.toLowerCase()}`}
               accessibilityRole="button"
             >
               <Text style={styles.closeText}>✕</Text>
@@ -165,9 +176,9 @@ export function QuickLogOverlay({
             </View>
           </View>
 
-          <RpeSelector selected={rpe} onSelect={setRpe} />
+          {showRpe ? <RpeSelector selected={rpe} onSelect={setRpe} /> : null}
 
-          <CtaButton label="Log set → Rest" onPress={handleLog} />
+          <CtaButton label={ctaLabel} onPress={handleLog} />
         </TouchableOpacity>
       </TouchableOpacity>
     </Modal>

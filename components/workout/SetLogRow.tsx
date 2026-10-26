@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { typography, spacing, useColors, type ColorSet } from '@/src/theme';
 
 /** Column widths shared with the header row in SetLogList. */
@@ -15,9 +15,11 @@ interface SetLogRowProps {
   previous?: string;
   /** `target` = pending set showing the prefilled suggestion. */
   status: 'pending' | 'current' | 'done' | 'target';
+  /** Set on logged rows so they can be corrected. */
+  onPress?: () => void;
 }
 
-export function SetLogRow({ index, reps, weight, previous, status }: SetLogRowProps) {
+export function SetLogRow({ index, reps, weight, previous, status, onPress }: SetLogRowProps) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const isDone = status === 'done';
@@ -35,10 +37,13 @@ export function SetLogRow({ index, reps, weight, previous, status }: SetLogRowPr
     `, ${weight} kg, ${reps} reps` +
     (isDone ? ', done' : '');
 
+  const Wrapper = onPress ? TouchableOpacity : View;
+
   return (
-    <View
+    <Wrapper
       style={[styles.row, isDone && styles.rowDone, isCurrent && styles.rowCurrent]}
-      accessibilityLabel={label}
+      accessibilityLabel={onPress ? `Edit ${label}` : label}
+      {...(onPress ? { onPress, accessibilityRole: 'button' as const } : {})}
     >
       <Text style={[styles.num, isDone && styles.numDone, isCurrent && styles.numCurrent]}>
         {index}
@@ -51,7 +56,7 @@ export function SetLogRow({ index, reps, weight, previous, status }: SetLogRowPr
       <Text style={[styles.mark, isDone ? styles.markDone : styles.markCurrent]}>
         {isDone ? '✓' : isCurrent ? '→' : ''}
       </Text>
-    </View>
+    </Wrapper>
   );
 }
 

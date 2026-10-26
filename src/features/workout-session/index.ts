@@ -42,6 +42,7 @@ export { initializeSession } from './session-initializer';
 export {
   hydrateActiveSession,
   updateSet,
+  editLoggedSet,
   swapExercise,
   completeSession,
   abandonSession,
