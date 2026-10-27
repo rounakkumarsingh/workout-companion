@@ -973,6 +973,17 @@ export default function ExerciseDetailScreen() {
           onEditSet={setEditingSetId}
         />
 
+        {exercise.warmupSets.length > 0 && (
+          <WarmupSection
+            prescribedMin={0}
+            prescribedMax={0}
+            workingWeight={0}
+            warmupSets={exercise.warmupSets}
+            onLogWarmupSet={async () => {}}
+            onEditWarmupSet={setEditingSetId}
+          />
+        )}
+
         <View style={styles.logCard}>
           <Text style={styles.setLabel}>
             Set {state.currentSetIndex} of {exercise.sets.length}
@@ -1141,6 +1152,17 @@ export default function ExerciseDetailScreen() {
         previousBySetIndex={previousBySetIndex}
         onEditSet={setEditingSetId}
       />
+
+      {exercise.warmupSets.length > 0 && (
+        <WarmupSection
+          prescribedMin={0}
+          prescribedMax={0}
+          workingWeight={0}
+          warmupSets={exercise.warmupSets}
+          onLogWarmupSet={async () => {}}
+          onEditWarmupSet={setEditingSetId}
+        />
+      )}
 
       <View style={styles.completeBanner}>
         <Text style={styles.completeIcon}>✓</Text>
