@@ -326,7 +326,7 @@ export async function createWarmupSetLog(input: CreateSetLogInput & { isWarmup: 
       weight: input.weight,
       reps: input.reps,
       loggedRpe: null,
-      loggedAt: new Date().toISOString(),
+      loggedAt: input.loggedAt ?? new Date().toISOString(),
       isWarmup: 1,
     })
     .run();
@@ -336,6 +336,32 @@ export async function createWarmupSetLog(input: CreateSetLogInput & { isWarmup: 
 export async function deleteExerciseLog(id: string) {
   const db = await getDb();
   db.delete(exerciseLogs).where(eq(exerciseLogs.id, id)).run();
+}
+
+/** Makes the set indexes of one kind (working or warm-up) contiguous again, 1..n. */
+export async function renumberSetLogs(exerciseLogId: string, isWarmup: boolean) {
+  const db = await getDb();
+  db.transaction((tx) => {
+    const rows = tx
+      .select()
+      .from(workoutSetLogs)
+      .where(
+        and(
+          eq(workoutSetLogs.exerciseLogId, exerciseLogId),
+          eq(workoutSetLogs.isWarmup, isWarmup ? 1 : 0),
+        ),
+      )
+      .orderBy(asc(workoutSetLogs.setIndex))
+      .all();
+    rows.forEach((row, i) => {
+      if (row.setIndex !== i + 1) {
+        tx.update(workoutSetLogs)
+          .set({ setIndex: i + 1 })
+          .where(eq(workoutSetLogs.id, row.id))
+          .run();
+      }
+    });
+  });
 }
 
 export async function deleteSetLog(id: string) {

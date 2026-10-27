@@ -191,6 +191,12 @@ export async function abandonSession(id: string) {
   });
 }
 
+/** Removes a session with its exercise logs and sets (the foreign keys cascade). */
+export async function deleteSession(id: string) {
+  const db = await getDb();
+  db.delete(workoutSessions).where(eq(workoutSessions.id, id)).run();
+}
+
 export async function getSessionsByWeek(weekNumber: number) {
   const db = await getDb();
   return db
