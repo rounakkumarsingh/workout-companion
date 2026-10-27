@@ -4,20 +4,27 @@ import Svg, { Path } from 'react-native-svg';
 import { formatClock } from '@/src/lib/clock';
 import { spacing, useColors, type ColorSet } from '@/src/theme';
 
-/** Elapsed time since `startedAt`, ticking every second. Only this Text re-renders. */
+/**
+ * Elapsed time since `startedAt`, ticking every second. Only this Text re-renders.
+ * With `endAt` (a finished session) it shows the fixed duration and does not tick.
+ */
 export function ElapsedText({
   startedAt,
+  endAt,
   style,
 }: {
   startedAt: string;
+  endAt?: string | null;
   style?: StyleProp<TextStyle>;
 }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
+    if (endAt) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, []);
-  return <Text style={style}>{formatClock(now - new Date(startedAt).getTime())}</Text>;
+  }, [endAt]);
+  const end = endAt ? new Date(endAt).getTime() : now;
+  return <Text style={style}>{formatClock(Math.max(0, end - new Date(startedAt).getTime()))}</Text>;
 }
 
 /** Clock icon plus the ticking elapsed time, for the workout list's top bar. */

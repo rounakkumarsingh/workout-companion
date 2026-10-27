@@ -40,6 +40,7 @@ import {
   getSessionProgress,
   getProgressionSuggestions,
   getProgramDayNumber,
+  sessionEndAt,
 } from '@/src/features/workout-session';
 import { getActiveSession } from '@/src/db/repositories/sessions';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -476,7 +477,8 @@ export default function ActiveWorkoutScreen() {
                   <Text style={styles.completeLabel}>SESSION COMPLETE</Text>
                   <Text style={styles.completeMeta}>
                     {session.exercises.length} of {session.exercises.length} ·{' '}
-                    {progress.completedSets} sets · <ElapsedText startedAt={session.startedAt} />
+                    {progress.completedSets} sets ·{' '}
+                    <ElapsedText startedAt={session.startedAt} endAt={sessionEndAt(session)} />
                   </Text>
                 </View>
               </View>
