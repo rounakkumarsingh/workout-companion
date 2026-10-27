@@ -336,7 +336,7 @@ export default function TodayScheduleScreen() {
             getBodyweightEntries(30),
             getProgressPhotos(1),
             getProgramStart(),
-            wasWeighInSkippedToday(),
+            wasWeighInSkippedToday().catch(() => false),
           ]);
         if (cancelled) return;
         setWeighInSkipped(skipped);
