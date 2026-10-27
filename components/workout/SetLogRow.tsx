@@ -42,7 +42,7 @@ export function SetLogRow({ index, reps, weight, previous, status, onPress }: Se
   return (
     <Wrapper
       style={[styles.row, isDone && styles.rowDone, isCurrent && styles.rowCurrent]}
-      accessibilityLabel={onPress ? `Edit ${label}` : label}
+      accessibilityLabel={onPress ? `${isDone ? 'Edit' : 'Log'} ${label}` : label}
       {...(onPress ? { onPress, accessibilityRole: 'button' as const } : {})}
     >
       <Text style={[styles.num, isDone && styles.numDone, isCurrent && styles.numCurrent]}>

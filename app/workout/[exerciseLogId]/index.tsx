@@ -56,6 +56,11 @@ import type {
 import {
   hydrateActiveSession,
   editLoggedSet,
+  deleteSetFromExercise,
+  addWorkingSetToExercise,
+  deleteExerciseFromSession,
+  sessionEndAt,
+  MAX_WORKING_SETS,
   updateSet,
   completeSession,
   getExerciseHistoryComparison,
@@ -151,6 +156,7 @@ export default function ExerciseDetailScreen() {
   const scrollRef = useRef<ScrollViewInstance>(null);
   const loggingSetRef = useRef(false);
   const [editingSetId, setEditingSetId] = useState<string | null>(null);
+  const [addingWarmup, setAddingWarmup] = useState(false);
 
   const handleRestExpired = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -638,6 +644,18 @@ export default function ExerciseDetailScreen() {
     [state, exerciseLogId, dialog],
   );
 
+  const applyEditedSession = useCallback(
+    (session: ActiveSession) => {
+      const updatedExercise = session.exercises.find((e) => e.exerciseLogId === exerciseLogId);
+      if (!updatedExercise) return;
+      setState((prev) => {
+        if (prev.phase !== 'active') return prev;
+        return { ...prev, session, exercise: updatedExercise };
+      });
+    },
+    [exerciseLogId],
+  );
+
   const handleSaveEditedSet = useCallback(
     async (setLogId: string, weight: number, reps: number, loggedRpe: number | null) => {
       if (state.phase !== 'active') return;
@@ -651,20 +669,97 @@ export default function ExerciseDetailScreen() {
           dialog.show('Cannot save', result.reason ?? 'Could not save the change.');
           return;
         }
-        const updatedExercise = result.session.exercises.find(
-          (e) => e.exerciseLogId === exerciseLogId,
-        )!;
-        setState((prev) => {
-          if (prev.phase !== 'active') return prev;
-          return { ...prev, session: result.session, exercise: updatedExercise };
-        });
+        applyEditedSession(result.session);
       } catch (e) {
         console.error('[exercise] Failed to edit set:', e);
         dialog.show('Error', 'Failed to save the change. Please try again.');
       }
     },
-    [state, exerciseLogId, dialog],
+    [state, dialog, applyEditedSession],
   );
+
+  const handleDeleteSet = useCallback(
+    (setLogId: string) => {
+      if (state.phase !== 'active') return;
+      const sessionId = state.session.id;
+      setEditingSetId(null);
+      dialog.show('Delete set?', 'This removes the set from the workout.', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await deleteSetFromExercise(sessionId, setLogId);
+              applyEditedSession(result.session);
+            } catch (e) {
+              console.error('[exercise] Failed to delete set:', e);
+              dialog.show('Error', 'Failed to delete the set. Please try again.');
+            }
+          },
+        },
+      ]);
+    },
+    [state, dialog, applyEditedSession],
+  );
+
+  const handleAddWorkingSet = useCallback(async () => {
+    if (state.phase !== 'active') return;
+    try {
+      const result = await addWorkingSetToExercise(state.session.id, exerciseLogId);
+      if (!result.success) {
+        dialog.show('Cannot add set', result.reason ?? 'Could not add a set.');
+        return;
+      }
+      applyEditedSession(result.session);
+    } catch (e) {
+      console.error('[exercise] Failed to add set:', e);
+      dialog.show('Error', 'Failed to add the set. Please try again.');
+    }
+  }, [state, exerciseLogId, dialog, applyEditedSession]);
+
+  const handleAddPastWarmup = useCallback(
+    async (weight: number, reps: number) => {
+      if (state.phase !== 'active') return;
+      try {
+        const updated = await logWarmupSet(state.session, exerciseLogId, {
+          weight,
+          reps,
+          loggedAt: sessionEndAt(state.session) ?? undefined,
+        });
+        applyEditedSession(updated);
+      } catch (e) {
+        console.error('[exercise] Failed to add warmup set:', e);
+        dialog.show('Error', 'Failed to add the warmup set. Please try again.');
+      }
+    },
+    [state, exerciseLogId, dialog, applyEditedSession],
+  );
+
+  const handleDeleteExercise = useCallback(() => {
+    if (state.phase !== 'active') return;
+    const sessionId = state.session.id;
+    dialog.show(
+      'Delete exercise?',
+      'This removes the exercise and all its sets from the workout.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteExerciseFromSession(sessionId, exerciseLogId);
+              router.back();
+            } catch (e) {
+              console.error('[exercise] Failed to delete exercise:', e);
+              dialog.show('Error', 'Failed to delete the exercise. Please try again.');
+            }
+          },
+        },
+      ],
+    );
+  }, [state, exerciseLogId, dialog, router]);
 
   // The keyboard animates in after focus; wait for the layout to settle, then
   // bring the note card (the last block above Start Logging) into view.
@@ -1202,16 +1297,17 @@ export default function ExerciseDetailScreen() {
 
       <View style={styles.hero}>
         <Text style={styles.exName}>{exercise.exerciseName}</Text>
-        <Text style={styles.exType}>TAP A LOGGED SET TO EDIT IT</Text>
+        <Text style={styles.exType}>TAP A SET TO EDIT OR LOG IT</Text>
       </View>
 
       <SectionLabel label="Set log" />
       <SetLogList
         sets={exercise.sets}
-        allSetsLogged
+        allSetsLogged={false}
         currentSetIndex={0}
         previousBySetIndex={previousBySetIndex}
         onEditSet={setEditingSetId}
+        editPending
       />
 
       {exercise.warmupSets.length > 0 && (
@@ -1224,6 +1320,12 @@ export default function ExerciseDetailScreen() {
           onEditWarmupSet={setEditingSetId}
         />
       )}
+
+      {exercise.sets.length < MAX_WORKING_SETS && (
+        <GhostButton label="+ Add set" onPress={handleAddWorkingSet} />
+      )}
+      <GhostButton label="+ Add warm-up" onPress={() => setAddingWarmup(true)} />
+      <GhostButton label="Delete exercise" tone="danger" onPress={handleDeleteExercise} />
 
       <View style={styles.spacerBottom} />
     </>
@@ -1261,8 +1363,9 @@ export default function ExerciseDetailScreen() {
         <QuickLogOverlay
           key={editingSet.setLogId}
           visible
-          title="Edit set"
-          ctaLabel="Save changes"
+          title={editingSet.isComplete ? 'Edit set' : 'Log set'}
+          ctaLabel={editingSet.isComplete ? 'Save changes' : 'Log set'}
+          onDelete={isReview ? () => handleDeleteSet(editingSet.setLogId) : undefined}
           exerciseName={exercise.exerciseName}
           setLabel={`${editingSet.isWarmup ? 'Warmup' : 'Set'} ${editingSet.setIndex}`}
           initialWeight={editingSet.weight}
@@ -1271,6 +1374,24 @@ export default function ExerciseDetailScreen() {
           showRpe={!editingSet.isWarmup}
           onClose={() => setEditingSetId(null)}
           onLog={(w, r, rpe) => handleSaveEditedSet(editingSet.setLogId, w, r, rpe)}
+        />
+      ) : null}
+      {addingWarmup ? (
+        <QuickLogOverlay
+          visible
+          title="Add warm-up"
+          ctaLabel="Add warm-up"
+          exerciseName={exercise.exerciseName}
+          setLabel={`Warmup ${exercise.warmupSets.length + 1}`}
+          initialWeight={
+            exercise.warmupSets[exercise.warmupSets.length - 1]?.weight ??
+            exercise.sets[0]?.weight ??
+            0
+          }
+          initialReps={exercise.warmupSets[exercise.warmupSets.length - 1]?.reps ?? 10}
+          showRpe={false}
+          onClose={() => setAddingWarmup(false)}
+          onLog={(w, r) => handleAddPastWarmup(w, r)}
         />
       ) : null}
     </View>
