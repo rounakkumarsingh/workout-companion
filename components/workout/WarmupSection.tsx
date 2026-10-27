@@ -124,7 +124,7 @@ export function WarmupSection({
       <TouchableOpacity onPress={handleToggle} activeOpacity={0.7}>
         <Text style={hasLogged ? styles.toggleDone : styles.toggleActive}>
           {hasLogged
-            ? `✓ ${warmupSets.length} warmup sets logged`
+            ? `✓ ${warmupSets.length} warmup sets logged${onEditWarmupSet ? (expanded ? ' ▾' : ' ▸') : ''}`
             : `Log warmup sets ${expanded ? '▾' : '▸'}`}
         </Text>
       </TouchableOpacity>
