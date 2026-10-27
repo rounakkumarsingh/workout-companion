@@ -16,8 +16,8 @@ interface ExercisePickerSheetProps {
   visible: boolean;
   weekNumber: number;
   dayType: DayType;
-  /** Prescribed names already in the session, hidden from "Not logged this day". */
-  presentPrescribedNames: string[];
+  /** Names already in the session (performed or prescribed); they are not offered again. */
+  presentNames: string[];
   onClose: () => void;
   onPick: (exerciseName: string) => void;
 }
@@ -27,7 +27,7 @@ export function ExercisePickerSheet({
   visible,
   weekNumber,
   dayType,
-  presentPrescribedNames,
+  presentNames,
   onClose,
   onPick,
 }: ExercisePickerSheetProps) {
@@ -37,16 +37,17 @@ export function ExercisePickerSheet({
 
   const missingToday = useMemo(() => {
     const day = PROGRAM.weeks[weekNumber - 1]?.days.find((d) => d.dayType === dayType);
-    const present = new Set(presentPrescribedNames);
+    const present = new Set(presentNames);
     return (day?.exercises ?? []).map((e) => e.exerciseName).filter((n) => !present.has(n));
-  }, [weekNumber, dayType, presentPrescribedNames]);
+  }, [weekNumber, dayType, presentNames]);
 
   const all = useMemo(() => {
     const needle = query.trim().toLowerCase();
+    const present = new Set(presentNames);
     return Object.keys(PROGRAM.exercises)
-      .filter((n) => needle === '' || n.toLowerCase().includes(needle))
+      .filter((n) => !present.has(n) && (needle === '' || n.toLowerCase().includes(needle)))
       .sort((a, b) => a.localeCompare(b));
-  }, [query]);
+  }, [query, presentNames]);
 
   const pick = (name: string) => {
     setQuery('');
