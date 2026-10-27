@@ -12,6 +12,8 @@ interface SetLogListProps {
   previousBySetIndex?: Map<number, string>;
   /** When given, logged rows are tappable to edit that set. */
   onEditSet?: (setLogId: string) => void;
+  /** Past workouts: unlogged sets are tappable too, to log them. */
+  editPending?: boolean;
 }
 
 export function SetLogList({
@@ -20,6 +22,7 @@ export function SetLogList({
   currentSetIndex,
   previousBySetIndex,
   onEditSet,
+  editPending = false,
 }: SetLogListProps) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -49,7 +52,9 @@ export function SetLogList({
             weight={set.weight > 0 ? String(set.weight) : '—'}
             previous={previousBySetIndex?.get(set.setIndex)}
             status={status}
-            onPress={isLogged && onEditSet ? () => onEditSet(set.setLogId) : undefined}
+            onPress={
+              onEditSet && (isLogged || editPending) ? () => onEditSet(set.setLogId) : undefined
+            }
           />
         );
       })}

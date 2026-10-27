@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'reac
 import { typography, radii, spacing, useColors, type ColorSet, hitSlopFor } from '@/src/theme';
 import { RpeSelector } from '@/components/workout/RpeSelector';
 import { CtaButton } from '@/components/ui/CtaButton';
+import { GhostButton } from '@/components/ui/GhostButton';
 
 interface QuickLogOverlayProps {
   exerciseName: string;
@@ -18,6 +19,9 @@ interface QuickLogOverlayProps {
   ctaLabel?: string;
   /** Warm-up sets have no RPE. */
   showRpe?: boolean;
+  /** When given, a destructive button under the save button (e.g. delete this set). */
+  onDelete?: () => void;
+  deleteLabel?: string;
   visible: boolean;
   onClose: () => void;
   onLog: (weight: number, reps: number, rpe: number | null) => void;
@@ -33,6 +37,8 @@ export function QuickLogOverlay({
   title = 'Quick Log',
   ctaLabel = 'Log set → Rest',
   showRpe = true,
+  onDelete,
+  deleteLabel = 'Delete set',
   visible,
   onClose,
   onLog,
@@ -179,6 +185,7 @@ export function QuickLogOverlay({
           {showRpe ? <RpeSelector selected={rpe} onSelect={setRpe} /> : null}
 
           <CtaButton label={ctaLabel} onPress={handleLog} />
+          {onDelete ? <GhostButton label={deleteLabel} tone="danger" onPress={onDelete} /> : null}
         </TouchableOpacity>
       </TouchableOpacity>
     </Modal>

@@ -9,11 +9,13 @@ interface GhostButtonProps {
   label: string;
   onPress: () => void;
   style?: ViewStyle;
+  /** `danger` for destructive actions such as deleting. */
+  tone?: 'default' | 'danger';
 }
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
-export function GhostButton({ label, onPress, style }: GhostButtonProps) {
+export function GhostButton({ label, onPress, style, tone = 'default' }: GhostButtonProps) {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { animatedStyle, onPressIn, onPressOut } = useAnimatedPress(0.985);
@@ -21,7 +23,12 @@ export function GhostButton({ label, onPress, style }: GhostButtonProps) {
 
   return (
     <AnimatedTouchable
-      style={[styles.button, !reducedMotion && animatedStyle, style]}
+      style={[
+        styles.button,
+        tone === 'danger' && styles.buttonDanger,
+        !reducedMotion && animatedStyle,
+        style,
+      ]}
       onPress={onPress}
       onPressIn={!reducedMotion ? onPressIn : undefined}
       onPressOut={!reducedMotion ? onPressOut : undefined}
@@ -29,7 +36,7 @@ export function GhostButton({ label, onPress, style }: GhostButtonProps) {
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, tone === 'danger' && styles.labelDanger]}>{label}</Text>
     </AnimatedTouchable>
   );
 }
@@ -45,6 +52,12 @@ const makeStyles = (c: ColorSet) =>
       alignItems: 'center',
       borderWidth: 1,
       borderColor: c.borderControl,
+    },
+    buttonDanger: {
+      borderColor: c.dangerBorder,
+    },
+    labelDanger: {
+      color: c.dangerText,
     },
     label: {
       ...typography.cta,
