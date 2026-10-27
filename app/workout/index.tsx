@@ -21,6 +21,8 @@ import { useColors, typography, radii, spacing } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { ExerciseRow } from '@/components/workout/ExerciseRow';
 import { QuickLogOverlay } from '@/components/workout/QuickLogOverlay';
+import { ExercisePickerSheet } from '@/components/workout/ExercisePickerSheet';
+import { GhostButton } from '@/components/ui/GhostButton';
 import { ElapsedTimer, ElapsedText } from '@/components/workout/ElapsedTimer';
 import { SessionStatsBar } from '@/components/workout/SessionStatsBar';
 import { LastTimeSheet } from '@/components/workout/LastTimeSheet';
@@ -41,6 +43,9 @@ import {
   getProgressionSuggestions,
   getProgramDayNumber,
   sessionEndAt,
+  addExerciseToSession,
+  deleteExerciseFromSession,
+  deleteWorkoutSession,
 } from '@/src/features/workout-session';
 import { getActiveSession } from '@/src/db/repositories/sessions';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -92,6 +97,7 @@ export default function ActiveWorkoutScreen() {
   >(new Map());
   const [quickLogExercise, setQuickLogExercise] = useState<string | null>(null);
   const [lastTimeFor, setLastTimeFor] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const shakeOffset = useSharedValue(0);
 
@@ -335,6 +341,79 @@ export default function ActiveWorkoutScreen() {
     );
   }, [router, dialog]);
 
+  // Past workouts only: add, delete exercises, or delete the whole workout.
+  const handleAddExercise = useCallback(
+    async (exerciseName: string) => {
+      const current = activeRef.current;
+      if (!current) return;
+      try {
+        const result = await addExerciseToSession(current.session.id, exerciseName);
+        const added = result.session.exercises.reduce((a, b) =>
+          b.sortOrder > a.sortOrder ? b : a,
+        );
+        await hydrate(current.session.id);
+        router.push(`/workout/${added.exerciseLogId}` as Href);
+      } catch (e) {
+        console.error('[workout] Failed to add exercise:', e);
+        dialog.show('Error', 'Failed to add the exercise. Please try again.');
+      }
+    },
+    [hydrate, router, dialog],
+  );
+
+  const handleDeleteExercise = useCallback(
+    (exerciseLogId: string, exerciseName: string) => {
+      dialog.show(
+        'Delete exercise?',
+        `${exerciseName} and all its sets will be removed from this workout.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              const current = activeRef.current;
+              if (!current) return;
+              try {
+                await deleteExerciseFromSession(current.session.id, exerciseLogId);
+                await hydrate(current.session.id);
+              } catch (e) {
+                console.error('[workout] Failed to delete exercise:', e);
+                dialog.show('Error', 'Failed to delete the exercise. Please try again.');
+              }
+            },
+          },
+        ],
+      );
+    },
+    [hydrate, dialog],
+  );
+
+  const handleDeleteWorkout = useCallback(() => {
+    dialog.show(
+      'Delete workout?',
+      'The whole workout and every set in it will be removed. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const current = activeRef.current;
+            if (!current) return;
+            try {
+              await deleteWorkoutSession(current.session.id);
+              router.dismissAll();
+            } catch (e) {
+              console.error('[workout] Failed to delete workout:', e);
+              dialog.show('Error', 'Failed to delete the workout. Please try again.');
+            }
+          },
+        },
+      ],
+    );
+  }, [router, dialog]);
+
   if (state.phase === 'loading') {
     return (
       <View style={styles.centered}>
@@ -426,7 +505,11 @@ export default function ActiveWorkoutScreen() {
               lastTime={summarizeLastTime(prog?.lastSession ?? null)}
               onLastTimePress={() => setLastTimeFor(item.exerciseName)}
               onPress={() => handleViewDetail(item.exerciseLogId)}
-              onLongPress={isReview ? undefined : () => setQuickLogExercise(item.exerciseLogId)}
+              onLongPress={
+                isReview
+                  ? () => handleDeleteExercise(item.exerciseLogId, item.exerciseName)
+                  : () => setQuickLogExercise(item.exerciseLogId)
+              }
             />
           );
         }}
@@ -459,7 +542,15 @@ export default function ActiveWorkoutScreen() {
               </View>
             </View>
 
-            <GeneralWarmupCard />
+            {isReview ? (
+              <GhostButton
+                label="+ Add exercise"
+                onPress={() => setPickerOpen(true)}
+                style={{ marginHorizontal: 0 }}
+              />
+            ) : (
+              <GeneralWarmupCard />
+            )}
 
             {allComplete && (
               <View style={styles.completeCard}>
@@ -512,6 +603,28 @@ export default function ActiveWorkoutScreen() {
             <Text style={styles.endBtnText}>End Session</Text>
           </TouchableOpacity>
         </View>
+      )}
+
+      {isReview && (
+        <View style={[styles.dock, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+          <GhostButton
+            label="Delete workout"
+            tone="danger"
+            onPress={handleDeleteWorkout}
+            style={{ marginHorizontal: 0, marginBottom: 0 }}
+          />
+        </View>
+      )}
+
+      {isReview && (
+        <ExercisePickerSheet
+          visible={pickerOpen}
+          weekNumber={session.weekNumber}
+          dayType={session.dayType}
+          presentPrescribedNames={session.exercises.map((e) => e.prescribedExerciseName)}
+          onClose={() => setPickerOpen(false)}
+          onPick={handleAddExercise}
+        />
       )}
 
       <DevClearDbButton onCleared={() => router.dismissAll()} />
