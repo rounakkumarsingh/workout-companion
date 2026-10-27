@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { typography, radii, spacing, useColors, type ColorSet } from '@/src/theme';
 import { ElapsedText } from '@/components/workout/ElapsedTimer';
 import { computeTotalVolume, formatVolumeKg } from '@/src/features/workout-session/statistics';
-import { getSessionProgress } from '@/src/features/workout-session/session-executor';
+import { getSessionProgress, sessionEndAt } from '@/src/features/workout-session/session-executor';
 import type { ActiveSession } from '@/src/features/workout-session/types';
 
 interface SessionStatsBarProps {
@@ -23,7 +23,11 @@ export function SessionStatsBar({ session, compact = false }: SessionStatsBarPro
     <View style={styles.bar} accessibilityLabel="Session stats">
       <View style={styles.cell}>
         <Text style={styles.label}>{compact ? 'DUR' : 'DURATION'}</Text>
-        <ElapsedText startedAt={session.startedAt} style={styles.value} />
+        <ElapsedText
+          startedAt={session.startedAt}
+          endAt={sessionEndAt(session)}
+          style={styles.value}
+        />
       </View>
       <View style={[styles.cell, styles.divider]}>
         <Text style={styles.label}>{compact ? 'KG' : 'VOLUME · KG'}</Text>

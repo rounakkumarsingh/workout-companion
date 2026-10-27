@@ -211,7 +211,7 @@ export async function abandonSession(session: ActiveSession): Promise<ActiveSess
   await updateSessionStatus({
     id: session.id,
     status: 'abandoned',
-    completedAt: null,
+    completedAt: new Date().toISOString(),
   });
   await clearActiveRestForSession(session.id);
   return (await hydrateActiveSession(session.id))!;
@@ -244,7 +244,7 @@ export async function finalizeStaleSessions(now: Date = new Date()): Promise<voi
     await updateSessionStatus({
       id: session.id,
       status: hasLoggedSets ? 'completed' : 'abandoned',
-      completedAt: hasLoggedSets ? lastActiveAt : null,
+      completedAt: lastActiveAt,
     });
     await clearActiveRestForSession(session.id);
   }
@@ -367,8 +367,25 @@ export async function getExerciseHistoryComparison(
   };
 }
 
+/**
+ * When a session stopped: null while in progress. Older ended sessions have no
+ * `completedAt`, so fall back to the last logged set, then to the start.
+ */
+export function sessionEndAt(session: ActiveSession): string | null {
+  if (session.status === 'in_progress') return null;
+  if (session.completedAt) return session.completedAt;
+  let latest: string | null = null;
+  for (const exercise of session.exercises) {
+    for (const set of [...exercise.warmupSets, ...exercise.sets]) {
+      if (set.loggedAt && (latest === null || set.loggedAt > latest)) latest = set.loggedAt;
+    }
+  }
+  return latest ?? session.startedAt;
+}
+
 export function getElapsedMinutes(session: ActiveSession): number {
   const start = new Date(session.startedAt).getTime();
-  const end = session.completedAt ? new Date(session.completedAt).getTime() : Date.now();
-  return Math.floor((end - start) / 60000);
+  const endAt = sessionEndAt(session);
+  const end = endAt ? new Date(endAt).getTime() : Date.now();
+  return Math.max(0, Math.floor((end - start) / 60000));
 }

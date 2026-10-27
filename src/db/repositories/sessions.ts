@@ -187,7 +187,7 @@ export async function abandonSession(id: string) {
   return updateSessionStatus({
     id,
     status: 'abandoned',
-    completedAt: null,
+    completedAt: new Date().toISOString(),
   });
 }
 

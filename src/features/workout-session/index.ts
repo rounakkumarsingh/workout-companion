@@ -43,6 +43,7 @@ export {
   hydrateActiveSession,
   updateSet,
   editLoggedSet,
+  sessionEndAt,
   swapExercise,
   completeSession,
   abandonSession,
