@@ -11,6 +11,7 @@ import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { useColors, typography, spacing, radii } from '@/src/theme';
 import type { ColorSet } from '@/src/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { GhostButton } from '@/components/ui/GhostButton';
 import {
   getSessionsWithVolume,
   getSessionCountByWeek,
@@ -31,6 +32,8 @@ interface VolumeBar {
   volume: number;
   isFuture: boolean;
 }
+
+const PAST_PAGE = 20;
 
 interface PastSession {
   id: string;
@@ -56,6 +59,7 @@ export default function HistoryScreen() {
   const [topExercises, setTopExercises] = useState<string[]>([]);
   const [allExercises, setAllExercises] = useState<string[]>([]);
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
+  const [pastLimit, setPastLimit] = useState(PAST_PAGE);
   const [exerciseHistoryMap, setExerciseHistoryMap] = useState<
     Record<string, { date: string; weekNumber: number; sets: { weight: number; reps: number }[] }[]>
   >({});
@@ -68,7 +72,7 @@ export default function HistoryScreen() {
           const programStart = await getProgramStart();
           const [dates, sessions, weeklyCounts, exerciseVolumes] = await Promise.all([
             getAllWorkoutDates(),
-            getSessionsWithVolume(200),
+            getSessionsWithVolume(1000),
             // Adherence covers the current program cycle only.
             getSessionCountByWeek(programStart?.toISOString()),
             getVolumeByExercise(),
@@ -78,9 +82,7 @@ export default function HistoryScreen() {
 
           setWorkoutDates(dates);
           setPastSessions(
-            sessions
-              .filter((s) => s.status === 'completed' || s.status === 'abandoned')
-              .slice(0, 20),
+            sessions.filter((s) => s.status === 'completed' || s.status === 'abandoned'),
           );
 
           const weeks: AdherenceWeek[] = [];
@@ -175,7 +177,7 @@ export default function HistoryScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Past workouts</Text>
           <View style={styles.exerciseList}>
-            {pastSessions.map((ps, i) => (
+            {pastSessions.slice(0, pastLimit).map((ps, i) => (
               <TouchableOpacity
                 key={ps.id}
                 style={[styles.exerciseRow, i > 0 && styles.exerciseRowRule]}
@@ -191,6 +193,13 @@ export default function HistoryScreen() {
               </TouchableOpacity>
             ))}
           </View>
+          {pastSessions.length > pastLimit && (
+            <GhostButton
+              label={`Show more (${pastSessions.length - pastLimit} older)`}
+              onPress={() => setPastLimit((n) => n + PAST_PAGE)}
+              style={{ marginHorizontal: 0, marginTop: spacing.md }}
+            />
+          )}
         </View>
       )}
 
