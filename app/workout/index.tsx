@@ -273,7 +273,8 @@ export default function ActiveWorkoutScreen() {
     const current = activeRef.current;
     if (!current) return;
     const { session } = current;
-    const allComplete = session.exercises.every((e) => e.status === 'completed');
+    const allComplete =
+      session.exercises.length > 0 && session.exercises.every((e) => e.status === 'completed');
     if (!allComplete) {
       const unfinishedCount = session.exercises.filter((e) => e.status !== 'completed').length;
       dialog.show(
@@ -437,7 +438,8 @@ export default function ActiveWorkoutScreen() {
   const { session, progress } = state;
   const pct = progress.totalSets > 0 ? progress.completedSets / progress.totalSets : 0;
   const exercisesDone = session.exercises.filter((e) => getExerciseStatus(e) === 'done').length;
-  const allComplete = session.exercises.every((e) => e.status === 'completed');
+  const allComplete =
+    session.exercises.length > 0 && session.exercises.every((e) => e.status === 'completed');
   const dayCode = DAY_CODES[session.dayType] ?? session.dayType;
   const dayNumber = getProgramDayNumber(session.weekNumber, session.dayType);
   const quickEx = quickLogExercise
@@ -621,7 +623,10 @@ export default function ActiveWorkoutScreen() {
           visible={pickerOpen}
           weekNumber={session.weekNumber}
           dayType={session.dayType}
-          presentPrescribedNames={session.exercises.map((e) => e.prescribedExerciseName)}
+          presentNames={session.exercises.flatMap((e) => [
+            e.exerciseName,
+            e.prescribedExerciseName,
+          ])}
           onClose={() => setPickerOpen(false)}
           onPick={handleAddExercise}
         />
