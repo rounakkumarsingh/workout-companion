@@ -179,7 +179,7 @@ export default function ActiveWorkoutScreen() {
   }, [sessionId, exerciseNamesKey]);
 
   useEffect(() => {
-    if (state.phase === 'active') {
+    if (state.phase === 'active' && !isReview) {
       const activeIndex = state.session.exercises.findIndex(
         (e) => e.status === 'active' || e.status === 'pending',
       );

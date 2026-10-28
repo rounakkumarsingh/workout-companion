@@ -21,12 +21,12 @@ import {
   updateExerciseLog,
   updateExerciseLogStatus,
   createWarmupSetLog,
-  createExerciseLog,
+  createExerciseLogWithSets,
   createSetLog,
   deleteExerciseLog,
-  deleteSetLog,
+  deleteSetLogAndRenumber,
   getSetLogById,
-  renumberSetLogs,
+  getExerciseLogById,
 } from '../../db/repositories/exercises';
 import { getSubstitutionOptions } from './substitution';
 import {
@@ -132,12 +132,20 @@ export async function editLoggedSet(
     };
   }
   const existing = await getSetLogById(setLogId);
-  const session = (await hydrateActiveSession(sessionId))!;
+  const log = existing ? await getExerciseLogById(existing.exerciseLogId) : null;
+  if (!existing || !log || log.workoutSessionId !== sessionId) {
+    return {
+      session: (await hydrateActiveSession(sessionId))!,
+      success: false,
+      reason: 'Set not found in this workout',
+    };
+  }
   // A set that was never logged is logged now, dated to the workout, not to today.
-  const loggedAt =
-    existing && existing.loggedAt === null && existing.isWarmup === 0
-      ? (sessionEndAt(session) ?? new Date().toISOString())
-      : undefined;
+  let loggedAt: string | undefined;
+  if (existing.loggedAt === null && existing.isWarmup === 0) {
+    const session = (await hydrateActiveSession(sessionId))!;
+    loggedAt = sessionEndAt(session) ?? new Date().toISOString();
+  }
   await updateSetLog(setLogId, loggedAt ? { ...updates, loggedAt } : updates);
   return { session: (await hydrateActiveSession(sessionId))!, success: true };
 }
@@ -164,27 +172,23 @@ export async function addExerciseToSession(
     dayType: session.dayType,
     repRange: prescription?.repRange,
   });
-  const exerciseLogId = generateId();
-  await createExerciseLog({
-    id: exerciseLogId,
-    workoutSessionId: sessionId,
-    exerciseName,
-    prescribedExerciseName: exerciseName,
-    substitutionNote: null,
-    sortOrder: session.exercises.reduce((max, e) => Math.max(max, e.sortOrder), 0) + 1,
-  });
-  await updateExerciseLogStatus(exerciseLogId, 'completed');
-  for (let i = 0; i < setCount; i++) {
-    await createSetLog({
+  // Unlogged sets, so the exercise stays pending until they are logged.
+  await createExerciseLogWithSets(
+    {
       id: generateId(),
-      exerciseLogId,
+      workoutSessionId: sessionId,
+      exerciseName,
+      prescribedExerciseName: exerciseName,
+      substitutionNote: null,
+      sortOrder: session.exercises.reduce((max, e) => Math.max(max, e.sortOrder), 0) + 1,
+    },
+    Array.from({ length: setCount }, (_, i) => ({
+      id: generateId(),
       setIndex: i + 1,
       weight: suggested[i]?.weight ?? 0,
       reps: suggested[i]?.reps ?? 0,
-      loggedRpe: null,
-      loggedAt: null,
-    });
-  }
+    })),
+  );
   return { session: (await hydrateActiveSession(sessionId))!, success: true };
 }
 
@@ -225,11 +229,7 @@ export async function deleteSetFromExercise(
   sessionId: string,
   setLogId: string,
 ): Promise<SessionEdit> {
-  const existing = await getSetLogById(setLogId);
-  if (existing) {
-    await deleteSetLog(setLogId);
-    await renumberSetLogs(existing.exerciseLogId, existing.isWarmup === 1);
-  }
+  await deleteSetLogAndRenumber(setLogId);
   return { session: (await hydrateActiveSession(sessionId))!, success: true };
 }
 
