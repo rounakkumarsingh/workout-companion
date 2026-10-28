@@ -848,6 +848,19 @@ export default function ExerciseDetailScreen() {
       : ([...exercise.warmupSets, ...exercise.sets].find((x) => x.setLogId === editingSetId) ??
         null);
 
+  // Logged warm-ups to tap and edit once the first screen of the exercise is past.
+  const warmupEditList =
+    exercise.warmupSets.length > 0 ? (
+      <WarmupSection
+        prescribedMin={0}
+        prescribedMax={0}
+        workingWeight={0}
+        warmupSets={exercise.warmupSets}
+        onLogWarmupSet={async () => {}}
+        onEditWarmupSet={setEditingSetId}
+      />
+    ) : null;
+
   // --- Phase Renders ---
 
   const renderIntro = () => (
@@ -973,16 +986,7 @@ export default function ExerciseDetailScreen() {
           onEditSet={setEditingSetId}
         />
 
-        {exercise.warmupSets.length > 0 && (
-          <WarmupSection
-            prescribedMin={0}
-            prescribedMax={0}
-            workingWeight={0}
-            warmupSets={exercise.warmupSets}
-            onLogWarmupSet={async () => {}}
-            onEditWarmupSet={setEditingSetId}
-          />
-        )}
+        {warmupEditList}
 
         <View style={styles.logCard}>
           <Text style={styles.setLabel}>
@@ -1153,16 +1157,7 @@ export default function ExerciseDetailScreen() {
         onEditSet={setEditingSetId}
       />
 
-      {exercise.warmupSets.length > 0 && (
-        <WarmupSection
-          prescribedMin={0}
-          prescribedMax={0}
-          workingWeight={0}
-          warmupSets={exercise.warmupSets}
-          onLogWarmupSet={async () => {}}
-          onEditWarmupSet={setEditingSetId}
-        />
-      )}
+      {warmupEditList}
 
       <View style={styles.completeBanner}>
         <Text style={styles.completeIcon}>✓</Text>
@@ -1332,16 +1327,7 @@ export default function ExerciseDetailScreen() {
         editPending
       />
 
-      {exercise.warmupSets.length > 0 && (
-        <WarmupSection
-          prescribedMin={0}
-          prescribedMax={0}
-          workingWeight={0}
-          warmupSets={exercise.warmupSets}
-          onLogWarmupSet={async () => {}}
-          onEditWarmupSet={setEditingSetId}
-        />
-      )}
+      {warmupEditList}
 
       {exercise.sets.length < MAX_WORKING_SETS && (
         <GhostButton label="+ Add set" onPress={handleAddWorkingSet} />
