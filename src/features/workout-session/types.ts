@@ -38,6 +38,7 @@ export interface ActiveSession {
   weekNumber: number;
   dayType: DayType;
   startedAt: string;
+  /** When the session ended (completed or abandoned); null while in progress and on older ended rows. */
   completedAt: string | null;
   status: WorkoutSessionStatus;
   exercises: ActiveExercise[];

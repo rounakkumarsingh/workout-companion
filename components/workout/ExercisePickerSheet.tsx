@@ -34,20 +34,22 @@ export function ExercisePickerSheet({
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [query, setQuery] = useState('');
+  // The parent builds a new array each render; key the memos on its contents.
+  const presentKey = presentNames.join('|');
 
   const missingToday = useMemo(() => {
     const day = PROGRAM.weeks[weekNumber - 1]?.days.find((d) => d.dayType === dayType);
-    const present = new Set(presentNames);
+    const present = new Set(presentKey.split('|'));
     return (day?.exercises ?? []).map((e) => e.exerciseName).filter((n) => !present.has(n));
-  }, [weekNumber, dayType, presentNames]);
+  }, [weekNumber, dayType, presentKey]);
 
   const all = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    const present = new Set(presentNames);
+    const present = new Set(presentKey.split('|'));
     return Object.keys(PROGRAM.exercises)
       .filter((n) => !present.has(n) && (needle === '' || n.toLowerCase().includes(needle)))
       .sort((a, b) => a.localeCompare(b));
-  }, [query, presentNames]);
+  }, [query, presentKey]);
 
   const pick = (name: string) => {
     setQuery('');
