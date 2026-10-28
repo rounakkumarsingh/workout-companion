@@ -439,7 +439,7 @@ export default function ActiveWorkoutScreen() {
   const pct = progress.totalSets > 0 ? progress.completedSets / progress.totalSets : 0;
   const exercisesDone = session.exercises.filter((e) => getExerciseStatus(e) === 'done').length;
   const allComplete =
-    session.exercises.length > 0 && session.exercises.every((e) => e.status === 'completed');
+    session.exercises.length > 0 && session.exercises.every((e) => getExerciseStatus(e) === 'done');
   const dayCode = DAY_CODES[session.dayType] ?? session.dayType;
   const dayNumber = getProgramDayNumber(session.weekNumber, session.dayType);
   const quickEx = quickLogExercise
