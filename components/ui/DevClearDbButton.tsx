@@ -1,4 +1,5 @@
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, typography } from '@/src/theme';
 import { clearAllTables } from '@/src/db/client';
 import { useDialog } from '@/components/ui/ConfirmDialog';
@@ -9,10 +10,11 @@ interface DevClearDbButtonProps {
 
 export function DevClearDbButton({ onCleared }: DevClearDbButtonProps) {
   const dialog = useDialog();
+  const insets = useSafeAreaInsets();
   if (!__DEV__) return null;
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, { top: insets.top + 4 }]}
       onPress={() => {
         dialog.show('Dev: Clear DB', 'This will delete ALL data. Are you sure?', [
           { text: 'Cancel', style: 'cancel' },
@@ -35,7 +37,6 @@ export function DevClearDbButton({ onCleared }: DevClearDbButtonProps) {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 16,
     right: 16,
     alignItems: 'center',
     paddingVertical: 4,

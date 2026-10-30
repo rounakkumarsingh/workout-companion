@@ -2,8 +2,12 @@ import { useEffect, useRef, useMemo } from 'react';
 import { Tabs } from 'expo-router';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { typography, useColors, type ColorSet } from '@/src/theme';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+
+const TAB_BAR_HEIGHT = 70;
+const TAB_BAR_PADDING_BOTTOM = 8;
 
 function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
   const colors = useColors();
@@ -39,12 +43,16 @@ function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
 export default function TabLayout() {
   const colors = useColors();
   const tabStyles = useMemo(() => makeTabStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: tabStyles.tabBar,
+        tabBarStyle: [
+          tabStyles.tabBar,
+          { height: TAB_BAR_HEIGHT + insets.bottom, paddingBottom: TAB_BAR_PADDING_BOTTOM + insets.bottom },
+        ],
         tabBarShowLabel: true,
         tabBarLabelStyle: tabStyles.tabLabel,
         tabBarActiveTintColor: colors.gold,
@@ -85,8 +93,6 @@ const makeTabStyles = (c: ColorSet) =>
       borderTopWidth: 0.5,
       borderTopColor: c.border,
       paddingTop: 12,
-      paddingBottom: 8,
-      height: 70,
     },
     tabLabel: {
       ...typography.monoTiny,
