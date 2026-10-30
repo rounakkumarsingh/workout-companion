@@ -55,7 +55,11 @@ import { createCardioSession } from '@/src/db/repositories/cardio';
 import { getBodyweightEntries } from '@/src/db/repositories/bodyweight';
 import { getProgressPhotos } from '@/src/db/repositories/photos';
 import { WeighInSheet } from '@/features/bodyweight/WeighInSheet';
-import { logWeightEntry } from '@/features/bodyweight/weight-settings';
+import {
+  logWeightEntry,
+  skipWeighInToday,
+  wasWeighInSkippedToday,
+} from '@/features/bodyweight/weight-settings';
 import { WeighInCard } from '@/components/home/WeighInCard';
 import { PhotoDueBanner } from '@/components/home/PhotoDueBanner';
 import { hasEntryToday, type WeightUnit } from '@/src/features/progress-tracking/weight';
@@ -220,6 +224,8 @@ export default function TodayScheduleScreen() {
   const [recentDays, setRecentDays] = useState<RecentDay[]>([]);
   // null until loaded, so the weigh-in sheet is never shown on a stale guess.
   const [weighedToday, setWeighedToday] = useState<boolean | null>(null);
+  // Skipping the weigh-in sheet holds for the day; the card below can still open it.
+  const [weighInSkipped, setWeighInSkipped] = useState(false);
   const [photoNudge, setPhotoNudge] = useState<{ due: boolean; daysSince: number | null }>({
     due: false,
     daysSince: null,
@@ -321,7 +327,7 @@ export default function TodayScheduleScreen() {
     let cancelled = false;
     (async () => {
       try {
-        const [streakNow, done, cycleNow, days, weights, latestPhotos, programStart] =
+        const [streakNow, done, cycleNow, days, weights, latestPhotos, programStart, skipped] =
           await Promise.all([
             getCurrentStreak(),
             getCompletedSessionCount(),
@@ -330,8 +336,10 @@ export default function TodayScheduleScreen() {
             getBodyweightEntries(30),
             getProgressPhotos(1),
             getProgramStart(),
+            wasWeighInSkippedToday().catch(() => false),
           ]);
         if (cancelled) return;
+        setWeighInSkipped(skipped);
         setStreak(streakNow);
         setSessionsDone(done);
         setCycle(cycleNow);
@@ -413,14 +421,14 @@ export default function TodayScheduleScreen() {
     async (choice: WorkoutChoice) => {
       if (screenState.status !== 'choose' || choice.status !== 'available') return;
       // Ask for today's weight first, but never block the workout on it.
-      if (weighedToday === false) {
+      if (weighedToday === false && !weighInSkipped) {
         setPendingChoice(choice);
         setWeighInOpen(true);
         return;
       }
       await startSession(screenState.plan.weekNumber, choice.dayPrescription);
     },
-    [screenState, startSession, weighedToday],
+    [screenState, startSession, weighedToday, weighInSkipped],
   );
 
   const finishWeighIn = useCallback(async () => {
@@ -438,14 +446,20 @@ export default function TodayScheduleScreen() {
 
   const handleResume = useCallback(async () => {
     // Ask for today's weight first, but never block the workout on it.
-    if (weighedToday === false) {
+    if (weighedToday === false && !weighInSkipped) {
       setPendingChoice(null);
       setResumePending(true);
       setWeighInOpen(true);
       return;
     }
     await doResume();
-  }, [weighedToday, doResume]);
+  }, [weighedToday, weighInSkipped, doResume]);
+
+  const handleWeighInSkip = useCallback(async () => {
+    setWeighInSkipped(true);
+    skipWeighInToday().catch((e) => console.warn('[home] Failed to remember weigh-in skip:', e));
+    await finishWeighIn();
+  }, [finishWeighIn]);
 
   const handleWeighInLog = useCallback(
     async (weight: number, unit: WeightUnit) => {
@@ -580,7 +594,7 @@ export default function TodayScheduleScreen() {
         <View style={styles.block}>{block}</View>
       </ScrollView>
       {footer ? <View style={styles.dock}>{footer}</View> : null}
-      <WeighInSheet visible={weighInOpen} onLog={handleWeighInLog} onSkip={finishWeighIn} />
+      <WeighInSheet visible={weighInOpen} onLog={handleWeighInLog} onSkip={handleWeighInSkip} />
       {devClear}
     </View>
   );

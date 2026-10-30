@@ -187,8 +187,14 @@ export async function abandonSession(id: string) {
   return updateSessionStatus({
     id,
     status: 'abandoned',
-    completedAt: null,
+    completedAt: new Date().toISOString(),
   });
+}
+
+/** Removes a session with its exercise logs and sets (the foreign keys cascade). */
+export async function deleteSession(id: string) {
+  const db = await getDb();
+  db.delete(workoutSessions).where(eq(workoutSessions.id, id)).run();
 }
 
 export async function getSessionsByWeek(weekNumber: number) {

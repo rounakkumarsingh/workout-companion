@@ -13,6 +13,7 @@ import {
   updateSessionStatus,
   getActiveSessions,
   getSessionActivity,
+  deleteSession,
 } from '../../db/repositories/sessions';
 import {
   getExerciseLogsWithSetsBySession,
@@ -20,6 +21,12 @@ import {
   updateExerciseLog,
   updateExerciseLogStatus,
   createWarmupSetLog,
+  createExerciseLogWithSets,
+  createSetLog,
+  deleteExerciseLog,
+  deleteSetLogAndRenumber,
+  getSetLogById,
+  getExerciseLogById,
 } from '../../db/repositories/exercises';
 import { getSubstitutionOptions } from './substitution';
 import {
@@ -124,8 +131,112 @@ export async function editLoggedSet(
       reason: 'Reps must be greater than 0',
     };
   }
-  await updateSetLog(setLogId, updates);
+  const existing = await getSetLogById(setLogId);
+  const log = existing ? await getExerciseLogById(existing.exerciseLogId) : null;
+  if (!existing || !log || log.workoutSessionId !== sessionId) {
+    return {
+      session: (await hydrateActiveSession(sessionId))!,
+      success: false,
+      reason: 'Set not found in this workout',
+    };
+  }
+  // A set that was never logged is logged now, dated to the workout, not to today.
+  let loggedAt: string | undefined;
+  if (existing.loggedAt === null && existing.isWarmup === 0) {
+    const session = (await hydrateActiveSession(sessionId))!;
+    loggedAt = sessionEndAt(session) ?? new Date().toISOString();
+  }
+  await updateSetLog(setLogId, loggedAt ? { ...updates, loggedAt } : updates);
   return { session: (await hydrateActiveSession(sessionId))!, success: true };
+}
+
+/** Max working sets per exercise; the database check allows 1-3. */
+export const MAX_WORKING_SETS = 3;
+
+type SessionEdit = { session: ActiveSession; success: boolean; reason?: string };
+
+/**
+ * Adds an exercise to a past workout (e.g. one done that day but never logged).
+ * Its working sets start unlogged and pre-filled, to be logged one by one.
+ */
+export async function addExerciseToSession(
+  sessionId: string,
+  exerciseName: string,
+): Promise<SessionEdit> {
+  const session = await hydrateActiveSession(sessionId);
+  if (!session) throw new Error('Session not found');
+  const prescription = getPrescription(session.weekNumber, session.dayType, exerciseName);
+  const setCount = Math.min(prescription?.workingSets ?? MAX_WORKING_SETS, MAX_WORKING_SETS);
+  const suggested = await getSuggestedSetValues(exerciseName, setCount, {
+    excludeSessionId: sessionId,
+    dayType: session.dayType,
+    repRange: prescription?.repRange,
+  });
+  // Unlogged sets, so the exercise stays pending until they are logged.
+  await createExerciseLogWithSets(
+    {
+      id: generateId(),
+      workoutSessionId: sessionId,
+      exerciseName,
+      prescribedExerciseName: exerciseName,
+      substitutionNote: null,
+      sortOrder: session.exercises.reduce((max, e) => Math.max(max, e.sortOrder), 0) + 1,
+    },
+    Array.from({ length: setCount }, (_, i) => ({
+      id: generateId(),
+      setIndex: i + 1,
+      weight: suggested[i]?.weight ?? 0,
+      reps: suggested[i]?.reps ?? 0,
+    })),
+  );
+  return { session: (await hydrateActiveSession(sessionId))!, success: true };
+}
+
+export async function deleteExerciseFromSession(
+  sessionId: string,
+  exerciseLogId: string,
+): Promise<SessionEdit> {
+  await deleteExerciseLog(exerciseLogId);
+  return { session: (await hydrateActiveSession(sessionId))!, success: true };
+}
+
+/** Adds one unlogged working set, pre-filled from the exercise's last set. */
+export async function addWorkingSetToExercise(
+  sessionId: string,
+  exerciseLogId: string,
+): Promise<SessionEdit> {
+  const session = (await hydrateActiveSession(sessionId))!;
+  const exercise = session.exercises.find((e) => e.exerciseLogId === exerciseLogId);
+  if (!exercise) return { session, success: false, reason: 'Exercise not found' };
+  if (exercise.sets.length >= MAX_WORKING_SETS) {
+    return { session, success: false, reason: `At most ${MAX_WORKING_SETS} working sets` };
+  }
+  const last = exercise.sets[exercise.sets.length - 1];
+  await createSetLog({
+    id: generateId(),
+    exerciseLogId,
+    setIndex: exercise.sets.length + 1,
+    weight: last?.weight ?? 0,
+    reps: last?.reps ?? 0,
+    loggedRpe: null,
+    loggedAt: null,
+  });
+  return { session: (await hydrateActiveSession(sessionId))!, success: true };
+}
+
+/** Deletes a set and renumbers the rest of its kind (working or warm-up) from 1. */
+export async function deleteSetFromExercise(
+  sessionId: string,
+  setLogId: string,
+): Promise<SessionEdit> {
+  await deleteSetLogAndRenumber(setLogId);
+  return { session: (await hydrateActiveSession(sessionId))!, success: true };
+}
+
+/** Removes a whole workout, including any rest still running for it. */
+export async function deleteWorkoutSession(sessionId: string): Promise<void> {
+  await clearActiveRestForSession(sessionId);
+  await deleteSession(sessionId);
 }
 
 export async function updateSet(
@@ -211,7 +322,7 @@ export async function abandonSession(session: ActiveSession): Promise<ActiveSess
   await updateSessionStatus({
     id: session.id,
     status: 'abandoned',
-    completedAt: null,
+    completedAt: new Date().toISOString(),
   });
   await clearActiveRestForSession(session.id);
   return (await hydrateActiveSession(session.id))!;
@@ -244,7 +355,7 @@ export async function finalizeStaleSessions(now: Date = new Date()): Promise<voi
     await updateSessionStatus({
       id: session.id,
       status: hasLoggedSets ? 'completed' : 'abandoned',
-      completedAt: hasLoggedSets ? lastActiveAt : null,
+      completedAt: lastActiveAt,
     });
     await clearActiveRestForSession(session.id);
   }
@@ -331,7 +442,7 @@ export function getNextIncompleteExercise(
 export async function logWarmupSet(
   session: ActiveSession,
   exerciseLogId: string,
-  data: { weight: number; reps: number },
+  data: { weight: number; reps: number; loggedAt?: string },
 ): Promise<ActiveSession> {
   const exercise = session.exercises.find((e) => e.exerciseLogId === exerciseLogId);
   if (!exercise) return session;
@@ -343,7 +454,7 @@ export async function logWarmupSet(
     weight: data.weight,
     reps: data.reps,
     loggedRpe: null,
-    loggedAt: null,
+    loggedAt: data.loggedAt ?? null,
     isWarmup: true,
   });
   return (await hydrateActiveSession(session.id))!;
@@ -367,8 +478,25 @@ export async function getExerciseHistoryComparison(
   };
 }
 
+/**
+ * When a session stopped: null while in progress. Older ended sessions have no
+ * `completedAt`, so fall back to the last logged set, then to the start.
+ */
+export function sessionEndAt(session: ActiveSession): string | null {
+  if (session.status === 'in_progress') return null;
+  if (session.completedAt) return session.completedAt;
+  let latest: string | null = null;
+  for (const exercise of session.exercises) {
+    for (const set of [...exercise.warmupSets, ...exercise.sets]) {
+      if (set.loggedAt && (latest === null || set.loggedAt > latest)) latest = set.loggedAt;
+    }
+  }
+  return latest ?? session.startedAt;
+}
+
 export function getElapsedMinutes(session: ActiveSession): number {
   const start = new Date(session.startedAt).getTime();
-  const end = session.completedAt ? new Date(session.completedAt).getTime() : Date.now();
-  return Math.floor((end - start) / 60000);
+  const endAt = sessionEndAt(session);
+  const end = endAt ? new Date(endAt).getTime() : Date.now();
+  return Math.max(0, Math.floor((end - start) / 60000));
 }

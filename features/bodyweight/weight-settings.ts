@@ -1,8 +1,10 @@
 import { getSetting, setSetting } from '@/src/db/repositories/settings';
 import { createBodyweightEntry, getLatestBodyweightEntry } from '@/src/db/repositories/bodyweight';
 import type { WeightUnit } from '@/src/features/progress-tracking/weight';
+import { isoToLocalDateKey } from '@/src/lib/dates';
 
 const WEIGHT_UNIT_KEY = 'weight_unit';
+const WEIGH_IN_SKIPPED_KEY = 'weigh_in_skipped_on';
 
 export function isWeightUnit(value: unknown): value is WeightUnit {
   return value === 'kg' || value === 'lbs';
@@ -30,4 +32,13 @@ export async function logWeightEntry(weight: number, unit: WeightUnit): Promise<
     note: null,
   });
   await setWeightUnit(unit);
+}
+
+/** "Skip for now" holds for the rest of the local day, so Resume stops asking. */
+export async function skipWeighInToday(now: Date = new Date()): Promise<void> {
+  await setSetting(WEIGH_IN_SKIPPED_KEY, isoToLocalDateKey(now.toISOString()));
+}
+
+export async function wasWeighInSkippedToday(now: Date = new Date()): Promise<boolean> {
+  return (await getSetting(WEIGH_IN_SKIPPED_KEY)) === isoToLocalDateKey(now.toISOString());
 }

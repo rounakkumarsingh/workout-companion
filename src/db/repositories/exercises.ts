@@ -54,6 +54,40 @@ export async function createExerciseLog(input: CreateExerciseLogInput) {
   return getExerciseLogById(input.id);
 }
 
+/** An exercise log with its unlogged working sets, written in one transaction. */
+export async function createExerciseLogWithSets(
+  input: CreateExerciseLogInput,
+  sets: { id: string; setIndex: number; weight: number; reps: number }[],
+) {
+  const db = await getDb();
+  db.transaction((tx) => {
+    tx.insert(exerciseLogs)
+      .values({
+        id: input.id,
+        workoutSessionId: input.workoutSessionId,
+        exerciseName: input.exerciseName,
+        prescribedExerciseName: input.prescribedExerciseName,
+        substitutionNote: input.substitutionNote,
+        sortOrder: input.sortOrder,
+      })
+      .run();
+    for (const set of sets) {
+      tx.insert(workoutSetLogs)
+        .values({
+          id: set.id,
+          exerciseLogId: input.id,
+          setIndex: set.setIndex,
+          weight: set.weight,
+          reps: set.reps,
+          loggedRpe: null,
+          loggedAt: null,
+        })
+        .run();
+    }
+  });
+  return getExerciseLogById(input.id);
+}
+
 export async function getExerciseLogById(id: string) {
   const db = await getDb();
   const rows = db.select().from(exerciseLogs).where(eq(exerciseLogs.id, id)).all();
@@ -326,7 +360,7 @@ export async function createWarmupSetLog(input: CreateSetLogInput & { isWarmup: 
       weight: input.weight,
       reps: input.reps,
       loggedRpe: null,
-      loggedAt: new Date().toISOString(),
+      loggedAt: input.loggedAt ?? new Date().toISOString(),
       isWarmup: 1,
     })
     .run();
@@ -336,6 +370,38 @@ export async function createWarmupSetLog(input: CreateSetLogInput & { isWarmup: 
 export async function deleteExerciseLog(id: string) {
   const db = await getDb();
   db.delete(exerciseLogs).where(eq(exerciseLogs.id, id)).run();
+}
+
+/**
+ * Deletes a set and makes the remaining sets of its kind (working or warm-up)
+ * contiguous again, 1..n, in one transaction.
+ */
+export async function deleteSetLogAndRenumber(id: string) {
+  const db = await getDb();
+  db.transaction((tx) => {
+    const target = tx.select().from(workoutSetLogs).where(eq(workoutSetLogs.id, id)).all()[0];
+    if (!target) return;
+    tx.delete(workoutSetLogs).where(eq(workoutSetLogs.id, id)).run();
+    const rows = tx
+      .select()
+      .from(workoutSetLogs)
+      .where(
+        and(
+          eq(workoutSetLogs.exerciseLogId, target.exerciseLogId),
+          eq(workoutSetLogs.isWarmup, target.isWarmup),
+        ),
+      )
+      .orderBy(asc(workoutSetLogs.setIndex))
+      .all();
+    rows.forEach((row, i) => {
+      if (row.setIndex !== i + 1) {
+        tx.update(workoutSetLogs)
+          .set({ setIndex: i + 1 })
+          .where(eq(workoutSetLogs.id, row.id))
+          .run();
+      }
+    });
+  });
 }
 
 export async function deleteSetLog(id: string) {
