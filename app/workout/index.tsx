@@ -274,9 +274,12 @@ export default function ActiveWorkoutScreen() {
     if (!current) return;
     const { session } = current;
     const allComplete =
-      session.exercises.length > 0 && session.exercises.every((e) => e.status === 'completed');
+      session.exercises.length > 0 &&
+      session.exercises.every((e) => getExerciseStatus(e) === 'done');
     if (!allComplete) {
-      const unfinishedCount = session.exercises.filter((e) => e.status !== 'completed').length;
+      const unfinishedCount = session.exercises.filter(
+        (e) => getExerciseStatus(e) !== 'done',
+      ).length;
       dialog.show(
         `${unfinishedCount} ${unfinishedCount === 1 ? 'exercise' : 'exercises'} not finished`,
         "Complete anyway? Sets you haven't logged will be skipped.",
