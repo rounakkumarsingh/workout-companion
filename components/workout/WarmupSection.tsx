@@ -197,7 +197,7 @@ export function WarmupSection({
                       accessibilityLabel={`Log warmup ${step.setIndex}: ${step.weight} kilograms for ${step.reps} reps`}
                       activeOpacity={0.7}
                     >
-                      <Text style={styles.logBtnText}>Log</Text>
+                      <Text style={styles.ladderLogText}>Log</Text>
                     </TouchableOpacity>
                   ) : null}
                 </View>
@@ -408,6 +408,10 @@ const makeStyles = (c: ColorSet) =>
       color: c.textPrimary,
       minWidth: 60,
       textAlign: 'center',
+    },
+    ladderLogText: {
+      ...typography.monoSmall,
+      color: c.blackText,
     },
     logBtn: {
       minHeight: MIN_TAP_SIZE,
