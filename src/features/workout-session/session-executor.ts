@@ -205,6 +205,26 @@ export async function addWorkingSetToExercise(
   sessionId: string,
   exerciseLogId: string,
 ): Promise<SessionEdit> {
+  // Serialize per exercise: a double tap must not read the same set count twice.
+  const prior = addSetQueue.get(exerciseLogId) ?? Promise.resolve();
+  const run = prior.then(() => addWorkingSetUnlocked(sessionId, exerciseLogId));
+  const tail = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  addSetQueue.set(exerciseLogId, tail);
+  void tail.then(() => {
+    if (addSetQueue.get(exerciseLogId) === tail) addSetQueue.delete(exerciseLogId);
+  });
+  return run;
+}
+
+const addSetQueue = new Map<string, Promise<void>>();
+
+async function addWorkingSetUnlocked(
+  sessionId: string,
+  exerciseLogId: string,
+): Promise<SessionEdit> {
   const session = (await hydrateActiveSession(sessionId))!;
   const exercise = session.exercises.find((e) => e.exerciseLogId === exerciseLogId);
   if (!exercise) return { session, success: false, reason: 'Exercise not found' };
