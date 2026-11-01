@@ -51,7 +51,10 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: [
           tabStyles.tabBar,
-          { height: TAB_BAR_HEIGHT + insets.bottom, paddingBottom: TAB_BAR_PADDING_BOTTOM + insets.bottom },
+          {
+            height: TAB_BAR_HEIGHT + insets.bottom,
+            paddingBottom: TAB_BAR_PADDING_BOTTOM + insets.bottom,
+          },
         ],
         tabBarShowLabel: true,
         tabBarLabelStyle: tabStyles.tabLabel,
