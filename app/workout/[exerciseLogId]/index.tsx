@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
+  type ScrollViewInstance,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -152,7 +153,7 @@ export default function ExerciseDetailScreen() {
   const [alwaysName, setAlwaysName] = useState<string | null>(null);
   // The user's note for the performed exercise (keyed on its name).
   const [exerciseNote, setExerciseNote] = useState<string | null>(null);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const loggingSetRef = useRef(false);
   const [editingSetId, setEditingSetId] = useState<string | null>(null);
   const [addingWarmup, setAddingWarmup] = useState(false);
