@@ -24,7 +24,7 @@ interface QuickLogOverlayProps {
   deleteLabel?: string;
   visible: boolean;
   onClose: () => void;
-  onLog: (weight: number, reps: number, rpe: number | null) => void;
+  onLog: (weight: number, reps: number, rpe: number | null) => void | Promise<void>;
 }
 
 export function QuickLogOverlay({
@@ -51,9 +51,14 @@ export function QuickLogOverlay({
   const [editingWeight, setEditingWeight] = useState<string | null>(null);
   const [editingReps, setEditingReps] = useState<string | null>(null);
 
-  const handleLog = () => {
+  const handleLog = async () => {
     if (weight <= 0 || reps <= 0) return;
-    onLog(weight, reps, rpe);
+    // Keep the sheet and the entered values if saving fails.
+    try {
+      await onLog(weight, reps, rpe);
+    } catch {
+      return;
+    }
     setWeight(0);
     setReps(0);
     setRpe(null);
