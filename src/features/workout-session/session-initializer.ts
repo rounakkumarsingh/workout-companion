@@ -1,29 +1,39 @@
 import type { DayPrescription } from '../../data/program';
 import type { ActiveSession } from './types';
 import { hydrateActiveSession, reopenSession } from './session-executor';
-import { createSessionWithLogs, getSessionsStartedBetween } from '../../db/repositories/sessions';
+import {
+  createSessionWithLogs,
+  getSessionsStartedBetween,
+  updateSessionStatus,
+} from '../../db/repositories/sessions';
 import { getSuggestedSetValues } from './progression';
 import { getPreferredExercise } from './substitution-preferences-store';
 import { generateId } from '../../lib/ids';
 import { localDayBoundsIso } from '../../lib/dates';
 
+const PAST_WORKOUT_DURATION_MS = 60 * 60 * 1000;
+
 export async function initializeSession(
   weekNumber: number,
   dayType: 'Upper' | 'Lower' | 'Pull' | 'Push' | 'Legs',
   dayPrescription: DayPrescription,
+  // A past date logs the workout after the fact: it is created already completed.
+  pastDate?: Date,
 ): Promise<{ session: ActiveSession; created: boolean }> {
-  // Resume today's session for this day instead of starting a duplicate.
+  // Resume the day's session for this day instead of starting a duplicate.
   // An abandoned one ("End Session") is reopened with its logged sets.
-  const { startIso, endIso } = localDayBoundsIso(new Date());
-  const todaySessions = (await getSessionsStartedBetween(startIso, endIso)).filter(
+  const startedAt = pastDate ?? new Date();
+  const { startIso, endIso } = localDayBoundsIso(startedAt);
+  const daySessions = (await getSessionsStartedBetween(startIso, endIso)).filter(
     (s) => s.weekNumber === weekNumber && s.dayType === dayType,
   );
-  const existing =
-    todaySessions.find((s) => s.status === 'in_progress') ??
-    todaySessions.find((s) => s.status === 'abandoned');
+  const existing = pastDate
+    ? daySessions[0]
+    : (daySessions.find((s) => s.status === 'in_progress') ??
+      daySessions.find((s) => s.status === 'abandoned'));
 
   if (existing) {
-    if (existing.status === 'abandoned') {
+    if (existing.status === 'abandoned' && !pastDate) {
       await reopenSession(existing.id);
     }
     const session = await hydrateActiveSession(existing.id);
@@ -65,10 +75,17 @@ export async function initializeSession(
       id: sessionId,
       weekNumber,
       dayType,
-      startedAt: new Date().toISOString(),
+      startedAt: startedAt.toISOString(),
     },
     exercises,
   });
+  if (pastDate) {
+    await updateSessionStatus({
+      id: sessionId,
+      status: 'completed',
+      completedAt: new Date(startedAt.getTime() + PAST_WORKOUT_DURATION_MS).toISOString(),
+    });
+  }
 
   const session = (await hydrateActiveSession(sessionId))!;
   return { session, created: true };

@@ -172,6 +172,14 @@ export default function HistoryScreen() {
         <VolumeTrendChart bars={volumeBars} />
       </View>
 
+      <View style={styles.section}>
+        <GhostButton
+          label="Log a past workout"
+          onPress={() => router.push('/past-workout' as Href)}
+          style={{ marginHorizontal: 0 }}
+        />
+      </View>
+
       {/* Past workouts, reopened to correct logged sets */}
       {pastSessions.length > 0 && (
         <View style={styles.section}>
