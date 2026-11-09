@@ -285,10 +285,11 @@ export async function getSessionsStartedBetween(
 
 export async function getCompletedSessionsSince(
   sinceIso: string,
-): Promise<{ weekNumber: number; dayType: string; startedAt: string }[]> {
+): Promise<{ id: string; weekNumber: number; dayType: string; startedAt: string }[]> {
   const db = await getDb();
   return db
     .select({
+      id: workoutSessions.id,
       weekNumber: workoutSessions.weekNumber,
       dayType: workoutSessions.dayType,
       startedAt: workoutSessions.startedAt,
@@ -303,6 +304,11 @@ export async function getCompletedSessionsSince(
  * Local calendar days with a workout: completed sessions, plus abandoned
  * sessions in which at least one working set was logged.
  */
+export async function updateSessionWeek(id: string, weekNumber: number) {
+  const db = await getDb();
+  db.update(workoutSessions).set({ weekNumber }).where(eq(workoutSessions.id, id)).run();
+}
+
 export async function getAllWorkoutDates(): Promise<string[]> {
   const db = await getDb();
   const rows = db

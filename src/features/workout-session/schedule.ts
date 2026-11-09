@@ -14,6 +14,7 @@ import { getSetting, setSetting, deleteSetting } from '../../db/repositories/set
 import {
   getCompletedSessionsSince,
   getSessionsStartedBetween,
+  updateSessionWeek,
 } from '../../db/repositories/sessions';
 import { getCardioSessionsSince } from '../../db/repositories/cardio';
 import {
@@ -28,6 +29,8 @@ import {
 const PROGRAM_START_KEY = 'program_start_date';
 /** When the start date was set; a restart must not count the last cycle. */
 const CYCLE_STARTED_AT_KEY = 'program_cycle_started_at';
+/** Set once the one-time schedule repair has run. */
+const SCHEDULE_REPAIR_KEY = 'schedule_repair_v1';
 /** Which pass through the 12 weeks this is (1 = the first). */
 const PROGRAM_CYCLE_KEY = 'program_cycle';
 
@@ -46,6 +49,7 @@ export const TRAINING_DAY_TYPES: readonly TrainingDayType[] = [
 ];
 
 interface CompletedSession {
+  id?: string;
   weekNumber: number;
   dayType: string;
   startedAt: string;
@@ -59,9 +63,14 @@ export async function getProgramStartDate(): Promise<string | null> {
   return getSetting(PROGRAM_START_KEY);
 }
 
+/**
+ * Sets the day the program began. Workouts on or after that day count, so a
+ * past date picks up sessions already done. Only `startNextCycle` stamps the
+ * restart marker; stamping it here would hide every session before "now".
+ */
 export async function setProgramStartDate(date: string): Promise<void> {
   await setSetting(PROGRAM_START_KEY, date);
-  await setSetting(CYCLE_STARTED_AT_KEY, new Date().toISOString());
+  if ((await getProgramCycle()) <= 1) await deleteSetting(CYCLE_STARTED_AT_KEY);
 }
 
 export async function clearProgramStartDate(): Promise<void> {
@@ -87,15 +96,32 @@ export function getDayPrescription(weekNumber: number, dayType: TrainingDayType)
  * The program week in progress. A week's five training days can be done in
  * any order on any dates; the next week opens once all five are completed
  * (the guidebook's "carry over the remaining workouts into the following
- * week"). Sessions only ever start in the current week, so it is the latest
- * week with a completed session — an earlier week left incomplete is not
- * reopened. Returns TOTAL_WEEKS + 1 once the last week is done.
+ * week"). Replays the completed sessions in the order they happened rather
+ * than trusting each row's stored week, so a mislabelled session cannot pull
+ * the schedule back. Returns TOTAL_WEEKS + 1 once the last week is done.
  */
 export function computeCurrentWeek(completed: readonly CompletedSession[]): number {
-  const latest = completed.reduce((max, s) => Math.max(max, s.weekNumber), 0);
-  if (latest === 0) return 1;
-  const doneTypes = new Set(completed.filter((s) => s.weekNumber === latest).map((s) => s.dayType));
-  return TRAINING_DAY_TYPES.every((t) => doneTypes.has(t)) ? latest + 1 : latest;
+  return replayWeeks(completed).currentWeek;
+}
+
+/** Walks sessions oldest first, giving each the week it belonged to. */
+function replayWeeks(completed: readonly CompletedSession[]): {
+  currentWeek: number;
+  weeks: Map<CompletedSession, number>;
+} {
+  const ordered = [...completed].sort((a, b) => (a.startedAt < b.startedAt ? -1 : 1));
+  const weeks = new Map<CompletedSession, number>();
+  let week = 1;
+  let doneTypes = new Set<string>();
+  for (const session of ordered) {
+    weeks.set(session, week);
+    doneTypes.add(session.dayType);
+    if (TRAINING_DAY_TYPES.every((t) => doneTypes.has(t))) {
+      week += 1;
+      doneTypes = new Set();
+    }
+  }
+  return { currentWeek: week, weeks };
 }
 
 /** The rolling window ending `today`, oldest day first. */
@@ -231,9 +257,45 @@ export async function startNextCycle(): Promise<void> {
   const next = (await getProgramCycle()) + 1;
   await setSetting(PROGRAM_CYCLE_KEY, String(next));
   await setProgramStartDate(toLocalDateKey(new Date()));
+  await setSetting(CYCLE_STARTED_AT_KEY, new Date().toISOString());
+}
+
+/**
+ * One-time fix for histories where setting the start date hid earlier sessions
+ * and left their weeks mislabelled: moves the start back to the first
+ * completed session, drops the stale restart marker, and relabels the cycle's
+ * sessions by replaying them in order.
+ */
+async function repairScheduleOnce(): Promise<void> {
+  if ((await getSetting(SCHEDULE_REPAIR_KEY)) !== null) return;
+  const start = await getProgramStart();
+  if (!start) return;
+
+  if ((await getProgramCycle()) <= 1) {
+    await deleteSetting(CYCLE_STARTED_AT_KEY);
+    const all = await getCompletedSessionsSince('');
+    const first = all.reduce<string | null>(
+      (min, s) => (min === null || s.startedAt < min ? s.startedAt : min),
+      null,
+    );
+    if (first && startOfLocalDay(new Date(first)) < start) {
+      await setSetting(PROGRAM_START_KEY, toLocalDateKey(new Date(first)));
+    }
+  }
+
+  const cycle = await getCompletedThisCycle(await getProgramStart());
+  const { weeks } = replayWeeks(cycle);
+  for (const session of cycle) {
+    const week = weeks.get(session);
+    if (session.id && week !== undefined && week !== session.weekNumber) {
+      await updateSessionWeek(session.id, week);
+    }
+  }
+  await setSetting(SCHEDULE_REPAIR_KEY, new Date().toISOString());
 }
 
 export async function resolveCurrentSchedule(): Promise<ScheduleResolution> {
+  await repairScheduleOnce();
   const start = await getProgramStart();
   if (!start) {
     return { status: 'onboarding' };
