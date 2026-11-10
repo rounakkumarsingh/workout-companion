@@ -674,7 +674,7 @@ export default function TodayScheduleScreen() {
               <Text style={styles.choiceSub}>
                 {plan.mobility.availableOn
                   ? `Logged in the last 7 days · unlocks ${formatUnlockDay(plan.mobility.availableOn)}`
-                  : 'Optional · once every 7 days'}
+                  : 'Optional · any time'}
               </Text>
             </View>
           </TouchableOpacity>

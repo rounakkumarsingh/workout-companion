@@ -160,15 +160,10 @@ function latestDay(
   return null;
 }
 
-function unlockDateKey(day: RecentDay): string {
-  return toLocalDateKey(addLocalDays(day.date, RECOVERY_WINDOW_DAYS));
-}
-
 /**
- * What can be trained today. A training day is locked once it is completed
- * in the current program week, or when it was completed in the last 7 days
- * (so at most five lifting sessions fit in any 7 days). Cardio / mobility is
- * limited to once in the last 7 days.
+ * What can be trained today. A training day is locked only once it is
+ * completed in the current program week; there is no rolling recovery window.
+ * Cardio / mobility is always available.
  */
 export function buildChoices(
   weekNumber: number,
@@ -183,28 +178,17 @@ export function buildChoices(
     const lastStartedAt = completed
       .filter((s) => s.dayType === dayType)
       .reduce<string | null>((max, s) => (!max || s.startedAt > max ? s.startedAt : max), null);
-    const status: WorkoutChoiceStatus = doneThisWeek
-      ? 'doneThisWeek'
-      : lastRecent
-        ? 'recent'
-        : 'available';
+    const status: WorkoutChoiceStatus = doneThisWeek ? 'doneThisWeek' : 'available';
     return {
       dayType,
       dayPrescription: getDayPrescription(weekNumber, dayType),
       status,
-      availableOn: status === 'recent' && lastRecent ? unlockDateKey(lastRecent) : null,
+      availableOn: null,
       lastDoneOn: lastRecent?.dateKey ?? (lastStartedAt ? isoToLocalDateKey(lastStartedAt) : null),
     };
   });
 
-  const lastMobility = latestDay(recentDays, (d) => d.mobility);
-  return {
-    choices,
-    mobility: {
-      available: !lastMobility,
-      availableOn: lastMobility ? unlockDateKey(lastMobility) : null,
-    },
-  };
+  return { choices, mobility: { available: true, availableOn: null } };
 }
 
 /**

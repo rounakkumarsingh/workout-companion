@@ -50,12 +50,37 @@ export default function PastWorkoutScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const changeDay = (delta: number) => {
-    const next = addLocalDays(date, delta);
-    if (next.getTime() > addLocalDays(today, -1).getTime()) return;
+  const latest = addLocalDays(today, -1);
+  const [viewMonth, setViewMonth] = useState<Date>(
+    new Date(latest.getFullYear(), latest.getMonth(), 1),
+  );
+
+  const pickDate = (next: Date) => {
+    if (next.getTime() > latest.getTime()) return;
     setDate(next);
     if (!weekTouched) setWeekNumber(weekFor(next, programStart));
   };
+
+  const changeMonth = (delta: number) => {
+    const next = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + delta, 1);
+    if (next.getTime() > new Date(latest.getFullYear(), latest.getMonth(), 1).getTime()) return;
+    setViewMonth(next);
+  };
+
+  const atLatestMonth =
+    viewMonth.getFullYear() === latest.getFullYear() && viewMonth.getMonth() === latest.getMonth();
+
+  // Leading blanks line the first of the month up under its weekday (Mon first).
+  const cells: (Date | null)[] = (() => {
+    const y = viewMonth.getFullYear();
+    const m = viewMonth.getMonth();
+    const lead = (new Date(y, m, 1).getDay() + 6) % 7;
+    const count = new Date(y, m + 1, 0).getDate();
+    return [
+      ...Array.from({ length: lead }, () => null),
+      ...Array.from({ length: count }, (_, i) => new Date(y, m, i + 1)),
+    ];
+  })();
 
   const changeWeek = (delta: number) => {
     setWeekTouched(true);
@@ -82,8 +107,6 @@ export default function PastWorkoutScreen() {
     }
   };
 
-  const atLatest = date.getTime() >= addLocalDays(today, -1).getTime();
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
@@ -96,9 +119,9 @@ export default function PastWorkoutScreen() {
 
         <View style={styles.stepper}>
           <TouchableOpacity
-            onPress={() => changeDay(-1)}
+            onPress={() => changeMonth(-1)}
             style={styles.arrowButton}
-            accessibilityLabel="Previous day"
+            accessibilityLabel="Previous month"
           >
             <AppText variant="monoMedium" color="gold">
               ←
@@ -110,7 +133,7 @@ export default function PastWorkoutScreen() {
             </AppText>
             <AppText variant="monoBody" color="goldText" style={styles.displayText}>
               {date.toLocaleDateString(undefined, {
-                weekday: 'long',
+                weekday: 'short',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -118,15 +141,52 @@ export default function PastWorkoutScreen() {
             </AppText>
           </View>
           <TouchableOpacity
-            onPress={() => changeDay(1)}
+            onPress={() => changeMonth(1)}
             style={styles.arrowButton}
-            disabled={atLatest}
-            accessibilityLabel="Next day"
+            disabled={atLatestMonth}
+            accessibilityLabel="Next month"
           >
-            <AppText variant="monoMedium" color={atLatest ? 'textDim' : 'gold'}>
+            <AppText variant="monoMedium" color={atLatestMonth ? 'textDim' : 'gold'}>
               →
             </AppText>
           </TouchableOpacity>
+        </View>
+        <AppText variant="caption" color="textTertiary">
+          {viewMonth
+            .toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+            .toUpperCase()}
+        </AppText>
+        <View style={styles.grid}>
+          {cells.map((cell, i) =>
+            cell === null ? (
+              <View key={`pad-${i}`} style={styles.dayCell} />
+            ) : (
+              <TouchableOpacity
+                key={cell.getTime()}
+                onPress={() => pickDate(cell)}
+                disabled={cell.getTime() > latest.getTime()}
+                style={[
+                  styles.dayCell,
+                  cell.getTime() === date.getTime() && styles.dayCellSelected,
+                ]}
+                accessibilityLabel={cell.toDateString()}
+                accessibilityState={{ selected: cell.getTime() === date.getTime() }}
+              >
+                <AppText
+                  variant="caption"
+                  color={
+                    cell.getTime() > latest.getTime()
+                      ? 'textDim'
+                      : cell.getTime() === date.getTime()
+                        ? 'goldText'
+                        : 'textSecondary'
+                  }
+                >
+                  {cell.getDate()}
+                </AppText>
+              </TouchableOpacity>
+            ),
+          )}
         </View>
 
         <View style={styles.stepper}>
@@ -205,6 +265,19 @@ const makeStyles = (c: ColorSet) =>
       borderColor: c.goldStroke,
     },
     displayText: { textAlign: 'center' },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', width: 7 * 44, justifyContent: 'flex-start' },
+    dayCell: {
+      width: 44,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 10,
+    },
+    dayCellSelected: {
+      backgroundColor: c.surfaceElevated,
+      borderWidth: 0.5,
+      borderColor: c.goldStroke,
+    },
     arrowButton: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
     chips: {
       flexDirection: 'row',
