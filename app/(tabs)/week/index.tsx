@@ -108,7 +108,7 @@ export default function WeekScreen() {
             <Text style={styles.dayLabel}>OPT.</Text>
             <Text style={[styles.dayName, styles.restName]}>Cardio / Mobility</Text>
           </View>
-          <Text style={styles.restNote}>Optional · at most once every 7 days</Text>
+          <Text style={styles.restNote}>Optional · any time</Text>
         </View>
       </View>
       <View style={{ height: 40 }} />
