@@ -124,12 +124,12 @@ function previewOf(day: DayPrescription): PreviewExercise[] {
 function defaultSelection(plan: TodayPlan): Selection | null {
   const next = plan.choices.find((c) => c.status === 'available');
   if (next) return next.dayType;
-  return plan.mobility.available ? 'Mobility' : null;
+  return plan.choices[0]?.dayType ?? null;
 }
 
+/** Every workout, and Cardio / Mobility, can be chosen on any day. */
 function isSelectable(plan: TodayPlan, selection: Selection): boolean {
-  if (selection === 'Mobility') return plan.mobility.available;
-  return plan.choices.some((c) => c.dayType === selection && c.status === 'available');
+  return selection === 'Mobility' || plan.choices.some((c) => c.dayType === selection);
 }
 
 /** "today", "yesterday", or a short weekday for a recent date key. */
@@ -419,7 +419,7 @@ export default function TodayScheduleScreen() {
 
   const handleBegin = useCallback(
     async (choice: WorkoutChoice) => {
-      if (screenState.status !== 'choose' || choice.status !== 'available') return;
+      if (screenState.status !== 'choose') return;
       // Ask for today's weight first, but never block the workout on it.
       if (weighedToday === false && !weighInSkipped) {
         setPendingChoice(choice);
@@ -618,7 +618,7 @@ export default function TodayScheduleScreen() {
       <>
         <View style={styles.choiceList} accessibilityRole="radiogroup">
           {plan.choices.map((choice) => {
-            const locked = choice.status !== 'available';
+            const locked = false;
             const isSelected = choice.dayType === selection;
             return (
               <TouchableOpacity
@@ -654,28 +654,18 @@ export default function TodayScheduleScreen() {
           })}
 
           <TouchableOpacity
-            style={[
-              styles.choiceCard,
-              selection === 'Mobility' && styles.choiceCardSelected,
-              !plan.mobility.available && styles.choiceLocked,
-            ]}
+            style={[styles.choiceCard, selection === 'Mobility' && styles.choiceCardSelected]}
             onPress={() => setPicked('Mobility')}
-            disabled={!plan.mobility.available}
             accessibilityRole="radio"
             accessibilityLabel="Cardio and mobility"
             accessibilityState={{
               selected: selection === 'Mobility',
-              disabled: !plan.mobility.available,
             }}
           >
             <DayFigure day="rest" size={40} tone="neutral" />
             <View style={styles.choiceInfo}>
               <Text style={styles.choiceTitle}>Cardio / Mobility</Text>
-              <Text style={styles.choiceSub}>
-                {plan.mobility.availableOn
-                  ? `Logged in the last 7 days · unlocks ${formatUnlockDay(plan.mobility.availableOn)}`
-                  : 'Optional · any time'}
-              </Text>
+              <Text style={styles.choiceSub}>Optional · any time</Text>
             </View>
           </TouchableOpacity>
         </View>
