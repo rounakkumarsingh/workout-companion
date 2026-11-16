@@ -20,8 +20,8 @@ Optional Cardio/HIIT (shown as "Cardio / Mobility") can be logged on rest days.
 
 The order isn't fixed. Each time the user opens the app, they choose today's workout and see what they did in the last 7 days. The app enforces these rules:
 
-* A workout already completed in the current program week can't be chosen again.
-* There is no recovery window: a workout from an earlier week can be repeated on any day, and Cardio / Mobility can be logged any time.
+* Any workout can be chosen on any day, including one already done this week.
+* There is no recovery window and no lock: Cardio / Mobility can be logged any time.
 * The next program week starts once all five workouts of the current week are completed. This follows the guidebook's advice to carry remaining workouts over into the following week, so nothing is ever "missed".
 
 Rest days are never chosen. The user simply doesn't train that day.

@@ -1,4 +1,3 @@
-import { repairDoubledSetsOnce } from './doubled-sets-repair';
 import type {
   MobilityChoice,
   RecentDay,
@@ -281,7 +280,6 @@ async function repairScheduleOnce(): Promise<void> {
 
 export async function resolveCurrentSchedule(): Promise<ScheduleResolution> {
   await repairScheduleOnce();
-  await repairDoubledSetsOnce();
   const start = await getProgramStart();
   if (!start) {
     return { status: 'onboarding' };
