@@ -170,9 +170,16 @@ export function buildChoices(
   completed: readonly CompletedSession[],
   recentDays: readonly RecentDay[],
 ): { choices: WorkoutChoice[]; mobility: MobilityChoice } {
+  const weeksByCompleted = replayWeeks(completed).weeks;
   const choices = TRAINING_DAY_TYPES.map((dayType): WorkoutChoice => {
+    // Each day type progresses on its own: its next session is one week
+    // after the latest week it was completed in.
+    const lastWeekDone = completed
+      .filter((s) => s.dayType === dayType)
+      .reduce((max, s) => Math.max(max, s.weekNumber), 0);
+    const typeWeek = Math.min(TOTAL_WEEKS, lastWeekDone + 1);
     const doneThisWeek = completed.some(
-      (s) => s.weekNumber === weekNumber && s.dayType === dayType,
+      (s) => weeksByCompleted.get(s) === weekNumber && s.dayType === dayType,
     );
     const lastRecent = latestDay(recentDays, (d) => d.workouts.includes(dayType));
     const lastStartedAt = completed
@@ -181,7 +188,8 @@ export function buildChoices(
     const status: WorkoutChoiceStatus = doneThisWeek ? 'doneThisWeek' : 'available';
     return {
       dayType,
-      dayPrescription: getDayPrescription(weekNumber, dayType),
+      weekNumber: typeWeek,
+      dayPrescription: getDayPrescription(typeWeek, dayType),
       status,
       availableOn: null,
       lastDoneOn: lastRecent?.dateKey ?? (lastStartedAt ? isoToLocalDateKey(lastStartedAt) : null),

@@ -90,7 +90,9 @@ export default function WeekScreen() {
                 <Text style={[styles.dayLabel, done && styles.doneLabel]}>
                   {done ? 'DONE' : 'TO DO'}
                 </Text>
-                <Text style={styles.dayName}>{choice.dayType} Day</Text>
+                <Text style={styles.dayName}>
+                  {choice.dayType} Day · Week {choice.weekNumber}
+                </Text>
                 <Text style={styles.dayBadge}>{exercises.length} ex.</Text>
               </View>
               <View style={styles.chips}>

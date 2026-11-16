@@ -69,6 +69,8 @@ export type WorkoutChoiceStatus = 'available' | 'doneThisWeek' | 'recent';
 
 export interface WorkoutChoice {
   dayType: TrainingDayType;
+  /** The week this day type is on: one after its latest completed week. */
+  weekNumber: number;
   dayPrescription: DayPrescription;
   status: WorkoutChoiceStatus;
   /** Date key on which a 'recent' choice unlocks, else null. */

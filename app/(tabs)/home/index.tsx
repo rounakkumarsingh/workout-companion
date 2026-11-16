@@ -148,13 +148,14 @@ function formatUnlockDay(dateKey: string): string {
 
 function choiceSubtitle(choice: WorkoutChoice): string {
   const exercises = `${choice.dayPrescription.exercises.length} exercises`;
-  if (choice.status === 'doneThisWeek') return `${exercises} · ✓ Done this week`;
+  if (choice.status === 'doneThisWeek')
+    return `${exercises} · Week ${choice.weekNumber} · ✓ Done this week`;
   if (choice.status === 'recent' && choice.lastDoneOn && choice.availableOn) {
     return `Done ${formatRecentDay(choice.lastDoneOn)} · unlocks ${formatUnlockDay(choice.availableOn)}`;
   }
-  if (!choice.lastDoneOn) return `${exercises} · Not done yet`;
+  if (!choice.lastDoneOn) return `${exercises} · Week ${choice.weekNumber} · Not done yet`;
   const daysAgo = localDaysBetween(parseLocalDateKey(choice.lastDoneOn), new Date());
-  return `${exercises} · Last done ${daysAgo} days ago`;
+  return `${exercises} · Week ${choice.weekNumber} · Last done ${daysAgo} days ago`;
 }
 
 async function computeScreenState(): Promise<HomeScreenState> {
@@ -426,7 +427,7 @@ export default function TodayScheduleScreen() {
         setWeighInOpen(true);
         return;
       }
-      await startSession(screenState.plan.weekNumber, choice.dayPrescription);
+      await startSession(choice.weekNumber, choice.dayPrescription);
     },
     [screenState, startSession, weighedToday, weighInSkipped],
   );
@@ -438,7 +439,7 @@ export default function TodayScheduleScreen() {
     setPendingChoice(null);
     setResumePending(false);
     if (choice && screenState.status === 'choose') {
-      await startSession(screenState.plan.weekNumber, choice.dayPrescription);
+      await startSession(choice.weekNumber, choice.dayPrescription);
     } else if (resuming) {
       await doResume();
     }
@@ -601,7 +602,7 @@ export default function TodayScheduleScreen() {
 
   // --- CHOOSE TODAY'S WORKOUT ---
   if (screenState.status === 'choose') {
-    const { plan, blockName } = screenState;
+    const { plan } = screenState;
     const selection = picked && isSelectable(plan, picked) ? picked : defaultSelection(plan);
     const upNext = plan.choices.find((c) => c.status === 'available');
     const selectedChoice = plan.choices.find((c) => c.dayType === selection);
@@ -682,8 +683,8 @@ export default function TodayScheduleScreen() {
         {selectedChoice && (
           <WorkoutPreviewCard
             dayType={selectedChoice.dayType}
-            dayNumber={getProgramDayNumber(plan.weekNumber, selectedChoice.dayType)}
-            meta={`${selectedChoice.dayPrescription.exercises.length} exercises${blockName ? ` · ${blockName}` : ''}`}
+            dayNumber={getProgramDayNumber(selectedChoice.weekNumber, selectedChoice.dayType)}
+            meta={`${selectedChoice.dayPrescription.exercises.length} exercises · Week ${selectedChoice.weekNumber}`}
             exercises={previewOf(selectedChoice.dayPrescription)}
           />
         )}
